@@ -1047,7 +1047,7 @@
                 return;
             }
             
-            const headers = ['Código', 'Descripción', 'Proveedor', 'Inventario Reportería', 'Factor Conversión', 'Cajas/Fardos', 'Unidades', 'Total'];
+            const headers = ['Codigo', 'Descripcion', 'Proveedor', 'Inventario Reporteria', 'Factor', 'Cajas/Fardos', 'Unidades', 'Total'];
             
             const csvContent = inventario.map(item => {
                 const total = (item.cajasFardos * item.factorConversion) + item.unidades;
