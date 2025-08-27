@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - Sistema de Inventarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --sidebar-width: 260px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #2d3748 0%, #4a5568 100%);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s ease;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .btn-primary {
+            background: var(--primary-gradient);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .input-field {
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .table-row:hover {
+            background: #f7fafc;
+        }
+        
+        .scanner-container {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                height: 100vh;
+                z-index: 1000;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+            
+            .mobile-overlay.open {
+                display: block;
+            }
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .nav-item i {
+            width: 20px;
+            margin-right: 12px;
+        }
+    </style>
+</head>
+<body class="flex">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar fixed top-0 left-0 h-full text-white">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-boxes text-xl"></i>
+                    </div>
+                    <h1 class="text-xl font-bold">InventarioPro</h1>
+                </div>
+                <button id="closeSidebar" class="lg:hidden text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <nav class="space-y-1">
+                <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-chart-pie"></i>
+                    Dashboard
+                </a>
+                <a href="#agregar" class="nav-item" data-section="agregar">
+                    <i class="fas fa-plus-circle"></i>
+                    Agregar Artículo
+                </a>
+                <a href="#escanear" class="nav-item" data-section="escanear">
+                    <i class="fas fa-barcode"></i>
+                    Escanear Códigos
+                </a>
+                <a href="#inventario" class="nav-item" data-section="inventario">
+                    <i class="fas fa-clipboard-list"></i>
+                    Ver Inventario
+                </a>
+                <a href="#exportar" class="nav-item" data-section="exportar">
+                    <i class="fas fa-file-export"></i>
+                    Exportar CSV
+                </a>
+                <a href="#importar-inventario" class="nav-item" data-section="importar-inventario">
+                    <i class="fas fa-file-import"></i>
+                    Importar Inventario
+                </a>
+                <a href="#importar-codigos" class="nav-item" data-section="importar-codigos">
+                    <i class="fas fa-database"></i>
+                    Importar Códigos
+                </a>
+                <a href="#usuarios" class="nav-item" data-section="usuarios">
+                    <i class="fas fa-users-cog"></i>
+                    Gestión de Usuarios
+                </a>
+            </nav>
+            
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="border-t border-white/20 pt-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-user text-sm"></i>
+                            </div>
+                            <span id="currentUserName" class="text-sm">Usuario</span>
+                        </div>
+                        <button id="logoutBtn" class="text-white/70 hover:text-white">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="mobile-overlay"></div>
+
+    <!-- Main Content -->
+    <div class="main-content flex-1 min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200 p-4 flex items-center justify-between">
+            <button id="menuToggle" class="lg:hidden text-gray-600 hover:text-gray-800">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            
+            <h2 class="text-xl font-semibold text-gray-800" id="currentSectionTitle">Dashboard</h2>
+            
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <button class="text-gray-600 hover:text-gray-800">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Sections -->
+        <main class="p-6 space-y-6">
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="section-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Total Artículos</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="totalArticulos">0</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-box text-blue-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Unidades Totales</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="totalUnidadesDashboard">0</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-cubes text-green-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Proveedores</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="totalProveedores">0</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-truck text-purple-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Última Actualización</p>
+                                <h3 class="text-xl font-bold text-gray-800" id="ultimaActualizacion">-</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-sync text-orange-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">Artículos Recientes</h3>
+                        <div class="space-y-3" id="recentItems">
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-inbox text-3xl mb-2"></i>
+                                <p>No hay artículos recientes</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">Distribución por Proveedor</h3>
+                        <div id="proveedorChart" class="h-64 flex items-center justify-center">
+                            <div class="text-center text-gray-500">
+                                <i class="fas fa-chart-pie text-3xl mb-2"></i>
+                                <p>No hay datos disponibles</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Agregar Artículo Section -->
+            <section id="agregar-section" class="section-content hidden">
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold mb-6">Agregar Nuevo Artículo</h3>
+                    
+                    <form id="articuloForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Código del Artículo *</label>
+                            <input type="text" id="codigoArticulo" 
+                                   class="input-field w-full px-4 py-3 rounded-lg" 
+                                   placeholder="Ingrese el código"
+                                   required
+                                   onchange="cargarDatosArticulo(this.value)">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Proveedor</label>
+                            <input type="text" id="proveedor" 
+                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" 
+                                   placeholder="Se cargará automáticamente"
+                                   readonly>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Descripción del Artículo</label>
+                            <input type="text" id="descripcion" 
+                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" 
+                                   placeholder="Se cargará automáticamente"
+                                   readonly>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Inventario en Reportería</label>
+                            <input type="number" id="inventarioReporteria" 
+                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" 
+                                   placeholder="0"
+                                   readonly>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Factor de Conversión</label>
+                            <input type="number" id="factorConversion" 
+                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" 
+                                   placeholder="1.0"
+                                   step="0.01"
+                                   readonly>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cajas / Fardos</label>
+                            <input type="number" id="cajasFardos" 
+                                   class="input-field w-full px-4 py-3 rounded-lg" 
+                                   placeholder="0"
+                                   min="0"
+                                   step="1"
+                                   oninput="calcularTotalUnidades()">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Unidades</label>
+                            <input type="number" id="unidades" 
+                                   class="input-field w-full px-4 py-3 rounded-lg" 
+                                   placeholder="0"
+                                   min="0"
+                                   step="1"
+                                   oninput="calcularTotalUnidades()">
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold text-blue-800">Total Unidades:</span>
+                                    <span id="totalUnidadesCalculo" class="text-xl font-bold text-blue-800">0</span>
+                                </div>
+                                <p class="text-sm text-blue-600 mt-1">(Cajas × Factor) + Unidades</p>
+                            </div>
+                        </div>
+                        
+                        <div class="md:col-span-2 flex justify-end space-x-4 pt-4">
+                            <button type="reset" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" onclick="limpiarFormulario()">
+                                Limpiar
+                            </button>
+                            <button type="submit" class="btn-primary px-6 py-3 rounded-lg text-white">
+                                <i class="fas fa-plus-circle mr-2"></i>
+                                Agregar Artículo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Escanear Códigos Section -->
+            <section id="escanear-section" class="section-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">Escáner de Códigos de Barras</h3>
+                        
+                        <div class="scanner-container mb-4 rounded-lg overflow-hidden">
+                            <div id="scanner" class="w-full h-64 bg-gray-200 flex items-center justify-center">
+                                <div class="text-center text-gray-600">
+                                    <i class="fas fa-camera text-3xl mb-2"></i>
+                                    <p>Iniciando cámara...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-4 mb-4">
+                            <button id="startScanner" class="btn-primary flex-1 py-3 rounded-lg text-white">
+                                <i class="fas fa-play mr-2"></i>
+                                Iniciar Escáner
+                            </button>
+                            <button id="stopScanner" class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" disabled>
+                                <i class="fas fa-stop mr-2"></i>
+                                Detener
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">Resultado del Escaneo</h3>
+                        
+                        <div id="scanResult" class="mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg min-h-32 flex items-center justify-center">
+                            <div class="text-center text-gray-500">
+                                <i class="fas fa-barcode text-3xl mb-2"></i>
+                                <p>Escanea un código de barras para ver los detalles</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Ver Inventario Section -->
+            <section id="inventario-section" class="section-content hidden">
+                <div class="card p-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                        <h3 class="text-lg font-semibold">Inventario Actual</h3>
+                        
+                        <div class="flex space-x-4 mt-4 md:mt-0">
+                            <div class="relative">
+                                <input type="text" id="searchInventory" 
+                                       class="input-field pl-10 pr-4 py-2 rounded-lg" 
+                                       placeholder="Buscar artículo...">
+                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                            <button id="refreshInventory" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Código</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Inv. Reportería</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Factor</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Cajas/Fardos</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Unidades</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Total</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                <tr>
+                                    <td colspan="8" class="py-8 text-center text-gray-500">
+                                        <i class="fas fa-inbox text-3xl mb-2"></i>
+                                        <p>No hay artículos en el inventario</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Exportar CSV Section -->
+            <section id="exportar-section" class="section-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-6">Exportar Inventario a CSV</h3>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Campos a Exportar</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="codigo" checked>
+                                        Código
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="proveedor" checked>
+                                        Proveedor
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="descripcion" checked>
+                                        Descripción
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="inventarioReporteria" checked>
+                                        Inv. Reportería
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="factorConversion" checked>
+                                        Factor Conversión
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="cajasFardos" checked>
+                                        Cajas/Fardos
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="unidades" checked>
+                                        Unidades
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button id="exportCSV" class="btn-primary w-full py-3 rounded-lg text-white">
+                                <i class="fas fa-file-export mr-2"></i>
+                                Exportar a CSV
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">Información de Exportación</h3>
+                        
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex">
+                                <i class="fas fa-info-circle text-blue-500 mr-3 mt-1"></i>
+                                <div>
+                                    <p class="text-sm text-blue-800">
+                                        <strong>Formato CSV:</strong> El archivo se generará sin apóstrofes y con codificación UTF-8 para 
+                                        garantizar la compatibilidad con Excel y otros programas de hojas de cálculo.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Importar Inventario Section -->
+            <section id="importar-inventario-section" class="section-content hidden">
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold mb-6">Importar Inventario</h3>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar archivo CSV</label>
+                            <input type="file" id="importInventoryFile" 
+                                   class="input-field w-full px-4 py-3 rounded-lg" 
+                                   accept=".csv"
+                                   onchange="previewInventoryFile(this)">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600">Código,Descripción,Proveedor,Inventario Reportería,Factor Conversión</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="inventoryPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
+                        <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead id="inventoryPreviewHead"></thead>
+                                <tbody id="inventoryPreviewBody"></tbody>
+                            </table>
+                        </div>
+                        
+                        <button id="confirmImportInventory" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white">
+                            <i class="fas fa-upload mr-2"></i>
+                            Confirmar Importación
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Importar Códigos Section -->
+            <section id="importar-codigos-section" class="section-content hidden">
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold mb-6">Importar Base de Códigos</h3>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar archivo CSV</label>
+                            <input type="file" id="importCodesFile" 
+                                   class="input-field w-full px-4 py-3 rounded-lg" 
+                                   accept=".csv"
+                                   onchange="previewCodesFile(this)">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600">Código,Descripción,Proveedor,Inventario Reportería,Factor Conversión</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="codesPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
+                        <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead id="codesPreviewHead"></thead>
+                                <tbody id="codesPreviewBody"></tbody>
+                            </table>
+                        </div>
+                        
+                        <button id="confirmImportCodes" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white">
+                            <i class="fas fa-upload mr-2"></i>
+                            Confirmar Importación
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gestión de Usuarios Section -->
+            <section id="usuarios-section" class="section-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-6">Gestión de Usuarios</h3>
+                        
+                        <div class="overflow-x-auto mb-6">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Usuario</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Email</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Rol</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr>
+                                        <td colspan="4" class="py-8 text-center text-gray-500">
+                                            <i class="fas fa-users text-3xl mb-2"></i>
+                                            <p>Cargando usuarios...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-6" id="userFormTitle">Crear Nuevo Usuario</h3>
+                        
+                        <form id="userForm" class="space-y-4">
+                            <input type="hidden" id="userId">
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de Usuario *</label>
+                                <input type="text" id="userUsername" 
+                                       class="input-field w-full px-4 py-3 rounded-lg" 
+                                       placeholder="nombre.usuario"
+                                       required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                                <input type="email" id="userEmail" 
+                                       class="input-field w-full px-4 py-3 rounded-lg" 
+                                       placeholder="usuario@empresa.com"
+                                       required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
+                                <input type="password" id="userPassword" 
+                                       class="input-field w-full px-4 py-3 rounded-lg" 
+                                       placeholder="••••••••"
+                                       required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña *</label>
+                                <input type="password" id="userConfirmPassword" 
+                                       class="input-field w-full px-4 py-3 rounded-lg" 
+                                       placeholder="••••••••"
+                                       required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
+                                <select id="userRole" class="input-field w-full px-4 py-3 rounded-lg">
+                                    <option value="user">Usuario</option>
+                                    <option value="admin">Administrador</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex space-x-4 pt-4">
+                                <button type="reset" class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn-primary flex-1 py-3 rounded-lg text-white">
+                                    <i class="fas fa-save mr-2"></i>
+                                    Guardar Usuario
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="notification hidden">
+        <div class="bg-white rounded-lg shadow-lg p-4 max-w-sm">
+            <div class="flex items-start">
+                <div id="notificationIcon" class="mr-3 mt-0.5"></div>
+                <div class="flex-1">
+                    <h4 id="notificationTitle" class="font-semibold"></h4>
+                    <p id="notificationMessage" class="text-sm text-gray-600 mt-1"></p>
+                </div>
+                <button id="closeNotification" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== VARIABLES GLOBALES =====
+        let currentUser = null;
+        let scannerActive = false;
+        let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
+        let baseDatosInventario = JSON.parse(localStorage.getItem('baseDatosInventario') || '[]');
+
+        // ===== INICIALIZACIÓN =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar autenticación
+            const userData = sessionStorage.getItem('currentUser');
+            if (!userData) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = JSON.parse(userData);
+            document.getElementById('currentUserName').textContent = currentUser.username;
+            
+            // Inicializar navegación
+            initNavigation();
+            
+            // Cargar datos iniciales
+            loadDashboardData();
+            loadInventory();
+            
+            // Configurar formulario de artículo
+            document.getElementById('articuloForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                agregarArticulo();
+            });
+            
+            // Configurar exportación CSV
+            document.getElementById('exportCSV').addEventListener('click', exportToCSV);
+        });
+
+        // ===== NAVEGACIÓN =====
+        function initNavigation() {
+            // Toggle sidebar en mobile
+            document.getElementById('menuToggle').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.add('open');
+                document.getElementById('mobileOverlay').classList.add('open');
+            });
+            
+            document.getElementById('closeSidebar').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.remove('open');
+                document.getElementById('mobileOverlay').classList.remove('open');
+            });
+            
+            document.getElementById('mobileOverlay').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.remove('open');
+                this.classList.remove('open');
+            });
+            
+            // Navegación entre secciones
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Actualizar navegación activa
+                    document.querySelectorAll('.nav-item').forEach(nav => {
+                        nav.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Ocultar todas las secciones
+                    document.querySelectorAll('.section-content').forEach(section => {
+                        section.classList.add('hidden');
+                    });
+                    
+                    // Mostrar sección correspondiente
+                    const sectionId = this.getAttribute('data-section') + '-section';
+                    document.getElementById(sectionId).classList.remove('hidden');
+                    
+                    // Actualizar título
+                    const sectionTitles = {
+                        'dashboard': 'Dashboard',
+                        'agregar': 'Agregar Artículo',
+                        'escanear': 'Escanear Códigos',
+                        'inventario': 'Ver Inventario',
+                        'exportar': 'Exportar CSV',
+                        'importar-inventario': 'Importar Inventario',
+                        'importar-codigos': 'Importar Códigos',
+                        'usuarios': 'Gestión de Usuarios'
+                    };
+                    document.getElementById('currentSectionTitle').textContent = sectionTitles[this.getAttribute('data-section')];
+                    
+                    // Cerrar sidebar en mobile
+                    if (window.innerWidth < 768) {
+                        document.querySelector('.sidebar').classList.remove('open');
+                        document.getElementById('mobileOverlay').classList.remove('open');
+                    }
+                });
+            });
+            
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                sessionStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+            });
+        }
+
+        // ===== DASHBOARD =====
+        function loadDashboardData() {
+            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            
+            // Actualizar estadísticas
+            document.getElementById('totalArticulos').textContent = inventario.length;
+            
+            const totalUnidades = inventario.reduce((sum, item) => {
+                const total = (item.cajasFardos * item.factorConversion) + item.unidades;
+                return sum + total;
+            }, 0);
+            document.getElementById('totalUnidadesDashboard').textContent = totalUnidades.toLocaleString();
+            
+            const proveedoresUnicos = new Set(inventario.map(item => item.proveedor)).size;
+            document.getElementById('totalProveedores').textContent = proveedoresUnicos;
+            
+            if (inventario.length > 0) {
+                const lastUpdate = new Date(Math.max(...inventario.map(item => new Date(item.timestamp))));
+                document.getElementById('ultimaActualizacion').textContent = 
+                    lastUpdate.toLocaleDateString() + ' ' + lastUpdate.toLocaleTimeString();
+            }
+        }
+
+        // ===== AGREGAR ARTÍCULO =====
+        function cargarDatosArticulo(codigo) {
+            const articulo = baseDatosArticulos.find(item => item.codigo === codigo);
+            
+            if (articulo) {
+                document.getElementById('proveedor').value = articulo.proveedor || '';
+                document.getElementById('descripcion').value = articulo.descripcion || '';
+                document.getElementById('inventarioReporteria').value = articulo.inventarioReporteria || 0;
+                document.getElementById('factorConversion').value = articulo.factorConversion || 1;
+                
+                // Buscar en inventario existente
+                const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+                const existencia = inventario.find(item => item.codigo === codigo);
+                
+                if (existencia) {
+                    document.getElementById('cajasFardos').value = existencia.cajasFardos || 0;
+                    document.getElementById('unidades').value = existencia.unidades || 0;
+                }
+                
+                calcularTotalUnidades();
+                showNotification('Éxito', 'Datos del artículo cargados correctamente', 'success');
+            } else {
+                showNotification('Advertencia', 'Artículo no encontrado en la base de datos', 'warning');
+            }
+        }
+
+        function calcularTotalUnidades() {
+            const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
+            const factor = parseFloat(document.getElementById('factorConversion').value) || 1;
+            const unidades = parseFloat(document.getElementById('unidades').value) || 0;
+            
+            const total = (cajas * factor) + unidades;
+            document.getElementById('totalUnidadesCalculo').textContent = total.toFixed(2);
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('codigoArticulo').value = '';
+            document.getElementById('proveedor').value = '';
+            document.getElementById('descripcion').value = '';
+            document.getElementById('inventarioReporteria').value = '';
+            document.getElementById('factorConversion').value = '';
+            document.getElementById('cajasFardos').value = '';
+            document.getElementById('unidades').value = '';
+            document.getElementById('totalUnidadesCalculo').textContent = '0';
+        }
+
+        function agregarArticulo() {
+            const codigo = document.getElementById('codigoArticulo').value;
+            const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
+            const unidades = parseFloat(document.getElementById('unidades').value) || 0;
+            
+            if (!codigo) {
+                showNotification('Error', 'El código del artículo es requerido', 'error');
+                return;
+            }
+            
+            const articuloBase = baseDatosArticulos.find(item => item.codigo === codigo);
+            if (!articuloBase) {
+                showNotification('Error', 'El artículo no existe en la base de datos', 'error');
+                return;
+            }
+            
+            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            const index = inventario.findIndex(item => item.codigo === codigo);
+            
+            const articulo = {
+                ...articuloBase,
+                cajasFardos: cajas,
+                unidades: unidades,
+                timestamp: new Date().toISOString()
+            };
+            
+            if (index !== -1) {
+                inventario[index] = articulo;
+            } else {
+                inventario.push(articulo);
+            }
+            
+            localStorage.setItem('inventario', JSON.stringify(inventario));
+            limpiarFormulario();
+            showNotification('Éxito', 'Artículo agregado/actualizado correctamente', 'success');
+            loadDashboardData();
+        }
+
+        // ===== VER INVENTARIO =====
+        function loadInventory() {
+            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            const tbody = document.getElementById('inventoryTableBody');
+            
+            if (inventario.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-gray-500">
+                            <i class="fas fa-inbox text-3xl mb-2"></i>
+                            <p>No hay artículos en el inventario</p>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                tbody.innerHTML = inventario.map(item => {
+                    const total = (item.cajasFardos * item.factorConversion) + item.unidades;
+                    
+                    return `
+                        <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="py-4 px-4 font-mono text-sm">${item.codigo}</td>
+                            <td class="py-4 px-4 max-w-xs">${item.descripcion}</td>
+                            <td class="py-4 px-4 text-center">${item.inventarioReporteria}</td>
+                            <td class="py-4 px-4 text-center">${item.factorConversion}</td>
+                            <td class="py-4 px-4 text-center">${item.cajasFardos || 0}</td>
+                            <td class="py-4 px-4 text-center">${item.unidades}</td>
+                            <td class="py-4 px-4 text-center font-bold">${total.toFixed(2)}</td>
+                            <td class="py-4 px-4">
+                                <div class="flex space-x-2 justify-center">
+                                    <button class="text-blue-600 hover:text-blue-800" onclick="editarArticulo('${item.codigo}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-red-600 hover:text-red-800" onclick="eliminarArticulo('${item.codigo}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        function editarArticulo(codigo) {
+            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            const articulo = inventario.find(item => item.codigo === codigo);
+            
+            if (articulo) {
+                document.getElementById('codigoArticulo').value = articulo.codigo;
+                document.getElementById('proveedor').value = articulo.proveedor;
+                document.getElementById('descripcion').value = articulo.descripcion;
+                document.getElementById('inventarioReporteria').value = articulo.inventarioReporteria;
+                document.getElementById('factorConversion').value = articulo.factorConversion;
+                document.getElementById('cajasFardos').value = articulo.cajasFardos || 0;
+                document.getElementById('unidades').value = articulo.unidades;
+                
+                calcularTotalUnidades();
+                
+                // Cambiar a la sección de agregar artículo
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                document.querySelector('[data-section="agregar"]').classList.add('active');
+                document.querySelectorAll('.section-content').forEach(section => section.classList.add('hidden'));
+                document.getElementById('agregar-section').classList.remove('hidden');
+                document.getElementById('currentSectionTitle').textContent = 'Editar Artículo';
+                
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function eliminarArticulo(codigo) {
+            if (confirm(`¿Estás seguro de eliminar el artículo ${codigo}?`)) {
+                let inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+                inventario = inventario.filter(item => item.codigo !== codigo);
+                localStorage.setItem('inventario', JSON.stringify(inventario));
+                
+                loadInventory();
+                loadDashboardData();
+                showNotification('Éxito', 'Artículo eliminado correctamente', 'success');
+            }
+        }
+
+        // ===== EXPORTAR CSV =====
+        function exportToCSV() {
+            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            
+            if (inventario.length === 0) {
+                showNotification('Advertencia', 'No hay datos para exportar', 'warning');
+                return;
+            }
+            
+            const headers = ['Código', 'Descripción', 'Proveedor', 'Inventario Reportería', 'Factor Conversión', 'Cajas/Fardos', 'Unidades', 'Total'];
+            
+            const csvContent = inventario.map(item => {
+                const total = (item.cajasFardos * item.factorConversion) + item.unidades;
+                return [
+                    item.codigo,
+                    item.descripcion,
+                    item.proveedor,
+                    item.inventarioReporteria,
+                    item.factorConversion,
+                    item.cajasFardos || 0,
+                    item.unidades,
+                    total.toFixed(2)
+                ].join(',');
+            }).join('\n');
+            
+            const csv = headers.join(',') + '\n' + csvContent;
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `inventario_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('Éxito', 'Archivo CSV exportado correctamente', 'success');
+        }
+
+        // ===== IMPORTAR DATOS =====
+        function previewInventoryFile(input) {
+            // Implementar vista previa de archivo de inventario
+        }
+
+        function previewCodesFile(input) {
+            // Implementar vista previa de archivo de códigos
+        }
+
+        // ===== NOTIFICACIONES =====
+        function showNotification(title, message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const icon = document.getElementById('notificationIcon');
+            const notificationTitle = document.getElementById('notificationTitle');
+            const notificationMessage = document.getElementById('notificationMessage');
+            
+            let iconClass = '';
+            switch(type) {
+                case 'success':
+                    iconClass = 'fas fa-check-circle text-green-500';
+                    break;
+                case 'error':
+                    iconClass = 'fas fa-exclamation-circle text-red-500';
+                    break;
+                case 'warning':
+                    iconClass = 'fas fa-exclamation-triangle text-yellow-500';
+                    break;
+                default:
+                    iconClass = 'fas fa-info-circle text-blue-500';
+            }
+            
+            icon.className = iconClass;
+            notificationTitle.textContent = title;
+            notificationMessage.textContent = message;
+            
+            notification.classList.remove('hidden');
+            
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 5000);
+        }
+        
+        document.getElementById('closeNotification').addEventListener('click', function() {
+            document.getElementById('notification').classList.add('hidden');
+        });
+
+        // Inicializar base de datos de ejemplo si no existe
+        if (baseDatosArticulos.length === 0) {
+            baseDatosArticulos = [
+                {
+                    codigo: 'PROD-001',
+                    descripcion: 'Laptop HP EliteBook',
+                    proveedor: 'Tecnologia S.A.',
+                    inventarioReporteria: 50,
+                    factorConversion: 1
+                },
+                {
+                    codigo: 'PROD-002',
+                    descripcion: 'Mouse Inalámbrico',
+                    proveedor: 'Perifericos Ltda.',
+                    inventarioReporteria: 100,
+                    factorConversion: 1
+                },
+                {
+                    codigo: 'PROD-003',
+                    descripcion: 'Teclado Mecánico',
+                    proveedor: 'Perifericos Ltda.',
+                    inventarioReporteria: 75,
+                    factorConversion: 1
+                }
+            ];
+            localStorage.setItem('baseDatosArticulos', JSON.stringify(baseDatosArticulos));
+        }
+    </script>
+</body>
+</html>
+
