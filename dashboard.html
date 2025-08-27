@@ -825,12 +825,12 @@
                     // Actualizar título
                     const sectionTitles = {
                         'dashboard': 'Dashboard',
-                        'agregar': 'Agregar Artículo',
-                        'escanear': 'Escanear Códigos',
-                        'inventario': 'Ver Inventario',
+                        'agregar': 'Agregar Articulo',
+                        'escanear': 'Escanear Codigos',
+                        'inventario': 'Inventario',
                         'exportar': 'Exportar CSV',
                         'importar-inventario': 'Importar Inventario',
-                        'importar-codigos': 'Importar Códigos',
+                        'importar-codigos': 'Importar Base de Datos',
                         'usuarios': 'Gestión de Usuarios'
                     };
                     document.getElementById('currentSectionTitle').textContent = sectionTitles[this.getAttribute('data-section')];
@@ -1124,6 +1124,167 @@
         document.getElementById('closeNotification').addEventListener('click', function() {
             document.getElementById('notification').classList.add('hidden');
         });
+
+               // ===== GESTIÓN DE USUARIOS =====
+        function initUsers() {
+            const form = document.getElementById('userForm');
+            const formTitle = document.getElementById('userFormTitle');
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('userUsername').value;
+                const email = document.getElementById('userEmail').value;
+                const password = document.getElementById('userPassword').value;
+                const confirmPassword = document.getElementById('userConfirmPassword').value;
+                const role = document.getElementById('userRole').value;
+                const userId = document.getElementById('userId').value;
+                
+                // Validaciones
+                if (password !== confirmPassword) {
+                    showNotification('Error', 'Las contraseñas no coinciden', 'error');
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    showNotification('Error', 'La contraseña debe tener al menos 6 caracteres', 'error');
+                    return;
+                }
+                
+                let users = JSON.parse(localStorage.getItem('users') || '[]');
+                
+                if (userId) {
+                    // Editar usuario existente
+                    const userIndex = users.findIndex(u => u.username === userId);
+                    if (userIndex !== -1) {
+                        users[userIndex] = {
+                            ...users[userIndex],
+                            email: email,
+                            password: password,
+                            role: role
+                        };
+                    }
+                } else {
+                    // Crear nuevo usuario
+                    if (users.some(u => u.username === username)) {
+                        showNotification('Error', 'El nombre de usuario ya existe', 'error');
+                        return;
+                    }
+                    
+                    users.push({
+                        username: username,
+                        email: email,
+                        password: password,
+                        role: role
+                    });
+                }
+                
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                // Limpiar formulario
+                form.reset();
+                document.getElementById('userId').value = '';
+                formTitle.textContent = 'Crear Nuevo Usuario';
+                
+                // Recargar lista de usuarios
+                loadUsers();
+                
+                showNotification('Éxito', userId ? 'Usuario actualizado' : 'Usuario creado', 'success');
+            });
+            
+            // Cancelar edición
+            form.querySelector('button[type="reset"]').addEventListener('click', function() {
+                form.reset();
+                document.getElementById('userId').value = '';
+                formTitle.textContent = 'Crear Nuevo Usuario';
+            });
+        }
+        
+        function loadUsers() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (users.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-8 text-center text-gray-500">
+                            <i class="fas fa-users text-3xl mb-2"></i>
+                            <p>No hay usuarios registrados</p>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                tbody.innerHTML = users.map(user => `
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-4 font-medium">${user.username}</td>
+                        <td class="py-3 px-4">${user.email}</td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-1 rounded-full text-xs ${
+                                user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                            }">
+                                ${user.role === 'admin' ? 'Administrador' : 'Usuario'}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="flex space-x-2">
+                                <button class="text-blue-600 hover:text-blue-800 edit-user" data-username="${user.username}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                ${user.username !== currentUser.username ? `
+                                <button class="text-red-600 hover:text-red-800 delete-user" data-username="${user.username}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // Agregar event listeners
+                document.querySelectorAll('.edit-user').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const username = this.getAttribute('data-username');
+                        editUser(username);
+                    });
+                });
+                
+                document.querySelectorAll('.delete-user').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const username = this.getAttribute('data-username');
+                        deleteUser(username);
+                    });
+                });
+            }
+        }
+        
+        function editUser(username) {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.username === username);
+            
+            if (user) {
+                document.getElementById('userUsername').value = user.username;
+                document.getElementById('userEmail').value = user.email;
+                document.getElementById('userPassword').value = user.password;
+                document.getElementById('userConfirmPassword').value = user.password;
+                document.getElementById('userRole').value = user.role;
+                document.getElementById('userId').value = user.username;
+                
+                document.getElementById('userFormTitle').textContent = 'Editar Usuario';
+                document.getElementById('userUsername').disabled = true;
+            }
+        }
+        
+        function deleteUser(username) {
+            if (confirm(`¿Estás seguro de que quieres eliminar al usuario ${username}?`)) {
+                let users = JSON.parse(localStorage.getItem('users') || '[]');
+                users = users.filter(u => u.username !== username);
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                loadUsers();
+                showNotification('Eliminado', `Usuario ${username} eliminado`, 'success');
+            }
+        }
+
 
         // Inicializar base de datos de ejemplo si no existe
         if (baseDatosArticulos.length === 0) {
