@@ -1,13 +1,14 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Control de Inventarios Diarios</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
-    <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sistema de Control de Inventarios Diarios</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+<style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --sidebar-width: 260px;
@@ -153,602 +154,490 @@
     </style>
 </head>
 <body class="flex">
-    <!-- Sidebar Navigation -->
-    <div class="sidebar fixed top-0 left-0 h-full text-white">
-        <div class="p-6">
-            <div class="flex items-center justify-between mb-8">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mr-3">
-                        <i class="fas fa-boxes text-xl"></i>
-                    </div>
-                    <h1 class="text-xl font-bold">Control de Inventarios</h1>
-                </div>
-                <button id="closeSidebar" class="lg:hidden text-white/70 hover:text-white">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            
-            <nav class="space-y-1">
-                <a href="#dashboard" class="nav-item active" data-section="dashboard">
-                    <i class="fas fa-chart-pie"></i>
+<!-- Sidebar Navigation -->
+<div class="sidebar fixed top-0 left-0 h-full text-white">
+<div class="p-6">
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center">
+<div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mr-3">
+<i class="fas fa-boxes text-xl"></i>
+</div>
+<h1 class="text-xl font-bold">Control de Inventarios</h1>
+</div>
+<button class="lg:hidden text-white/70 hover:text-white" id="closeSidebar">
+<i class="fas fa-times text-xl"></i>
+</button>
+</div>
+<nav class="space-y-1">
+<a class="nav-item active" data-section="dashboard" href="#dashboard">
+<i class="fas fa-chart-pie"></i>
                     Dashboard
                 </a>
-                <a href="#agregar" class="nav-item" data-section="agregar">
-                    <i class="fas fa-plus-circle"></i>
+<a class="nav-item" data-section="agregar" href="#agregar">
+<i class="fas fa-plus-circle"></i>
                     Agregar Artículo
                 </a>
-                <a href="#escanear" class="nav-item" data-section="escanear">
-                    <i class="fas fa-barcode"></i>
+<a class="nav-item" data-section="escanear" href="#escanear">
+<i class="fas fa-barcode"></i>
                     Escanear Códigos
                 </a>
-                <a href="#inventario" class="nav-item" data-section="inventario">
-                    <i class="fas fa-clipboard-list"></i>
+<a class="nav-item" data-section="inventario" href="#inventario">
+<i class="fas fa-clipboard-list"></i>
                     Ver Inventario
                 </a>
-                <a href="#exportar" class="nav-item" data-section="exportar">
-                    <i class="fas fa-file-export"></i>
+<a class="nav-item" data-section="exportar" href="#exportar">
+<i class="fas fa-file-export"></i>
                     Exportar CSV
                 </a>
-                <a href="#importar-inventario" class="nav-item" data-section="importar-inventario">
-                    <i class="fas fa-file-import"></i>
+<a class="nav-item" data-section="importar-inventario" href="#importar-inventario">
+<i class="fas fa-file-import"></i>
                     Importar Inventario
                 </a>
-                <a href="#importar-codigos" class="nav-item" data-section="importar-codigos">
-                    <i class="fas fa-database"></i>
+<a class="nav-item" data-section="importar-codigos" href="#importar-codigos">
+<i class="fas fa-database"></i>
                     Importar Códigos
                 </a>
-                <a href="#usuarios" class="nav-item" data-section="usuarios">
-                    <i class="fas fa-users-cog"></i>
+<a class="nav-item" data-section="usuarios" href="#usuarios">
+<i class="fas fa-users-cog"></i>
                     Gestión de Usuarios
                 </a>
-            </nav>
-            
-            <div class="absolute bottom-6 left-6 right-6">
-                <div class="border-t border-white/20 pt-4">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                                <i class="fas fa-user text-sm"></i>
-                            </div>
-                            <span id="currentUserName" class="text-sm">Usuario</span>
-                        </div>
-                        <button id="logoutBtn" class="text-white/70 hover:text-white">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Mobile Overlay -->
-    <div id="mobileOverlay" class="mobile-overlay"></div>
-
-    <!-- Main Content -->
-    <div class="main-content flex-1 min-h-screen">
-        <!-- Header -->
-        <header class="bg-white shadow-sm border-b border-gray-200 p-4 flex items-center justify-between">
-            <button id="menuToggle" class="lg:hidden text-gray-600 hover:text-gray-800">
-                <i class="fas fa-bars text-xl"></i>
-            </button>
-            
-            <h2 class="text-xl font-semibold text-gray-800" id="currentSectionTitle">Dashboard</h2>
-            
-            <div class="flex items-center space-x-4">
-                <div class="relative">
-                    <button class="text-gray-600 hover:text-gray-800">
-                        <i class="fas fa-bell"></i>
-                    </button>
-                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Content Sections -->
-        <main class="p-6 space-y-6">
-            <!-- Dashboard Section -->
-            <section id="dashboard-section" class="section-content">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                    <div class="card p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-600">Total Artículos</p>
-                                <h3 class="text-2xl font-bold text-gray-800" id="totalArticulos">0</h3>
-                            </div>
-                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-box text-blue-600"></i>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-600">Unidades Totales</p>
-                                <h3 class="text-2xl font-bold text-gray-800" id="totalUnidadesDashboard">0</h3>
-                            </div>
-                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-cubes text-green-600"></i>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-600">Proveedores</p>
-                                <h3 class="text-2xl font-bold text-gray-800" id="totalProveedores">0</h3>
-                            </div>
-                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-truck text-purple-600"></i>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-600">Última Actualización</p>
-                                <h3 class="text-xl font-bold text-gray-800" id="ultimaActualizacion">-</h3>
-                            </div>
-                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-sync text-orange-600"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-4">Artículos Recientes</h3>
-                        <div class="space-y-3" id="recentItems">
-                            <div class="text-center py-8 text-gray-500">
-                                <i class="fas fa-inbox text-3xl mb-2"></i>
-                                <p>No hay artículos recientes</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-4">Distribución por Proveedor</h3>
-                        <div id="proveedorChart" class="h-64 flex items-center justify-center">
-                            <div class="text-center text-gray-500">
-                                <i class="fas fa-chart-pie text-3xl mb-2"></i>
-                                <p>No hay datos disponibles</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Agregar Artículo Section -->
-            <section id="agregar-section" class="section-content hidden">
-                <div class="card p-6">
-                    <h3 class="text-lg font-semibold mb-6">Agregar Nuevo Artículo</h3>
-                    
-                    <form id="articuloForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Código del Artículo *</label>
-                            <input type="text" id="codigoArticulo" 
-                                   class="input-field w-full px-4 py-3 rounded-lg" 
-                                   placeholder="Ingrese el código"
-                                   required
-                                   onchange="cargarDatosArticulo(this.value)">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Proveedor</label>
-                            <input type="text" id="proveedor" 
-                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" 
-                                   placeholder="Se cargará automáticamente"
-                                   readonly>
-                        </div>
-                        
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Descripción del Artículo</label>
-                            <input type="text" id="descripcion" 
-                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" 
-                                   placeholder="Se cargará automáticamente"
-                                   readonly>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Inventario en Reportería</label>
-                            <input type="number" id="inventarioReporteria" 
-                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" 
-                                   placeholder="0"
-                                   readonly>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Factor de Conversión</label>
-                            <input type="number" id="factorConversion" 
-                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" 
-                                   placeholder="1.0"
-                                   step="0.01"
-                                   readonly>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Cajas / Fardos</label>
-                            <input type="number" id="cajasFardos" 
-                                   class="input-field w-full px-4 py-3 rounded-lg" 
-                                   placeholder="0"
-                                   min="0"
-                                   step="1"
-                                   oninput="calcularTotalUnidades()">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Unidades</label>
-                            <input type="number" id="unidades" 
-                                   class="input-field w-full px-4 py-3 rounded-lg" 
-                                   placeholder="0"
-                                   min="0"
-                                   step="1"
-                                   oninput="calcularTotalUnidades()">
-                        </div>
-                        
-                        <div class="md:col-span-2">
-                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-semibold text-blue-800">Total Unidades:</span>
-                                    <span id="totalUnidadesCalculo" class="text-xl font-bold text-blue-800">0</span>
-                                </div>
-                                <p class="text-sm text-blue-600 mt-1">(Cajas × Factor) + Unidades</p>
-                            </div>
-                        </div>
-                        
-                        <div class="md:col-span-2 flex justify-end space-x-4 pt-4">
-                            <button type="reset" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" onclick="limpiarFormulario()">
+</nav>
+<div class="absolute bottom-6 left-6 right-6">
+<div class="border-t border-white/20 pt-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
+<i class="fas fa-user text-sm"></i>
+</div>
+<span class="text-sm" id="currentUserName">Usuario</span>
+</div>
+<button class="text-white/70 hover:text-white" id="logoutBtn">
+<i class="fas fa-sign-out-alt"></i>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Mobile Overlay -->
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<!-- Main Content -->
+<div class="main-content flex-1 min-h-screen">
+<!-- Header -->
+<header class="bg-white shadow-sm border-b border-gray-200 p-4 flex items-center justify-between">
+<button class="lg:hidden text-gray-600 hover:text-gray-800" id="menuToggle">
+<i class="fas fa-bars text-xl"></i>
+</button>
+<h2 class="text-xl font-semibold text-gray-800" id="currentSectionTitle">Dashboard</h2>
+<div class="flex items-center space-x-4">
+<div class="relative">
+<button class="text-gray-600 hover:text-gray-800">
+<i class="fas fa-bell"></i>
+</button>
+<span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+</div>
+</div>
+</header>
+<!-- Content Sections -->
+<main class="p-6 space-y-6">
+<!-- Dashboard Section -->
+<section class="section-content" id="dashboard-section">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+<div class="card p-6">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm text-gray-600">Total Artículos</p>
+<h3 class="text-2xl font-bold text-gray-800" id="totalArticulos">0</h3>
+</div>
+<div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+<i class="fas fa-box text-blue-600"></i>
+</div>
+</div>
+</div>
+<div class="card p-6">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm text-gray-600">Unidades Totales</p>
+<h3 class="text-2xl font-bold text-gray-800" id="totalUnidadesDashboard">0</h3>
+</div>
+<div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+<i class="fas fa-cubes text-green-600"></i>
+</div>
+</div>
+</div>
+<div class="card p-6">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm text-gray-600">Proveedores</p>
+<h3 class="text-2xl font-bold text-gray-800" id="totalProveedores">0</h3>
+</div>
+<div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+<i class="fas fa-truck text-purple-600"></i>
+</div>
+</div>
+</div>
+<div class="card p-6">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm text-gray-600">Última Actualización</p>
+<h3 class="text-xl font-bold text-gray-800" id="ultimaActualizacion">-</h3>
+</div>
+<div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+<i class="fas fa-sync text-orange-600"></i>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="card p-6">
+<h3 class="text-lg font-semibold mb-4">Artículos Recientes</h3>
+<div class="space-y-3" id="recentItems">
+<div class="text-center py-8 text-gray-500">
+<i class="fas fa-inbox text-3xl mb-2"></i>
+<p>No hay artículos recientes</p>
+</div>
+</div>
+</div>
+<div class="card p-6">
+<h3 class="text-lg font-semibold mb-4">Distribución por Proveedor</h3>
+<div class="h-64 flex items-center justify-center" id="proveedorChart">
+<div class="text-center text-gray-500">
+<i class="fas fa-chart-pie text-3xl mb-2"></i>
+<p>No hay datos disponibles</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Agregar Artículo Section -->
+<section class="section-content hidden" id="agregar-section">
+<div class="card p-6">
+<h3 class="text-lg font-semibold mb-6">Agregar Nuevo Artículo</h3>
+<form class="grid grid-cols-1 md:grid-cols-2 gap-6" id="articuloForm">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Código del Artículo *</label>
+<input class="input-field w-full px-4 py-3 rounded-lg" id="codigoArticulo" onchange="cargarDatosArticulo(this.value)" placeholder="Ingrese el código" required="" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Proveedor</label>
+<input class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" id="proveedor" placeholder="Se cargará automáticamente" readonly="" type="text"/>
+</div>
+<div class="md:col-span-2">
+<label class="block text-sm font-medium text-gray-700 mb-2">Descripción del Artículo</label>
+<input class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" id="descripcion" placeholder="Se cargará automáticamente" readonly="" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Inventario en Reportería</label>
+<input class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" id="inventarioReporteria" placeholder="0" readonly="" type="number"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Factor de Conversión</label>
+<input class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" id="factorConversion" placeholder="1.0" readonly="" step="0.01" type="number"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Cajas / Fardos</label>
+<input class="input-field w-full px-4 py-3 rounded-lg" id="cajasFardos" min="0" oninput="calcularTotalUnidades()" placeholder="0" step="1" type="number"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Unidades</label>
+<input class="input-field w-full px-4 py-3 rounded-lg" id="unidades" min="0" oninput="calcularTotalUnidades()" placeholder="0" step="1" type="number"/>
+</div>
+<div class="md:col-span-2">
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+<div class="flex items-center justify-between">
+<span class="font-semibold text-blue-800">Total Unidades:</span>
+<span class="text-xl font-bold text-blue-800" id="totalUnidadesCalculo">0</span>
+</div>
+<p class="text-sm text-blue-600 mt-1">(Cajas × Factor) + Unidades</p>
+</div>
+</div>
+<div class="md:col-span-2 flex justify-end space-x-4 pt-4">
+<button class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" onclick="limpiarFormulario()" type="reset">
                                 Limpiar
                             </button>
-                            <button type="submit" class="btn-primary px-6 py-3 rounded-lg text-white">
-                                <i class="fas fa-plus-circle mr-2"></i>
+<button class="btn-primary px-6 py-3 rounded-lg text-white" type="submit">
+<i class="fas fa-plus-circle mr-2"></i>
                                 Agregar Artículo
                             </button>
-                        </div>
-                    </form>
-                </div>
-            </section>
-
-            <!-- Escanear Códigos Section -->
-            <section id="escanear-section" class="section-content hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-4">Escáner de Códigos de Barras</h3>
-                        
-                        <div class="scanner-container mb-4 rounded-lg overflow-hidden">
-                            <div id="scanner" class="w-full h-64 bg-gray-200 flex items-center justify-center">
-                                <div class="text-center text-gray-600">
-                                    <i class="fas fa-camera text-3xl mb-2"></i>
-                                    <p>Iniciando cámara...</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex space-x-4 mb-4">
-                            <button id="startScanner" class="btn-primary flex-1 py-3 rounded-lg text-white">
-                                <i class="fas fa-play mr-2"></i>
+</div>
+</form>
+</div>
+</section>
+<!-- Escanear Códigos Section -->
+<section class="section-content hidden" id="escanear-section">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="card p-6">
+<h3 class="text-lg font-semibold mb-4">Escáner de Códigos de Barras</h3>
+<div class="scanner-container mb-4 rounded-lg overflow-hidden">
+<div class="w-full h-64 bg-gray-200 flex items-center justify-center" id="scanner">
+<div class="text-center text-gray-600">
+<i class="fas fa-camera text-3xl mb-2"></i>
+<p>Iniciando cámara...</p>
+</div>
+</div>
+</div>
+<div class="flex space-x-4 mb-4">
+<button class="btn-primary flex-1 py-3 rounded-lg text-white" id="startScanner">
+<i class="fas fa-play mr-2"></i>
                                 Iniciar Escáner
                             </button>
-                            <button id="stopScanner" class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" disabled>
-                                <i class="fas fa-stop mr-2"></i>
+<button class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" disabled="" id="stopScanner">
+<i class="fas fa-stop mr-2"></i>
                                 Detener
                             </button>
-                        </div>
-                    </div>
-                    
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-4">Resultado del Escaneo</h3>
-                        
-                        <div id="scanResult" class="mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg min-h-32 flex items-center justify-center">
-                            <div class="text-center text-gray-500">
-                                <i class="fas fa-barcode text-3xl mb-2"></i>
-                                <p>Escanea un código de barras para ver los detalles</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Ver Inventario Section -->
-            <section id="inventario-section" class="section-content hidden">
-                <div class="card p-6">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-                        <h3 class="text-lg font-semibold">Inventario Actual</h3>
-                        
-                        <div class="flex space-x-4 mt-4 md:mt-0">
-                            <div class="relative">
-                                <input type="text" id="searchInventory" 
-                                       class="input-field pl-10 pr-4 py-2 rounded-lg" 
-                                       placeholder="Buscar artículo...">
-                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                            </div>
-                            <button id="refreshInventory" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                <i class="fas fa-sync"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead>
-                                <tr class="border-b border-gray-200">
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Código</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Inv. Reportería</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Factor</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Cajas/Fardos</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Unidades</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Total</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="inventoryTableBody">
-                                <tr>
-                                    <td colspan="8" class="py-8 text-center text-gray-500">
-                                        <i class="fas fa-inbox text-3xl mb-2"></i>
-                                        <p>No hay artículos en el inventario</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Exportar CSV Section -->
-            <section id="exportar-section" class="section-content hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-6">Exportar Inventario a CSV</h3>
-                        
-                        <div class="space-y-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Campos a Exportar</label>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="codigo" checked>
+</div>
+</div>
+<div class="card p-6">
+<h3 class="text-lg font-semibold mb-4">Resultado del Escaneo</h3>
+<div class="mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg min-h-32 flex items-center justify-center" id="scanResult">
+<div class="text-center text-gray-500">
+<i class="fas fa-barcode text-3xl mb-2"></i>
+<p>Escanea un código de barras para ver los detalles</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Ver Inventario Section -->
+<section class="section-content hidden" id="inventario-section">
+<div class="card p-6">
+<div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+<h3 class="text-lg font-semibold">Inventario Actual</h3>
+<div class="flex space-x-4 mt-4 md:mt-0">
+<div class="relative">
+<input class="input-field pl-10 pr-4 py-2 rounded-lg" id="searchInventory" placeholder="Buscar artículo..." type="text"/>
+<i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+</div>
+<button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" id="refreshInventory">
+<i class="fas fa-sync"></i>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full">
+<thead>
+<tr class="border-b border-gray-200">
+<th>Fecha</th><th>Código</th><th>Descripción</th><th>Inv. Reportería</th><th>Total</th><th>Diferencia</th><th>Validación</th></tr>
+</thead>
+<tbody id="inventoryTableBody">
+<tr>
+<td class="py-8 text-center text-gray-500" colspan="8">
+<i class="fas fa-inbox text-3xl mb-2"></i>
+<p>No hay artículos en el inventario</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Exportar CSV Section -->
+<section class="section-content hidden" id="exportar-section">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="card p-6">
+<h3 class="text-lg font-semibold mb-6">Exportar Inventario a CSV</h3>
+<div class="space-y-6">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Campos a Exportar</label>
+<div class="grid grid-cols-2 gap-3">
+<label class="flex items-center">
+<input checked="" class="mr-2" name="exportFields" type="checkbox" value="codigo"/>
                                         Código
                                     </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="proveedor" checked>
+<label class="flex items-center">
+<input checked="" class="mr-2" name="exportFields" type="checkbox" value="proveedor"/>
                                         Proveedor
                                     </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="descripcion" checked>
+<label class="flex items-center">
+<input checked="" class="mr-2" name="exportFields" type="checkbox" value="descripcion"/>
                                         Descripción
                                     </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="inventarioReporteria" checked>
+<label class="flex items-center">
+<input checked="" class="mr-2" name="exportFields" type="checkbox" value="inventarioReporteria"/>
                                         Inv. Reportería
                                     </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="factorConversion" checked>
+<label class="flex items-center">
+<input checked="" class="mr-2" name="exportFields" type="checkbox" value="factorConversion"/>
                                         Factor Conversión
                                     </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="cajasFardos" checked>
+<label class="flex items-center">
+<input checked="" class="mr-2" name="exportFields" type="checkbox" value="cajasFardos"/>
                                         Cajas/Fardos
                                     </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="unidades" checked>
+<label class="flex items-center">
+<input checked="" class="mr-2" name="exportFields" type="checkbox" value="unidades"/>
                                         Unidades
                                     </label>
-                                </div>
-                            </div>
-                            
-                            <button id="exportCSV" class="btn-primary w-full py-3 rounded-lg text-white">
-                                <i class="fas fa-file-export mr-2"></i>
+</div>
+</div>
+<button class="btn-primary w-full py-3 rounded-lg text-white" id="exportCSV">
+<i class="fas fa-file-export mr-2"></i>
                                 Exportar a CSV
                             </button>
-                        </div>
-                    </div>
-                    
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-4">Información de Exportación</h3>
-                        
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <div class="flex">
-                                <i class="fas fa-info-circle text-blue-500 mr-3 mt-1"></i>
-                                <div>
-                                    <p class="text-sm text-blue-800">
-                                        <strong>Formato CSV:</strong> El archivo se generará sin apóstrofes y con codificación UTF-8 para 
+</div>
+</div>
+<div class="card p-6">
+<h3 class="text-lg font-semibold mb-4">Información de Exportación</h3>
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+<div class="flex">
+<i class="fas fa-info-circle text-blue-500 mr-3 mt-1"></i>
+<div>
+<p class="text-sm text-blue-800">
+<strong>Formato CSV:</strong> El archivo se generará sin apóstrofes y con codificación UTF-8 para 
                                         garantizar la compatibilidad con Excel y otros programas de hojas de cálculo.
                                     </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Importar Inventario Section -->
-            <section id="importar-inventario-section" class="section-content hidden">
-                <div class="card p-6">
-                    <h3 class="text-lg font-semibold mb-6">Importar Inventario</h3>
-                    
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar archivo CSV</label>
-                            <input type="file" id="importInventoryFile" 
-                                   class="input-field w-full px-4 py-3 rounded-lg" 
-                                   accept=".csv"
-                                   onchange="previewInventoryFile(this)">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <p class="text-sm text-gray-600">Fecha,Proveedor,Codigo,Descripcion,Inventario Reporteria,Factor</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="inventoryPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
-                        <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead id="inventoryPreviewHead"></thead>
-                                <tbody id="inventoryPreviewBody"></tbody>
-                            </table>
-                        </div>
-                        
-                        <button id="confirmImportInventory" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white">
-                            <i class="fas fa-upload mr-2"></i>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Importar Inventario Section -->
+<section class="section-content hidden" id="importar-inventario-section">
+<div class="card p-6">
+<h3 class="text-lg font-semibold mb-6">Importar Inventario</h3>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar archivo CSV</label>
+<input accept=".csv" class="input-field w-full px-4 py-3 rounded-lg" id="importInventoryFile" onchange="previewInventoryFile(this)" type="file"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
+<div class="bg-gray-50 p-4 rounded-lg">
+<p class="text-sm text-gray-600">Fecha,Proveedor,Codigo,Descripcion,Inventario Reporteria,Factor</p>
+</div>
+</div>
+</div>
+<div class="mt-6 bg-gray-50 p-4 rounded-lg hidden" id="inventoryPreview">
+<h4 class="font-semibold mb-3">Vista previa del archivo</h4>
+<div class="overflow-x-auto">
+<table class="w-full text-sm">
+<thead id="inventoryPreviewHead"></thead>
+<tbody id="inventoryPreviewBody"></tbody>
+</table>
+</div>
+<button class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" id="confirmImportInventory">
+<i class="fas fa-upload mr-2"></i>
                             Confirmar Importación
                         </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Importar Códigos Section -->
-            <section id="importar-codigos-section" class="section-content hidden">
-                <div class="card p-6">
-                    <h3 class="text-lg font-semibold mb-6">Importar Base de Códigos</h3>
-                    
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar archivo CSV</label>
-                            <input type="file" id="importCodesFile" 
-                                   class="input-field w-full px-4 py-3 rounded-lg" 
-                                   accept=".csv"
-                                   onchange="previewCodesFile(this)">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <p class="text-sm text-gray-600">Codigo,Descripcion,Proveedor,Factor,Codigo de Barra</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="codesPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
-                        <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead id="codesPreviewHead"></thead>
-                                <tbody id="codesPreviewBody"></tbody>
-                            </table>
-                        </div>
-                        
-                        <button id="confirmImportCodes" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white">
-                            <i class="fas fa-upload mr-2"></i>
+</div>
+</div>
+</section>
+<!-- Importar Códigos Section -->
+<section class="section-content hidden" id="importar-codigos-section">
+<div class="card p-6">
+<h3 class="text-lg font-semibold mb-6">Importar Base de Códigos</h3>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar archivo CSV</label>
+<input accept=".csv" class="input-field w-full px-4 py-3 rounded-lg" id="importCodesFile" onchange="previewCodesFile(this)" type="file"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
+<div class="bg-gray-50 p-4 rounded-lg">
+<p class="text-sm text-gray-600">Codigo,Descripcion,Proveedor,Factor,Codigo de Barra</p>
+</div>
+</div>
+</div>
+<div class="mt-6 bg-gray-50 p-4 rounded-lg hidden" id="codesPreview">
+<h4 class="font-semibold mb-3">Vista previa del archivo</h4>
+<div class="overflow-x-auto">
+<table class="w-full text-sm">
+<thead id="codesPreviewHead"></thead>
+<tbody id="codesPreviewBody"></tbody>
+</table>
+</div>
+<button class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" id="confirmImportCodes">
+<i class="fas fa-upload mr-2"></i>
                             Confirmar Importación
                         </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Gestión de Usuarios Section -->
-            <section id="usuarios-section" class="section-content hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-6">Gestión de Usuarios</h3>
-                        
-                        <div class="overflow-x-auto mb-6">
-                            <table class="w-full">
-                                <thead>
-                                    <tr class="border-b border-gray-200">
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Usuario</th>
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Email</th>
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Rol</th>
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="usersTableBody">
-                                    <tr>
-                                        <td colspan="4" class="py-8 text-center text-gray-500">
-                                            <i class="fas fa-users text-3xl mb-2"></i>
-                                            <p>Cargando usuarios...</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-6" id="userFormTitle">Crear Nuevo Usuario</h3>
-                        
-                        <form id="userForm" class="space-y-4">
-                            <input type="hidden" id="userId">
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de Usuario *</label>
-                                <input type="text" id="userUsername" 
-                                       class="input-field w-full px-4 py-3 rounded-lg" 
-                                       placeholder="nombre.usuario"
-                                       required>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                <input type="email" id="userEmail" 
-                                       class="input-field w-full px-4 py-3 rounded-lg" 
-                                       placeholder="usuario@empresa.com"
-                                       required>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
-                                <input type="password" id="userPassword" 
-                                       class="input-field w-full px-4 py-3 rounded-lg" 
-                                       placeholder="••••••••"
-                                       required>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña *</label>
-                                <input type="password" id="userConfirmPassword" 
-                                       class="input-field w-full px-4 py-3 rounded-lg" 
-                                       placeholder="••••••••"
-                                       required>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
-                                <select id="userRole" class="input-field w-full px-4 py-3 rounded-lg">
-                                    <option value="user">Usuario</option>
-                                    <option value="admin">Administrador</option>
-                                </select>
-                            </div>
-                            
-                            <div class="flex space-x-4 pt-4">
-                                <button type="reset" class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+</div>
+</div>
+</section>
+<!-- Gestión de Usuarios Section -->
+<section class="section-content hidden" id="usuarios-section">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="card p-6">
+<h3 class="text-lg font-semibold mb-6">Gestión de Usuarios</h3>
+<div class="overflow-x-auto mb-6">
+<table class="w-full">
+<thead>
+<tr class="border-b border-gray-200">
+<th class="pb-3 text-left text-sm font-medium text-gray-600">Usuario</th>
+<th class="pb-3 text-left text-sm font-medium text-gray-600">Email</th>
+<th class="pb-3 text-left text-sm font-medium text-gray-600">Rol</th>
+<th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
+</tr>
+</thead>
+<tbody id="usersTableBody">
+<tr>
+<td class="py-8 text-center text-gray-500" colspan="4">
+<i class="fas fa-users text-3xl mb-2"></i>
+<p>Cargando usuarios...<button type="button">Crear Usuario</button><button type="button">Modificar Usuario</button><button type="button">Eliminar Usuario</button><button type="button">Cancelar</button><button type="button">Guardar</button></p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="card p-6">
+<h3 class="text-lg font-semibold mb-6" id="userFormTitle">Crear Nuevo Usuario</h3>
+<form class="space-y-4" id="userForm">
+<input id="userId" type="hidden"/>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Nombre de Usuario *</label>
+<input class="input-field w-full px-4 py-3 rounded-lg" id="userUsername" placeholder="nombre.usuario" required="" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+<input class="input-field w-full px-4 py-3 rounded-lg" id="userEmail" placeholder="usuario@empresa.com" required="" type="email"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
+<input class="input-field w-full px-4 py-3 rounded-lg" id="userPassword" placeholder="••••••••" required="" type="password"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña *</label>
+<input class="input-field w-full px-4 py-3 rounded-lg" id="userConfirmPassword" placeholder="••••••••" required="" type="password"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
+<select class="input-field w-full px-4 py-3 rounded-lg" id="userRole">
+<option value="user">Usuario</option>
+<option value="admin">Administrador</option>
+</select>
+</div>
+<div class="flex space-x-4 pt-4">
+<button class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" type="reset">
                                     Cancelar
                                 </button>
-                                <button type="submit" class="btn-primary flex-1 py-3 rounded-lg text-white">
-                                    <i class="fas fa-save mr-2"></i>
+<button class="btn-primary flex-1 py-3 rounded-lg text-white" type="submit">
+<i class="fas fa-save mr-2"></i>
                                     Guardar Usuario
                                 </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- Notification Toast -->
-    <div id="notification" class="notification hidden">
-        <div class="bg-white rounded-lg shadow-lg p-4 max-w-sm">
-            <div class="flex items-start">
-                <div id="notificationIcon" class="mr-3 mt-0.5"></div>
-                <div class="flex-1">
-                    <h4 id="notificationTitle" class="font-semibold"></h4>
-                    <p id="notificationMessage" class="text-sm text-gray-600 mt-1"></p>
-                </div>
-                <button id="closeNotification" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
+</div>
+</form>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- Notification Toast -->
+<div class="notification hidden" id="notification">
+<div class="bg-white rounded-lg shadow-lg p-4 max-w-sm">
+<div class="flex items-start">
+<div class="mr-3 mt-0.5" id="notificationIcon"></div>
+<div class="flex-1">
+<h4 class="font-semibold" id="notificationTitle"></h4>
+<p class="text-sm text-gray-600 mt-1" id="notificationMessage"></p>
+</div>
+<button class="text-gray-400 hover:text-gray-600" id="closeNotification">
+<i class="fas fa-times"></i>
+</button>
+</div>
+</div>
+</div>
+<script>
         // ===== VARIABLES GLOBALES =====
         let currentUser = null;
         let scannerActive = false;
@@ -1314,6 +1203,70 @@
             localStorage.setItem('baseDatosArticulos', JSON.stringify(baseDatosArticulos));
         }
     </script>
+<section id="inventario-diario">
+<h2>Inventario Diario</h2>
+<form>
+<label for="codigo">Código:</label>
+<input id="codigo" name="codigo" type="text"/>
+<button onclick="escanearCodigo()" type="button">Escanear Código</button>
+<label for="descripcion">Descripción:</label>
+<input id="descripcion" name="descripcion" type="text"/>
+<label for="fecha">Fecha:</label>
+<input id="fecha" name="fecha" readonly="" type="date" value="2025-08-28"/>
+<label for="cantidad">Cantidad:</label>
+<input id="cantidad" name="cantidad" type="number"/>
+<button type="submit">Agregar</button>
+</form>
+</section>
+<script>
+function escanearCodigo() {
+    alert("Iniciando cámara para escanear código de barras o QR...");
+    // Aquí se integraría la funcionalidad de escaneo con la cámara
+}
+</script>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script>
+function escanearCodigo() {
+    const qrCodeScanner = new Html5Qrcode("reader");
+    qrCodeScanner.start(
+        { facingMode: "environment" },
+        {
+            fps: 10,
+            qrbox: 250
+        },
+        qrCodeMessage => {
+            document.getElementById("codigo").value = qrCodeMessage;
+            qrCodeScanner.stop();
+        },
+        errorMessage => {
+            console.warn(errorMessage);
+        }
+    ).catch(err => {
+        console.error("Error al iniciar escáner", err);
+    });
+}
+</script>
+<div id="reader" style="width:300px;height:300px;"></div>
+
+<script>
+function handleFileUpload(inputId, previewId) {
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    const file = input.files[0];
+    if (!file || !file.name.endsWith(".csv")) {
+        preview.innerText = "Formato inválido. Seleccione un archivo CSV.";
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const lines = e.target.result.split("
+");
+        preview.innerText = lines.slice(0, 5).join("
+"); // Mostrar primeras 5 líneas
+    };
+    reader.readAsText(file);
+}
+</script>
 </body>
 </html>
-
