@@ -66,6 +66,13 @@
             background: #000;
             border-radius: 12px;
             overflow: hidden;
+            position: relative; /* Added for scanner video */
+        }
+
+        .scanner-container video {
+            width: 100%;
+            height: auto;
+            display: block;
         }
         
         /* Responsive */
@@ -173,13 +180,9 @@
                     <i class="fas fa-chart-pie"></i>
                     Dashboard
                 </a>
-                <a href="#agregar" class="nav-item" data-section="agregar">
-                    <i class="fas fa-plus-circle"></i>
-                    Agregar Artículo
-                </a>
-                <a href="#escanear" class="nav-item" data-section="escanear">
-                    <i class="fas fa-barcode"></i>
-                    Escanear Códigos
+                <a href="#inventario-diario" class="nav-item" data-section="inventario-diario">
+                    <i class="fas fa-clipboard-check"></i>
+                    Inventario Diario
                 </a>
                 <a href="#inventario" class="nav-item" data-section="inventario">
                     <i class="fas fa-clipboard-list"></i>
@@ -321,19 +324,47 @@
                 </div>
             </section>
 
-            <!-- Agregar Artículo Section -->
-            <section id="agregar-section" class="section-content hidden">
+            <!-- Inventario Diario Section (Unified Agregar Artículo and Escanear Códigos) -->
+            <section id="inventario-diario-section" class="section-content hidden">
                 <div class="card p-6">
-                    <h3 class="text-lg font-semibold mb-6">Agregar Nuevo Artículo</h3>
+                    <h3 class="text-lg font-semibold mb-6">Registro de Inventario Diario</h3>
                     
                     <form id="articuloForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha *</label>
+                            <input type="date" id="fechaInventario" 
+                                   class="input-field w-full px-4 py-3 rounded-lg" 
+                                   required>
+                        </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Código del Artículo *</label>
                             <input type="text" id="codigoArticulo" 
                                    class="input-field w-full px-4 py-3 rounded-lg" 
-                                   placeholder="Ingrese el código"
+                                   placeholder="Ingrese el código o escanee"
                                    required
                                    onchange="cargarDatosArticulo(this.value)">
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <button type="button" id="startScannerBtn" class="btn-primary w-full py-3 rounded-lg text-white">
+                                <i class="fas fa-barcode mr-2"></i>
+                                Escanear Código (Barras/QR)
+                            </button>
+                        </div>
+
+                        <div id="scanner-area" class="md:col-span-2 hidden">
+                            <div class="scanner-container mb-4 rounded-lg overflow-hidden">
+                                <div id="scanner" class="w-full h-64 bg-gray-200 flex items-center justify-center">
+                                    <div class="text-center text-gray-600">
+                                        <i class="fas fa-camera text-3xl mb-2"></i>
+                                        <p>Iniciando cámara...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" id="stopScannerBtn" class="w-full py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                <i class="fas fa-stop mr-2"></i>
+                                Detener Escáner
+                            </button>
                         </div>
                         
                         <div>
@@ -344,7 +375,7 @@
                                    readonly>
                         </div>
                         
-                        <div class="md:col-span-2">
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Descripción del Artículo</label>
                             <input type="text" id="descripcion" 
                                    class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" 
@@ -412,46 +443,6 @@
                 </div>
             </section>
 
-            <!-- Escanear Códigos Section -->
-            <section id="escanear-section" class="section-content hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-4">Escáner de Códigos de Barras</h3>
-                        
-                        <div class="scanner-container mb-4 rounded-lg overflow-hidden">
-                            <div id="scanner" class="w-full h-64 bg-gray-200 flex items-center justify-center">
-                                <div class="text-center text-gray-600">
-                                    <i class="fas fa-camera text-3xl mb-2"></i>
-                                    <p>Iniciando cámara...</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex space-x-4 mb-4">
-                            <button id="startScanner" class="btn-primary flex-1 py-3 rounded-lg text-white">
-                                <i class="fas fa-play mr-2"></i>
-                                Iniciar Escáner
-                            </button>
-                            <button id="stopScanner" class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" disabled>
-                                <i class="fas fa-stop mr-2"></i>
-                                Detener
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-4">Resultado del Escaneo</h3>
-                        
-                        <div id="scanResult" class="mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg min-h-32 flex items-center justify-center">
-                            <div class="text-center text-gray-500">
-                                <i class="fas fa-barcode text-3xl mb-2"></i>
-                                <p>Escanea un código de barras para ver los detalles</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <!-- Ver Inventario Section -->
             <section id="inventario-section" class="section-content hidden">
                 <div class="card p-6">
@@ -475,6 +466,7 @@
                         <table class="w-full">
                             <thead>
                                 <tr class="border-b border-gray-200">
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Fecha</th>
                                     <th class="pb-3 text-left text-sm font-medium text-gray-600">Código</th>
                                     <th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
                                     <th class="pb-3 text-left text-sm font-medium text-gray-600">Inv. Reportería</th>
@@ -482,12 +474,14 @@
                                     <th class="pb-3 text-left text-sm font-medium text-gray-600">Cajas/Fardos</th>
                                     <th class="pb-3 text-left text-sm font-medium text-gray-600">Unidades</th>
                                     <th class="pb-3 text-left text-sm font-medium text-gray-600">Total</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Diferencia</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Validación</th>
                                     <th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="inventoryTableBody">
                                 <tr>
-                                    <td colspan="8" class="py-8 text-center text-gray-500">
+                                    <td colspan="11" class="py-8 text-center text-gray-500">
                                         <i class="fas fa-inbox text-3xl mb-2"></i>
                                         <p>No hay artículos en el inventario</p>
                                     </td>
@@ -508,6 +502,10 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Campos a Exportar</label>
                                 <div class="grid grid-cols-2 gap-3">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="fecha" checked>
+                                        Fecha
+                                    </label>
                                     <label class="flex items-center">
                                         <input type="checkbox" class="mr-2" name="exportFields" value="codigo" checked>
                                         Código
@@ -535,6 +533,18 @@
                                     <label class="flex items-center">
                                         <input type="checkbox" class="mr-2" name="exportFields" value="unidades" checked>
                                         Unidades
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="total" checked>
+                                        Total
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="diferencia" checked>
+                                        Diferencia
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="validacion" checked>
+                                        Validación
                                     </label>
                                 </div>
                             </div>
@@ -595,7 +605,7 @@
                             </table>
                         </div>
                         
-                        <button id="confirmImportInventory" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white">
+                        <button id="confirmImportInventory" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" disabled>
                             <i class="fas fa-upload mr-2"></i>
                             Confirmar Importación
                         </button>
@@ -634,7 +644,7 @@
                             </table>
                         </div>
                         
-                        <button id="confirmImportCodes" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white">
+                        <button id="confirmImportCodes" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" disabled>
                             <i class="fas fa-upload mr-2"></i>
                             Confirmar Importación
                         </button>
@@ -773,6 +783,7 @@
             // Cargar datos iniciales
             loadDashboardData();
             loadInventory();
+            initUsers(); // Initialize user management
             
             // Configurar formulario de artículo
             document.getElementById('articuloForm').addEventListener('submit', function(e) {
@@ -782,6 +793,21 @@
             
             // Configurar exportación CSV
             document.getElementById('exportCSV').addEventListener('click', exportToCSV);
+
+            // Set current date for inventory
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months start at 0!
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
+
+            // Scanner buttons
+            document.getElementById('startScannerBtn').addEventListener('click', startScanner);
+            document.getElementById('stopScannerBtn').addEventListener('click', stopScanner);
+
+            // Import buttons
+            document.getElementById('confirmImportInventory').addEventListener('click', importInventory);
+            document.getElementById('confirmImportCodes').addEventListener('click', importCodes);
         });
 
         // ===== NAVEGACIÓN =====
@@ -825,8 +851,7 @@
                     // Actualizar título
                     const sectionTitles = {
                         'dashboard': 'Dashboard',
-                        'agregar': 'Agregar Articulo',
-                        'escanear': 'Escanear Codigos',
+                        'inventario-diario': 'Inventario Diario',
                         'inventario': 'Inventario',
                         'exportar': 'Exportar CSV',
                         'importar-inventario': 'Importar Inventario',
@@ -839,6 +864,13 @@
                     if (window.innerWidth < 768) {
                         document.querySelector('.sidebar').classList.remove('open');
                         document.getElementById('mobileOverlay').classList.remove('open');
+                    }
+
+                    // Specific actions for sections
+                    if (this.getAttribute('data-section') === 'inventario') {
+                        loadInventory(); // Reload inventory when viewing
+                    } else if (this.getAttribute('data-section') === 'usuarios') {
+                        loadUsers(); // Reload users when viewing
                     }
                 });
             });
@@ -873,7 +905,7 @@
             }
         }
 
-        // ===== AGREGAR ARTÍCULO =====
+        // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
         function cargarDatosArticulo(codigo) {
             const articulo = baseDatosArticulos.find(item => item.codigo === codigo);
             
@@ -890,12 +922,21 @@
                 if (existencia) {
                     document.getElementById('cajasFardos').value = existencia.cajasFardos || 0;
                     document.getElementById('unidades').value = existencia.unidades || 0;
+                    document.getElementById('fechaInventario').value = existencia.fecha || document.getElementById('fechaInventario').value;
                 }
                 
                 calcularTotalUnidades();
                 showNotification('Éxito', 'Datos del artículo cargados correctamente', 'success');
             } else {
-                showNotification('Advertencia', 'Artículo no encontrado en la base de datos', 'warning');
+                showNotification('Advertencia', 'Artículo no encontrado en la base de datos. Por favor, ingrese los datos manualmente o importe la base de códigos.', 'warning');
+                // Clear fields if not found, except code
+                document.getElementById('proveedor').value = '';
+                document.getElementById('descripcion').value = '';
+                document.getElementById('inventarioReporteria').value = 0;
+                document.getElementById('factorConversion').value = 1;
+                document.getElementById('cajasFardos').value = 0;
+                document.getElementById('unidades').value = 0;
+                calcularTotalUnidades();
             }
         }
 
@@ -917,29 +958,50 @@
             document.getElementById('cajasFardos').value = '';
             document.getElementById('unidades').value = '';
             document.getElementById('totalUnidadesCalculo').textContent = '0';
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
         }
 
         function agregarArticulo() {
+            const fecha = document.getElementById('fechaInventario').value;
             const codigo = document.getElementById('codigoArticulo').value;
             const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
             const unidades = parseFloat(document.getElementById('unidades').value) || 0;
+            const proveedor = document.getElementById('proveedor').value;
+            const descripcion = document.getElementById('descripcion').value;
+            const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
+            const factorConversion = parseFloat(document.getElementById('factorConversion').value) || 1;
             
-            if (!codigo) {
-                showNotification('Error', 'El código del artículo es requerido', 'error');
+            if (!codigo || !fecha) {
+                showNotification('Error', 'El código del artículo y la fecha son requeridos', 'error');
                 return;
             }
             
-            const articuloBase = baseDatosArticulos.find(item => item.codigo === codigo);
+            // Check if article exists in baseDatosArticulos, if not, allow adding with provided data
+            let articuloBase = baseDatosArticulos.find(item => item.codigo === codigo);
             if (!articuloBase) {
-                showNotification('Error', 'El artículo no existe en la base de datos', 'error');
-                return;
+                // If not found, create a temporary base article from current form data
+                articuloBase = {
+                    codigo: codigo,
+                    descripcion: descripcion,
+                    proveedor: proveedor,
+                    inventarioReporteria: inventarioReporteria,
+                    factorConversion: factorConversion
+                };
+                // Optionally, add this new article to baseDatosArticulos for future use
+                // baseDatosArticulos.push(articuloBase);
+                // localStorage.setItem('baseDatosArticulos', JSON.stringify(baseDatosArticulos));
             }
             
             const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
             const index = inventario.findIndex(item => item.codigo === codigo);
             
             const articulo = {
-                ...articuloBase,
+                fecha: fecha,
+                ...articuloBase, // Use data from baseDatosArticulos or form
                 cajasFardos: cajas,
                 unidades: unidades,
                 timestamp: new Date().toISOString()
@@ -955,6 +1017,57 @@
             limpiarFormulario();
             showNotification('Éxito', 'Artículo agregado/actualizado correctamente', 'success');
             loadDashboardData();
+            loadInventory(); // Refresh inventory table
+        }
+
+        // Barcode Scanner Functions
+        function startScanner() {
+            if (scannerActive) return;
+
+            const scannerArea = document.getElementById('scanner-area');
+            scannerArea.classList.remove('hidden');
+            document.getElementById('startScannerBtn').classList.add('hidden');
+
+            Quagga.init({
+                inputStream : {
+                    name : "Live",
+                    type : "LiveStream",
+                    target: document.querySelector('#scanner'),
+                    constraints: {
+                        facingMode: "environment" // or "user" for front camera
+                    }
+                },
+                decoder : {
+                    readers : ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader", "code_39_vin_reader", "codabar_reader", "upc_reader", "upc_e_reader", "i2of5_reader", "2of5_reader", "code_93_reader", "code_32_reader", "databar_reader", "databar_expanded_reader", "qr_code_reader"]
+                }
+            }, function(err) {
+                if (err) {
+                    console.log(err);
+                    showNotification('Error', 'No se pudo iniciar el escáner: ' + err.message, 'error');
+                    scannerArea.classList.add('hidden');
+                    document.getElementById('startScannerBtn').classList.remove('hidden');
+                    return
+                }
+                console.log("Initialization finished. Ready to start");
+                Quagga.start();
+                scannerActive = true;
+            });
+
+            Quagga.onDetected(function(result) {
+                const code = result.codeResult.code;
+                document.getElementById('codigoArticulo').value = code;
+                cargarDatosArticulo(code);
+                stopScanner();
+                showNotification('Escaneo Exitoso', `Código detectado: ${code}`, 'success');
+            });
+        }
+
+        function stopScanner() {
+            if (!scannerActive) return;
+            Quagga.stop();
+            scannerActive = false;
+            document.getElementById('scanner-area').classList.add('hidden');
+            document.getElementById('startScannerBtn').classList.remove('hidden');
         }
 
         // ===== VER INVENTARIO =====
@@ -965,7 +1078,7 @@
             if (inventario.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="py-8 text-center text-gray-500">
+                        <td colspan="11" class="py-8 text-center text-gray-500">
                             <i class="fas fa-inbox text-3xl mb-2"></i>
                             <p>No hay artículos en el inventario</p>
                         </td>
@@ -974,9 +1087,20 @@
             } else {
                 tbody.innerHTML = inventario.map(item => {
                     const total = (item.cajasFardos * item.factorConversion) + item.unidades;
+                    const diferencia = item.inventarioReporteria - total;
+                    let validacion = '';
+
+                    if (diferencia === 0) {
+                        validacion = 'OK';
+                    } else if (diferencia < 0) {
+                        validacion = 'VAL+'; // Total > Inv. Reportería
+                    } else {
+                        validacion = 'VAL-'; // Inv. Reportería > Total
+                    }
                     
                     return `
                         <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="py-4 px-4 text-sm">${item.fecha || 'N/A'}</td>
                             <td class="py-4 px-4 font-mono text-sm">${item.codigo}</td>
                             <td class="py-4 px-4 max-w-xs">${item.descripcion}</td>
                             <td class="py-4 px-4 text-center">${item.inventarioReporteria}</td>
@@ -984,6 +1108,16 @@
                             <td class="py-4 px-4 text-center">${item.cajasFardos || 0}</td>
                             <td class="py-4 px-4 text-center">${item.unidades}</td>
                             <td class="py-4 px-4 text-center font-bold">${total.toFixed(2)}</td>
+                            <td class="py-4 px-4 text-center">${diferencia.toFixed(2)}</td>
+                            <td class="py-4 px-4 text-center">
+                                <span class="px-2 py-1 rounded-full text-xs ${
+                                    validacion === 'OK' ? 'bg-green-100 text-green-800' :
+                                    validacion === 'VAL+' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-red-100 text-red-800'
+                                }">
+                                    ${validacion}
+                                </span>
+                            </td>
                             <td class="py-4 px-4">
                                 <div class="flex space-x-2 justify-center">
                                     <button class="text-blue-600 hover:text-blue-800" onclick="editarArticulo('${item.codigo}')">
@@ -1005,6 +1139,7 @@
             const articulo = inventario.find(item => item.codigo === codigo);
             
             if (articulo) {
+                document.getElementById('fechaInventario').value = articulo.fecha;
                 document.getElementById('codigoArticulo').value = articulo.codigo;
                 document.getElementById('proveedor').value = articulo.proveedor;
                 document.getElementById('descripcion').value = articulo.descripcion;
@@ -1015,12 +1150,12 @@
                 
                 calcularTotalUnidades();
                 
-                // Cambiar a la sección de agregar artículo
+                // Cambiar a la sección de inventario diario
                 document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                document.querySelector('[data-section="agregar"]').classList.add('active');
+                document.querySelector('[data-section="inventario-diario"]').classList.add('active');
                 document.querySelectorAll('.section-content').forEach(section => section.classList.add('hidden'));
-                document.getElementById('agregar-section').classList.remove('hidden');
-                document.getElementById('currentSectionTitle').textContent = 'Editar Artículo';
+                document.getElementById('inventario-diario-section').classList.remove('hidden');
+                document.getElementById('currentSectionTitle').textContent = 'Editar Artículo de Inventario';
                 
                 window.scrollTo(0, 0);
             }
@@ -1047,20 +1182,53 @@
                 return;
             }
             
-            const headers = ['Codigo', 'Descripcion', 'Proveedor', 'Inventario Reporteria', 'Factor', 'Cajas/Fardos', 'Unidades', 'Total'];
+            const selectedFields = Array.from(document.querySelectorAll('input[name="exportFields"]:checked'))
+                                        .map(checkbox => checkbox.value);
+
+            const headersMap = {
+                fecha: 'Fecha',
+                codigo: 'Codigo',
+                descripcion: 'Descripcion',
+                proveedor: 'Proveedor',
+                inventarioReporteria: 'Inventario Reporteria',
+                factorConversion: 'Factor',
+                cajasFardos: 'Cajas/Fardos',
+                unidades: 'Unidades',
+                total: 'Total',
+                diferencia: 'Diferencia',
+                validacion: 'Validacion'
+            };
+
+            const headers = selectedFields.map(field => headersMap[field]);
             
             const csvContent = inventario.map(item => {
                 const total = (item.cajasFardos * item.factorConversion) + item.unidades;
-                return [
-                    item.codigo,
-                    item.descripcion,
-                    item.proveedor,
-                    item.inventarioReporteria,
-                    item.factorConversion,
-                    item.cajasFardos || 0,
-                    item.unidades,
-                    total.toFixed(2)
-                ].join(',');
+                const diferencia = item.inventarioReporteria - total;
+                let validacion = '';
+
+                if (diferencia === 0) {
+                    validacion = 'OK';
+                } else if (diferencia < 0) {
+                    validacion = 'VAL+';
+                } else {
+                    validacion = 'VAL-';
+                }
+
+                const rowData = {
+                    fecha: item.fecha || '',
+                    codigo: item.codigo,
+                    descripcion: item.descripcion,
+                    proveedor: item.proveedor,
+                    inventarioReporteria: item.inventarioReporteria,
+                    factorConversion: item.factorConversion,
+                    cajasFardos: item.cajasFardos || 0,
+                    unidades: item.unidades,
+                    total: total.toFixed(2),
+                    diferencia: diferencia.toFixed(2),
+                    validacion: validacion
+                };
+
+                return selectedFields.map(field => `"${rowData[field]}"`).join(',');
             }).join('\n');
             
             const csv = headers.join(',') + '\n' + csvContent;
@@ -1081,11 +1249,222 @@
 
         // ===== IMPORTAR DATOS =====
         function previewInventoryFile(input) {
-            // Implementar vista previa de archivo de inventario
+            const file = input.files[0];
+            const previewDiv = document.getElementById('inventoryPreview');
+            const previewHead = document.getElementById('inventoryPreviewHead');
+            const previewBody = document.getElementById('inventoryPreviewBody');
+            const confirmBtn = document.getElementById('confirmImportInventory');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const text = e.target.result;
+                    const lines = text.split('\n').filter(line => line.trim() !== '');
+                    
+                    if (lines.length > 0) {
+                        const headers = lines[0].split(',');
+                        previewHead.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+                        
+                        let bodyHtml = '';
+                        for (let i = 1; i < Math.min(lines.length, 6); i++) { // Show max 5 rows
+                            const cells = lines[i].split(',');
+                            bodyHtml += `<tr>${cells.map(c => `<td>${c}</td>`).join('')}</tr>`;
+                        }
+                        previewBody.innerHTML = bodyHtml;
+                        previewDiv.classList.remove('hidden');
+                        confirmBtn.disabled = false;
+                    } else {
+                        previewDiv.classList.add('hidden');
+                        confirmBtn.disabled = true;
+                        showNotification('Advertencia', 'El archivo CSV está vacío.', 'warning');
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                previewDiv.classList.add('hidden');
+                confirmBtn.disabled = true;
+            }
+        }
+
+        function importInventory() {
+            const fileInput = document.getElementById('importInventoryFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showNotification('Error', 'Por favor, seleccione un archivo para importar.', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+
+                if (lines.length < 2) {
+                    showNotification('Error', 'El archivo CSV no contiene datos válidos (se espera al menos una fila de encabezado y una de datos).', 'error');
+                    return;
+                }
+
+                const headers = lines[0].split(',').map(h => h.trim());
+                const expectedHeaders = ['Fecha', 'Proveedor', 'Codigo', 'Descripcion', 'Inventario Reporteria', 'Factor'];
+
+                // Basic header validation
+                if (headers.length !== expectedHeaders.length || !headers.every((h, i) => h === expectedHeaders[i])) {
+                    showNotification('Error', 'El formato del encabezado del archivo CSV no es el esperado. Formato esperado: ' + expectedHeaders.join(','), 'error');
+                    return;
+                }
+
+                let importedCount = 0;
+                let updatedCount = 0;
+                let inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',');
+                    if (values.length === headers.length) {
+                        const item = {
+                            fecha: values[0].trim(),
+                            proveedor: values[1].trim(),
+                            codigo: values[2].trim(),
+                            descripcion: values[3].trim(),
+                            inventarioReporteria: parseFloat(values[4].trim()) || 0,
+                            factorConversion: parseFloat(values[5].trim()) || 1,
+                            cajasFardos: 0, // Default for imported inventory
+                            unidades: 0,    // Default for imported inventory
+                            timestamp: new Date().toISOString()
+                        };
+
+                        const existingIndex = inventario.findIndex(invItem => invItem.codigo === item.codigo);
+                        if (existingIndex !== -1) {
+                            // Update existing item, preserving cajasFardos and unidades if they exist
+                            inventario[existingIndex] = {
+                                ...inventario[existingIndex], // Keep existing cajasFardos, unidades if not provided by import
+                                ...item, // Override with imported data
+                                cajasFardos: inventario[existingIndex].cajasFardos || 0,
+                                unidades: inventario[existingIndex].unidades || 0,
+                            };
+                            updatedCount++;
+                        } else {
+                            inventario.push(item);
+                            importedCount++;
+                        }
+                    }
+                }
+
+                localStorage.setItem('inventario', JSON.stringify(inventario));
+                showNotification('Importación Completa', `Inventario importado: ${importedCount} nuevos, ${updatedCount} actualizados.`, 'success');
+                
+                // Clear preview and disable button
+                document.getElementById('inventoryPreview').classList.add('hidden');
+                document.getElementById('confirmImportInventory').disabled = true;
+                fileInput.value = ''; // Clear selected file
+                loadInventory();
+                loadDashboardData();
+            };
+            reader.readAsText(file);
         }
 
         function previewCodesFile(input) {
-            // Implementar vista previa de archivo de códigos
+            const file = input.files[0];
+            const previewDiv = document.getElementById('codesPreview');
+            const previewHead = document.getElementById('codesPreviewHead');
+            const previewBody = document.getElementById('codesPreviewBody');
+            const confirmBtn = document.getElementById('confirmImportCodes');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const text = e.target.result;
+                    const lines = text.split('\n').filter(line => line.trim() !== '');
+                    
+                    if (lines.length > 0) {
+                        const headers = lines[0].split(',');
+                        previewHead.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+                        
+                        let bodyHtml = '';
+                        for (let i = 1; i < Math.min(lines.length, 6); i++) { // Show max 5 rows
+                            const cells = lines[i].split(',');
+                            bodyHtml += `<tr>${cells.map(c => `<td>${c}</td>`).join('')}</tr>`;
+                        }
+                        previewBody.innerHTML = bodyHtml;
+                        previewDiv.classList.remove('hidden');
+                        confirmBtn.disabled = false;
+                    } else {
+                        previewDiv.classList.add('hidden');
+                        confirmBtn.disabled = true;
+                        showNotification('Advertencia', 'El archivo CSV está vacío.', 'warning');
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                previewDiv.classList.add('hidden');
+                confirmBtn.disabled = true;
+            }
+        }
+
+        function importCodes() {
+            const fileInput = document.getElementById('importCodesFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showNotification('Error', 'Por favor, seleccione un archivo para importar.', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+
+                if (lines.length < 2) {
+                    showNotification('Error', 'El archivo CSV no contiene datos válidos (se espera al menos una fila de encabezado y una de datos).', 'error');
+                    return;
+                }
+
+                const headers = lines[0].split(',').map(h => h.trim());
+                const expectedHeaders = ['Codigo', 'Descripcion', 'Proveedor', 'Factor', 'Codigo de Barra'];
+
+                // Basic header validation
+                if (headers.length !== expectedHeaders.length || !headers.every((h, i) => h === expectedHeaders[i])) {
+                    showNotification('Error', 'El formato del encabezado del archivo CSV no es el esperado. Formato esperado: ' + expectedHeaders.join(','), 'error');
+                    return;
+                }
+
+                let importedCount = 0;
+                let updatedCount = 0;
+                let currentBaseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
+
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',');
+                    if (values.length === headers.length) {
+                        const item = {
+                            codigo: values[0].trim(),
+                            descripcion: values[1].trim(),
+                            proveedor: values[2].trim(),
+                            factorConversion: parseFloat(values[3].trim()) || 1,
+                            codigoDeBarra: values[4].trim() // Assuming this is the barcode
+                        };
+
+                        const existingIndex = currentBaseDatosArticulos.findIndex(baseItem => baseItem.codigo === item.codigo);
+                        if (existingIndex !== -1) {
+                            currentBaseDatosArticulos[existingIndex] = item;
+                            updatedCount++;
+                        } else {
+                            currentBaseDatosArticulos.push(item);
+                            importedCount++;
+                        }
+                    }
+                }
+
+                localStorage.setItem('baseDatosArticulos', JSON.stringify(currentBaseDatosArticulos));
+                baseDatosArticulos = currentBaseDatosArticulos; // Update global variable
+                showNotification('Importación Completa', `Base de códigos importada: ${importedCount} nuevos, ${updatedCount} actualizados.`, 'success');
+                
+                // Clear preview and disable button
+                document.getElementById('codesPreview').classList.add('hidden');
+                document.getElementById('confirmImportCodes').disabled = true;
+                fileInput.value = ''; // Clear selected file
+            };
+            reader.readAsText(file);
         }
 
         // ===== NOTIFICACIONES =====
@@ -1096,36 +1475,54 @@
             const notificationMessage = document.getElementById('notificationMessage');
             
             let iconClass = '';
+            let bgColorClass = '';
+            let textColorClass = '';
+
             switch(type) {
                 case 'success':
                     iconClass = 'fas fa-check-circle text-green-500';
+                    bgColorClass = 'bg-green-100';
+                    textColorClass = 'text-green-800';
                     break;
                 case 'error':
                     iconClass = 'fas fa-exclamation-circle text-red-500';
+                    bgColorClass = 'bg-red-100';
+                    textColorClass = 'text-red-800';
                     break;
                 case 'warning':
                     iconClass = 'fas fa-exclamation-triangle text-yellow-500';
+                    bgColorClass = 'bg-yellow-100';
+                    textColorClass = 'text-yellow-800';
                     break;
                 default:
                     iconClass = 'fas fa-info-circle text-blue-500';
+                    bgColorClass = 'bg-blue-100';
+                    textColorClass = 'text-blue-800';
             }
             
             icon.className = iconClass;
             notificationTitle.textContent = title;
             notificationMessage.textContent = message;
             
+            // Apply background and text color to the notification card itself
+            notification.querySelector('.bg-white').className = `rounded-lg shadow-lg p-4 max-w-sm ${bgColorClass} ${textColorClass}`;
+
             notification.classList.remove('hidden');
             
             setTimeout(() => {
                 notification.classList.add('hidden');
+                // Reset to default white background after hiding
+                notification.querySelector('.rounded-lg').className = 'bg-white rounded-lg shadow-lg p-4 max-w-sm';
             }, 5000);
         }
         
         document.getElementById('closeNotification').addEventListener('click', function() {
             document.getElementById('notification').classList.add('hidden');
+            // Reset to default white background when closed manually
+            document.getElementById('notification').querySelector('.rounded-lg').className = 'bg-white rounded-lg shadow-lg p-4 max-w-sm';
         });
 
-               // ===== GESTIÓN DE USUARIOS =====
+        // ===== GESTIÓN DE USUARIOS =====
         function initUsers() {
             const form = document.getElementById('userForm');
             const formTitle = document.getElementById('userFormTitle');
@@ -1138,7 +1535,7 @@
                 const password = document.getElementById('userPassword').value;
                 const confirmPassword = document.getElementById('userConfirmPassword').value;
                 const role = document.getElementById('userRole').value;
-                const userId = document.getElementById('userId').value;
+                const userId = document.getElementById('userId').value; // This will be the original username for editing
                 
                 // Validaciones
                 if (password !== confirmPassword) {
@@ -1158,9 +1555,9 @@
                     const userIndex = users.findIndex(u => u.username === userId);
                     if (userIndex !== -1) {
                         users[userIndex] = {
-                            ...users[userIndex],
+                            username: username, // Username might be changed, but we use original for lookup
                             email: email,
-                            password: password,
+                            password: password, // In a real app, hash this!
                             role: role
                         };
                     }
@@ -1174,7 +1571,7 @@
                     users.push({
                         username: username,
                         email: email,
-                        password: password,
+                        password: password, // In a real app, hash this!
                         role: role
                     });
                 }
@@ -1185,6 +1582,7 @@
                 form.reset();
                 document.getElementById('userId').value = '';
                 formTitle.textContent = 'Crear Nuevo Usuario';
+                document.getElementById('userUsername').disabled = false; // Enable username field for new user
                 
                 // Recargar lista de usuarios
                 loadUsers();
@@ -1197,7 +1595,10 @@
                 form.reset();
                 document.getElementById('userId').value = '';
                 formTitle.textContent = 'Crear Nuevo Usuario';
+                document.getElementById('userUsername').disabled = false; // Enable username field for new user
             });
+
+            loadUsers(); // Initial load of users when the page loads
         }
         
         function loadUsers() {
@@ -1227,11 +1628,11 @@
                         </td>
                         <td class="py-3 px-4">
                             <div class="flex space-x-2">
-                                <button class="text-blue-600 hover:text-blue-800 edit-user" data-username="${user.username}">
+                                <button type="button" class="text-blue-600 hover:text-blue-800 edit-user" data-username="${user.username}">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 ${user.username !== currentUser.username ? `
-                                <button class="text-red-600 hover:text-red-800 delete-user" data-username="${user.username}">
+                                <button type="button" class="text-red-600 hover:text-red-800 delete-user" data-username="${user.username}">
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 ` : ''}
@@ -1264,13 +1665,13 @@
             if (user) {
                 document.getElementById('userUsername').value = user.username;
                 document.getElementById('userEmail').value = user.email;
-                document.getElementById('userPassword').value = user.password;
-                document.getElementById('userConfirmPassword').value = user.password;
+                document.getElementById('userPassword').value = user.password; // Pre-fill password for convenience (in real app, don't do this)
+                document.getElementById('userConfirmPassword').value = user.password; // Pre-fill password for convenience
                 document.getElementById('userRole').value = user.role;
-                document.getElementById('userId').value = user.username;
+                document.getElementById('userId').value = user.username; // Store original username for lookup
                 
                 document.getElementById('userFormTitle').textContent = 'Editar Usuario';
-                document.getElementById('userUsername').disabled = true;
+                document.getElementById('userUsername').disabled = true; // Prevent changing username during edit
             }
         }
         
@@ -1309,9 +1710,43 @@
                     proveedor: 'Perifericos Ltda.',
                     inventarioReporteria: 75,
                     factorConversion: 1
+                },
+                {
+                    codigo: 'PROD-004',
+                    descripcion: 'Monitor Curvo 27"',
+                    proveedor: 'Tecnologia S.A.',
+                    inventarioReporteria: 30,
+                    factorConversion: 1
+                },
+                {
+                    codigo: 'PROD-005',
+                    descripcion: 'Impresora Multifuncional',
+                    proveedor: 'Oficina Total',
+                    inventarioReporteria: 20,
+                    factorConversion: 1
+                },
+                {
+                    codigo: 'PROD-006',
+                    descripcion: 'Resma de Papel A4',
+                    proveedor: 'Oficina Total',
+                    inventarioReporteria: 200,
+                    factorConversion: 5 // 5 paquetes por caja/fardo
                 }
             ];
             localStorage.setItem('baseDatosArticulos', JSON.stringify(baseDatosArticulos));
+        }
+
+        // Initialize a default admin user if no users exist
+        if (!localStorage.getItem('users')) {
+            const defaultUsers = [
+                {
+                    username: 'admin',
+                    email: 'admin@example.com',
+                    password: 'adminpassword', // In a real application, hash this password!
+                    role: 'admin'
+                }
+            ];
+            localStorage.setItem('users', JSON.stringify(defaultUsers));
         }
     </script>
 </body>
