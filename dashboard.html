@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -905,12 +906,6 @@
             }
         }
 
-        // === FORMATO DE FECHA ====
-        function formatearFecha(fechaISO) {
-        const [año, mes, día] = fechaISO.split("-");
-        return `${día}/${mes}/${año}`;
-        }
-        
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
         function cargarDatosArticulo(codigo) {
             const articulo = baseDatosArticulos.find(item => item.codigo === codigo);
@@ -1790,6 +1785,26 @@
             ];
             localStorage.setItem('users', JSON.stringify(defaultUsers));
         }
-    inventario.js </script>
+    </script>
+
+<!-- Elementos para agregar artículos -->
+<div>
+    <label for="fecha">Fecha:</label>
+    <input type="date" id="fecha">
+    <button id="btnAgregarArticulo">Agregar Artículo</button>
+</div>
+
+<!-- Tabla para mostrar artículos -->
+<table id="tablaInventario" border="1">
+    <thead>
+        <tr>
+            <th>Fecha</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script src="inventario.js"></script>
 </body>
 </html>
