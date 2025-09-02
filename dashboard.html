@@ -905,6 +905,12 @@
             }
         }
 
+        // === FORMATO DE FECHA ====
+        function formatearFecha(fechaISO) {
+        const [año, mes, día] = fechaISO.split("-");
+        return `${día}/${mes}/${año}`;
+        }
+        
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
         function cargarDatosArticulo(codigo) {
             const articulo = baseDatosArticulos.find(item => item.codigo === codigo);
