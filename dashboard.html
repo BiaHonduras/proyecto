@@ -760,6 +760,8 @@
 
     <script>
         // ===== VARIABLES GLOBALES =====
+
+        inventario.js
         let currentUser = null;
         let scannerActive = false;
         let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
@@ -904,7 +906,7 @@
                     lastUpdate.toLocaleDateString() + ' ' + lastUpdate.toLocaleTimeString();
             }
         }
-
+        
         // === FORMATO DE FECHA ====
         function formatearFecha(fechaISO) {
         const [año, mes, día] = fechaISO.split("-");
@@ -1727,8 +1729,7 @@
                 showNotification('Eliminado', `Usuario ${username} eliminado`, 'success');
             }
         }
-
-
+        
         // Inicializar base de datos de ejemplo si no existe
         if (baseDatosArticulos.length === 0) {
             baseDatosArticulos = [
@@ -1790,6 +1791,6 @@
             ];
             localStorage.setItem('users', JSON.stringify(defaultUsers));
         }
-    inventario.js </script>
+    </script>
 </body>
 </html>
