@@ -955,6 +955,32 @@
         const [año, mes, día] = fechaISO.split("-");
         return `${día}/${mes}/${año}`;
         }
+
+        <script type="module">
+  // Dentro del mismo bloque de Supabase
+  const form = document.getElementById('articuloForm')
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const nuevoRegistro = {
+      Codigo: document.getElementById('codigoArticulo').value,
+      Descripcion: document.getElementById('descripcion').value,
+      Proveedor: document.getElementById('proveedor').value,
+      Masterpack: document.getElementById('factorConversion').value,
+      "Codigo de Barra": document.getElementById('codigoArticulo').value,
+      "Cajas/Fardos": document.getElementById('cajasFardos').value,
+      Unidades: document.getElementById('unidades').value,
+      Total: document.getElementById('totalUnidadesCalculo').innerText
+    }
+    const { error } = await supabase.from('Inventarios').insert([nuevoRegistro])
+    if (error) {
+      alert('Error al guardar: ' + error.message)
+    } else {
+      alert('Artículo agregado correctamente')
+      cargarTabla('Inventarios', 'inventoryTableBody')
+      form.reset()
+    }
+  })
+</script>
         
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
         function cargarDatosArticulo(codigo) {
