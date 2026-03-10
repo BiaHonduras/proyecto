@@ -159,35 +159,6 @@
         }
     </style>
 </head>
-
-<script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-
-  const supabaseUrl = 'https://czxzghhwgfciyrgmgtai.supabase.co'
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6eHpnaGh3Z2ZjaXlyZ21ndGFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNzYxMTgsImV4cCI6MjA4ODc1MjExOH0.LdODWE1RDggRq11NkfgFTUVv6g1E5iQxTfOtZnV0gF0'
-  const supabase = createClient(supabaseUrl, supabaseKey)
-
-  // Función genérica para cargar datos en una tabla HTML
-  async function cargarTabla(nombreTabla, idTabla) {
-    const { data, error } = await supabase.from(nombreTabla).select('*')
-    if (error) {
-      console.error(`Error al cargar ${nombreTabla}:`, error)
-      return
-    }
-    const tbody = document.getElementById(idTabla)
-    tbody.innerHTML = '' // limpiar antes de renderizar
-    data.forEach(item => {
-      const fila = document.createElement('tr')
-      fila.innerHTML = Object.values(item).map(val => `<td>${val}</td>`).join('')
-      tbody.appendChild(fila)
-    })
-  }
-
-  // Cargar SKUs e Inventarios
-  cargarTabla('SKUs', 'tablaSKUs')
-  cargarTabla('Inventarios', 'inventoryTableBody')
-</script>
-    
 <body class="flex">
     <!-- Sidebar Navigation -->
     <div class="sidebar fixed top-0 left-0 h-full text-white">
@@ -472,22 +443,6 @@
                 </div>
             </section>
 
-            <section id="skus-section" class="section-content hidden">
-                <div class="card p-6">
-                    <h3 class="text-lg font-semibold mb-6">Lista de SKUs</h3>
-                        <div class="overflow-x-auto">
-                          <table class="w-full">
-                            <thead>
-                              <tr>
-                                <th>Código</th><th>Descripción</th><th>Proveedor</th><th>Masterpack</th><th>Código de Barra</th>
-                                </tr>
-                            </thead>
-                        <tbody id="tablaSKUs"></tbody>
-                      </table>
-                    </div>
-                  </div>
-                </section>
-            
             <!-- Ver Inventario Section -->
             <section id="inventario-section" class="section-content hidden">
                 <div class="card p-6">
@@ -955,32 +910,6 @@
         const [año, mes, día] = fechaISO.split("-");
         return `${día}/${mes}/${año}`;
         }
-
-        <script type="module">
-  // Dentro del mismo bloque de Supabase
-  const form = document.getElementById('articuloForm')
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault()
-    const nuevoRegistro = {
-      Codigo: document.getElementById('codigoArticulo').value,
-      Descripcion: document.getElementById('descripcion').value,
-      Proveedor: document.getElementById('proveedor').value,
-      Masterpack: document.getElementById('factorConversion').value,
-      "Codigo de Barra": document.getElementById('codigoArticulo').value,
-      "Cajas/Fardos": document.getElementById('cajasFardos').value,
-      Unidades: document.getElementById('unidades').value,
-      Total: document.getElementById('totalUnidadesCalculo').innerText
-    }
-    const { error } = await supabase.from('Inventarios').insert([nuevoRegistro])
-    if (error) {
-      alert('Error al guardar: ' + error.message)
-    } else {
-      alert('Artículo agregado correctamente')
-      cargarTabla('Inventarios', 'inventoryTableBody')
-      form.reset()
-    }
-  })
-</script>
         
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
         function cargarDatosArticulo(codigo) {
