@@ -1,296 +1,1729 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Control de Inventarios Diarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --sidebar-width: 260px;
+        }
 
-<title>Sistema de Inventario</title>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
 
-<script src="https://cdn.tailwindcss.com"></script>
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #2d3748 0%, #4a5568 100%);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
 
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s ease;
+        }
 
-<script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
 
+        .btn-primary {
+            background: var(--primary-gradient);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .input-field {
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .table-row:hover {
+            background: #f7fafc;
+        }
+
+        .scanner-container {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .scanner-container video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                height: 100vh;
+                z-index: 1000;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            .mobile-overlay.open {
+                display: block;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            width: 20px;
+            margin-right: 12px;
+        }
+    </style>
 </head>
-
-<body class="bg-gray-100">
-
-<div class="flex">
-
-<!-- SIDEBAR -->
-<aside class="w-64 bg-gray-800 text-white min-h-screen p-4">
-
-<h2 class="text-xl font-bold mb-6">Inventario</h2>
-
-<ul class="space-y-3">
-
-<li>
-<button onclick="showSection('dashboard')" class="w-full text-left">
-<i class="fa fa-chart-line mr-2"></i> Dashboard
-</button>
-</li>
-
-<li>
-<button onclick="showSection('inventario')" class="w-full text-left">
-<i class="fa fa-box mr-2"></i> Inventario
-</button>
-</li>
-
-</ul>
-
-</aside>
-
-<!-- MAIN -->
-<main class="flex-1 p-6">
-
-<!-- DASHBOARD -->
-<section id="dashboard">
-
-<h1 class="text-2xl font-bold mb-6">Panel de Control</h1>
-
-<div class="grid grid-cols-3 gap-4">
-
-<div class="bg-white p-4 shadow rounded">
-<h3 class="text-gray-500">Productos</h3>
-<p id="totalProductos" class="text-3xl font-bold">0</p>
-</div>
-
-<div class="bg-white p-4 shadow rounded">
-<h3 class="text-gray-500">Cantidad Total</h3>
-<p id="cantidadTotal" class="text-3xl font-bold">0</p>
-</div>
-
-</div>
-
-</section>
-
-<!-- INVENTARIO -->
-<section id="inventario" class="hidden">
-
-<h1 class="text-2xl font-bold mb-6">Inventario</h1>
-
-<form id="formArticulo" class="bg-white p-4 shadow rounded mb-6 grid grid-cols-4 gap-3">
-
-<input id="codigo" placeholder="Código" class="border p-2 rounded">
-
-<input id="nombre" placeholder="Nombre" class="border p-2 rounded">
-
-<input id="cantidad" type="number" placeholder="Cantidad" class="border p-2 rounded">
-
-<button class="bg-blue-500 text-white rounded">
-Guardar
-</button>
-
-</form>
-
-<div class="mb-4 flex gap-2">
-
-<button onclick="startScanner()" class="bg-green-500 text-white px-4 py-2 rounded">
-<i class="fa fa-barcode"></i> Escanear
-</button>
-
-<button onclick="exportCSV()" class="bg-gray-700 text-white px-4 py-2 rounded">
-Exportar CSV
-</button>
-
-</div>
-
-<div id="scanner" class="mb-4"></div>
-
-<table class="w-full bg-white shadow rounded">
-
-<thead class="bg-gray-200">
-
-<tr>
-
-<th class="p-2">Código</th>
-<th class="p-2">Nombre</th>
-<th class="p-2">Cantidad</th>
-<th class="p-2">Acciones</th>
-
-</tr>
-
-</thead>
-
-<tbody id="tablaInventario"></tbody>
-
-</table>
-
-</section>
-
-</main>
-
-</div>
-
-<script>
-
-const Storage = {
-
-get(key){
-return JSON.parse(localStorage.getItem(key) || "[]")
-},
-
-set(key,value){
-localStorage.setItem(key, JSON.stringify(value))
-}
-
-}
-
-let inventario = Storage.get("inventario")
-
-function init(){
-
-renderInventario()
-updateStats()
-
-document
-.getElementById("formArticulo")
-.addEventListener("submit", agregarArticulo)
-
-}
-
-function agregarArticulo(e){
-
-e.preventDefault()
-
-const item = {
-
-id: Date.now(),
-codigo: codigo.value,
-nombre: nombre.value,
-cantidad: Number(cantidad.value)
-
-}
-
-inventario.push(item)
-
-Storage.set("inventario", inventario)
-
-renderInventario()
-updateStats()
-
-e.target.reset()
-
-}
-
-function renderInventario(){
-
-const tabla = document.getElementById("tablaInventario")
-
-tabla.innerHTML = ""
-
-inventario.forEach(item=>{
-
-tabla.innerHTML += `
-<tr class="border-b">
-
-<td class="p-2">${item.codigo}</td>
-<td class="p-2">${item.nombre}</td>
-<td class="p-2">${item.cantidad}</td>
-
-<td class="p-2">
-<button onclick="eliminar(${item.id})"
-class="text-red-500">
-<i class="fa fa-trash"></i>
-</button>
-</td>
-
-</tr>
-`
-
-})
-
-}
-
-function eliminar(id){
-
-inventario = inventario.filter(i => i.id !== id)
-
-Storage.set("inventario", inventario)
-
-renderInventario()
-updateStats()
-
-}
-
-function updateStats(){
-
-document.getElementById("totalProductos")
-.textContent = inventario.length
-
-const total = inventario.reduce((a,b)=>a+b.cantidad,0)
-
-document.getElementById("cantidadTotal")
-.textContent = total
-
-}
-
-function showSection(id){
-
-document.querySelectorAll("main section")
-.forEach(s => s.classList.add("hidden"))
-
-document.getElementById(id)
-.classList.remove("hidden")
-
-}
-
-function exportCSV(){
-
-let csv = "codigo,nombre,cantidad\n"
-
-inventario.forEach(i=>{
-csv += `${i.codigo},${i.nombre},${i.cantidad}\n`
-})
-
-const blob = new Blob([csv])
-
-const a = document.createElement("a")
-
-a.href = URL.createObjectURL(blob)
-
-a.download = "inventario.csv"
-
-a.click()
-
-}
-
-function startScanner(){
-
-Quagga.init({
-
-inputStream:{
-type:"LiveStream",
-target:document.querySelector("#scanner")
-},
-
-decoder:{
-readers:["code_128_reader"]
-}
-
-}, err=>{
-
-if(!err) Quagga.start()
-
-})
-
-Quagga.onDetected(result=>{
-
-codigo.value = result.codeResult.code
-
-Quagga.stop()
-
-})
-
-}
-
-document.addEventListener("DOMContentLoaded", init)
-
-</script>
-
+<body class="flex">
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar fixed top-0 left-0 h-full text-white">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-boxes text-xl"></i>
+                    </div>
+                    <h1 class="text-xl font-bold">Control de Inventarios</h1>
+                </div>
+                <button id="closeSidebar" class="lg:hidden text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <nav class="space-y-1">
+                <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-chart-pie"></i>
+                    Dashboard
+                </a>
+                <a href="#inventario-diario" class="nav-item" data-section="inventario-diario">
+                    <i class="fas fa-clipboard-check"></i>
+                    Inventario Diario
+                </a>
+                <a href="#inventario" class="nav-item" data-section="inventario">
+                    <i class="fas fa-clipboard-list"></i>
+                    Ver Inventario
+                </a>
+                <a href="#exportar" class="nav-item" data-section="exportar">
+                    <i class="fas fa-file-export"></i>
+                    Exportar CSV
+                </a>
+                <a href="#importar-inventario" class="nav-item" data-section="importar-inventario">
+                    <i class="fas fa-file-import"></i>
+                    Importar Inventario
+                </a>
+                <a href="#importar-codigos" class="nav-item" data-section="importar-codigos">
+                    <i class="fas fa-database"></i>
+                    Importar Códigos
+                </a>
+                <a href="#usuarios" class="nav-item" data-section="usuarios">
+                    <i class="fas fa-users-cog"></i>
+                    Gestión de Usuarios
+                </a>
+            </nav>
+
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="border-t border-white/20 pt-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-user text-sm"></i>
+                            </div>
+                            <span id="currentUserName" class="text-sm">Usuario</span>
+                        </div>
+                        <button id="logoutBtn" class="text-white/70 hover:text-white">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="mobile-overlay"></div>
+
+    <!-- Main Content -->
+    <div class="main-content flex-1 min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200 p-4 flex items-center justify-between">
+            <button id="menuToggle" class="lg:hidden text-gray-600 hover:text-gray-800">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+
+            <h2 class="text-xl font-semibold text-gray-800" id="currentSectionTitle">Dashboard</h2>
+
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <button class="text-gray-600 hover:text-gray-800">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Sections -->
+        <main class="p-6 space-y-6">
+
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="section-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Total Artículos</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="totalArticulos">0</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-box text-blue-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Unidades Totales</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="totalUnidadesDashboard">0</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-cubes text-green-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Proveedores</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="totalProveedores">0</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-truck text-purple-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Última Actualización</p>
+                                <h3 class="text-xl font-bold text-gray-800" id="ultimaActualizacion">-</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-sync text-orange-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">Artículos Recientes</h3>
+                        <div class="space-y-3" id="recentItems">
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-inbox text-3xl mb-2"></i>
+                                <p>No hay artículos recientes</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">Distribución por Proveedor</h3>
+                        <div id="proveedorChart" class="h-64 flex items-center justify-center">
+                            <div class="text-center text-gray-500">
+                                <i class="fas fa-chart-pie text-3xl mb-2"></i>
+                                <p>No hay datos disponibles</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inventario Diario Section -->
+            <section id="inventario-diario-section" class="section-content hidden">
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold mb-6">Registro de Inventario Diario</h3>
+
+                    <form id="articuloForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha *</label>
+                            <input type="date" id="fechaInventario"
+                                   class="input-field w-full px-4 py-3 rounded-lg"
+                                   required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Código del Artículo *</label>
+                            <input type="text" id="codigoArticulo"
+                                   class="input-field w-full px-4 py-3 rounded-lg"
+                                   placeholder="Ingrese el código o escanee"
+                                   required>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <button type="button" id="startScannerBtn" class="btn-primary w-full py-3 rounded-lg text-white">
+                                <i class="fas fa-barcode mr-2"></i>
+                                Escanear Código (Barras/QR)
+                            </button>
+                        </div>
+
+                        <div id="scanner-area" class="md:col-span-2 hidden">
+                            <div class="scanner-container mb-4">
+                                <div id="scanner" class="w-full h-64 bg-gray-200 flex items-center justify-center">
+                                    <div class="text-center text-gray-600">
+                                        <i class="fas fa-camera text-3xl mb-2"></i>
+                                        <p>Iniciando cámara...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" id="stopScannerBtn" class="w-full py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                <i class="fas fa-stop mr-2"></i>
+                                Detener Escáner
+                            </button>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Proveedor</label>
+                            <input type="text" id="proveedor"
+                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100"
+                                   placeholder="Se cargará automáticamente"
+                                   readonly>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Descripción del Artículo</label>
+                            <input type="text" id="descripcion"
+                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100"
+                                   placeholder="Se cargará automáticamente"
+                                   readonly>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Inventario en Reportería</label>
+                            <input type="number" id="inventarioReporteria"
+                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100"
+                                   placeholder="0"
+                                   readonly>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Factor de Conversión</label>
+                            <input type="number" id="factorConversion"
+                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100"
+                                   placeholder="1.0"
+                                   step="0.01"
+                                   readonly>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cajas / Fardos</label>
+                            <input type="number" id="cajasFardos"
+                                   class="input-field w-full px-4 py-3 rounded-lg"
+                                   placeholder="0"
+                                   min="0"
+                                   step="1">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Unidades</label>
+                            <input type="number" id="unidades"
+                                   class="input-field w-full px-4 py-3 rounded-lg"
+                                   placeholder="0"
+                                   min="0"
+                                   step="1">
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold text-blue-800">Total Unidades:</span>
+                                    <span id="totalUnidadesCalculo" class="text-xl font-bold text-blue-800">0</span>
+                                </div>
+                                <p class="text-sm text-blue-600 mt-1">(Cajas × Factor) + Unidades</p>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2 flex justify-end space-x-4 pt-4">
+                            <button type="button" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" id="limpiarBtn">
+                                Limpiar
+                            </button>
+                            <button type="submit" class="btn-primary px-6 py-3 rounded-lg text-white">
+                                <i class="fas fa-plus-circle mr-2"></i>
+                                Agregar Artículo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Ver Inventario Section -->
+            <section id="inventario-section" class="section-content hidden">
+                <div class="card p-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                        <h3 class="text-lg font-semibold">Inventario Actual</h3>
+
+                        <div class="flex space-x-4 mt-4 md:mt-0">
+                            <div class="relative">
+                                <input type="text" id="searchInventory"
+                                       class="input-field pl-10 pr-4 py-2 rounded-lg"
+                                       placeholder="Buscar artículo...">
+                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                            <button id="refreshInventory" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Fecha</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Código</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Inv. Reportería</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Factor</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Cajas/Fardos</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Unidades</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Total</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Diferencia</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Validación</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                <tr>
+                                    <td colspan="11" class="py-8 text-center text-gray-500">
+                                        <i class="fas fa-inbox text-3xl mb-2"></i>
+                                        <p>No hay artículos en el inventario</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Exportar CSV Section -->
+            <section id="exportar-section" class="section-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-6">Exportar Inventario a CSV</h3>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Campos a Exportar</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="fecha" checked>
+                                        Fecha
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="codigo" checked>
+                                        Código
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="proveedor" checked>
+                                        Proveedor
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="descripcion" checked>
+                                        Descripción
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="inventarioReporteria" checked>
+                                        Inv. Reportería
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="factorConversion" checked>
+                                        Factor Conversión
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="cajasFardos" checked>
+                                        Cajas/Fardos
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="unidades" checked>
+                                        Unidades
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="total" checked>
+                                        Total
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="diferencia" checked>
+                                        Diferencia
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-2" name="exportFields" value="validacion" checked>
+                                        Validación
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button id="exportCSV" class="btn-primary w-full py-3 rounded-lg text-white">
+                                <i class="fas fa-file-export mr-2"></i>
+                                Exportar a CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">Información de Exportación</h3>
+
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex">
+                                <i class="fas fa-info-circle text-blue-500 mr-3 mt-1"></i>
+                                <div>
+                                    <p class="text-sm text-blue-800">
+                                        <strong>Formato CSV:</strong> El archivo se generará con codificación UTF-8 para
+                                        garantizar la compatibilidad con Excel y otros programas de hojas de cálculo.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Importar Inventario Section -->
+            <section id="importar-inventario-section" class="section-content hidden">
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold mb-6">Importar Inventario</h3>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Carga - Inventario Teórico</label>
+                            <input type="file" id="importInventoryFile"
+                                   class="input-field w-full px-4 py-3 rounded-lg"
+                                   accept=".csv"
+                                   onchange="previewInventoryFile(this)">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600">Fecha,Proveedor,Codigo,Descripcion,Inventario Reporteria,Factor</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="inventoryPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
+                        <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead id="inventoryPreviewHead"></thead>
+                                <tbody id="inventoryPreviewBody"></tbody>
+                            </table>
+                        </div>
+
+                        <button id="confirmImportInventory" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" disabled>
+                            <i class="fas fa-upload mr-2"></i>
+                            Confirmar Importación
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Importar Códigos Section -->
+            <section id="importar-codigos-section" class="section-content hidden">
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold mb-6">Importar Base de Códigos</h3>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cargar - Base de Códigos</label>
+                            <input type="file" id="importCodesFile"
+                                   class="input-field w-full px-4 py-3 rounded-lg"
+                                   accept=".csv"
+                                   onchange="previewCodesFile(this)">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600">Codigo,Descripcion,Proveedor,Factor,Codigo de Barra</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="codesPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
+                        <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead id="codesPreviewHead"></thead>
+                                <tbody id="codesPreviewBody"></tbody>
+                            </table>
+                        </div>
+
+                        <button id="confirmImportCodes" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" disabled>
+                            <i class="fas fa-upload mr-2"></i>
+                            Confirmar Importación
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gestión de Usuarios Section -->
+            <section id="usuarios-section" class="section-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-6">Gestión de Usuarios</h3>
+
+                        <div class="overflow-x-auto mb-6">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Usuario</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Email</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Rol</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr>
+                                        <td colspan="4" class="py-8 text-center text-gray-500">
+                                            <i class="fas fa-users text-3xl mb-2"></i>
+                                            <p>Cargando usuarios...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-6" id="userFormTitle">Crear Nuevo Usuario</h3>
+
+                        <form id="userForm" class="space-y-4">
+                            <input type="hidden" id="userId">
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de Usuario *</label>
+                                <input type="text" id="userUsername"
+                                       class="input-field w-full px-4 py-3 rounded-lg"
+                                       placeholder="nombre.usuario"
+                                       required>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                                <input type="email" id="userEmail"
+                                       class="input-field w-full px-4 py-3 rounded-lg"
+                                       placeholder="usuario@empresa.com"
+                                       required>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
+                                <input type="password" id="userPassword"
+                                       class="input-field w-full px-4 py-3 rounded-lg"
+                                       placeholder="••••••••"
+                                       required>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña *</label>
+                                <input type="password" id="userConfirmPassword"
+                                       class="input-field w-full px-4 py-3 rounded-lg"
+                                       placeholder="••••••••"
+                                       required>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
+                                <select id="userRole" class="input-field w-full px-4 py-3 rounded-lg">
+                                    <option value="user">Usuario</option>
+                                    <option value="admin">Administrador</option>
+                                </select>
+                            </div>
+
+                            <div class="flex space-x-4 pt-4">
+                                <button type="button" id="cancelUserBtn" class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn-primary flex-1 py-3 rounded-lg text-white">
+                                    <i class="fas fa-save mr-2"></i>
+                                    Guardar Usuario
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="notification hidden">
+        <div id="notificationCard" class="bg-white rounded-lg shadow-lg p-4 max-w-sm">
+            <div class="flex items-start">
+                <div id="notificationIcon" class="mr-3 mt-0.5"></div>
+                <div class="flex-1">
+                    <h4 id="notificationTitle" class="font-semibold"></h4>
+                    <p id="notificationMessage" class="text-sm text-gray-600 mt-1"></p>
+                </div>
+                <button id="closeNotification" class="text-gray-400 hover:text-gray-600 ml-2">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== VARIABLES GLOBALES =====
+        let currentUser = null;
+        let scannerActive = false;
+        let notificationTimer = null;
+        let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
+
+        // ===== INICIALIZACIÓN DE DATOS DE EJEMPLO =====
+        if (baseDatosArticulos.length === 0) {
+            baseDatosArticulos = [
+                { codigo: 'PROD-001', descripcion: 'Laptop HP EliteBook',      proveedor: 'Tecnologia S.A.',   inventarioReporteria: 50,  factorConversion: 1 },
+                { codigo: 'PROD-002', descripcion: 'Mouse Inalámbrico',         proveedor: 'Perifericos Ltda.', inventarioReporteria: 100, factorConversion: 1 },
+                { codigo: 'PROD-003', descripcion: 'Teclado Mecánico',          proveedor: 'Perifericos Ltda.', inventarioReporteria: 75,  factorConversion: 1 },
+                { codigo: 'PROD-004', descripcion: 'Monitor Curvo 27"',         proveedor: 'Tecnologia S.A.',   inventarioReporteria: 30,  factorConversion: 1 },
+                { codigo: 'PROD-005', descripcion: 'Impresora Multifuncional',  proveedor: 'Oficina Total',     inventarioReporteria: 20,  factorConversion: 1 },
+                { codigo: 'PROD-006', descripcion: 'Resma de Papel A4',         proveedor: 'Oficina Total',     inventarioReporteria: 200, factorConversion: 5 }
+            ];
+            localStorage.setItem('baseDatosArticulos', JSON.stringify(baseDatosArticulos));
+        }
+
+        // Inicializar usuario administrador por defecto si no existen usuarios
+        if (!localStorage.getItem('users')) {
+            localStorage.setItem('users', JSON.stringify([
+                { username: 'admin', email: 'admin@example.com', password: 'adminpassword', role: 'admin' }
+            ]));
+        }
+
+        // ===== INICIALIZACIÓN =====
+        document.addEventListener('DOMContentLoaded', function () {
+            // Verificar autenticación
+            const userData = sessionStorage.getItem('currentUser');
+            if (!userData) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            currentUser = JSON.parse(userData);
+            document.getElementById('currentUserName').textContent = currentUser.username;
+
+            // Establecer fecha de hoy en el input de fecha (formato YYYY-MM-DD requerido por input[type=date])
+            setTodayDate();
+
+            // Inicializar navegación
+            initNavigation();
+
+            // Cargar datos iniciales
+            loadDashboardData();
+            loadInventory();
+            initUsers();
+
+            // Formulario de artículo
+            document.getElementById('articuloForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                agregarArticulo();
+            });
+
+            // Limpiar formulario
+            document.getElementById('limpiarBtn').addEventListener('click', limpiarFormulario);
+
+            // Cálculo automático al cambiar cajas o unidades
+            document.getElementById('cajasFardos').addEventListener('input', calcularTotalUnidades);
+            document.getElementById('unidades').addEventListener('input', calcularTotalUnidades);
+
+            // Cargar datos al cambiar código
+            document.getElementById('codigoArticulo').addEventListener('change', function () {
+                cargarDatosArticulo(this.value.trim());
+            });
+
+            // Exportar CSV
+            document.getElementById('exportCSV').addEventListener('click', exportToCSV);
+
+            // Escáner
+            document.getElementById('startScannerBtn').addEventListener('click', startScanner);
+            document.getElementById('stopScannerBtn').addEventListener('click', stopScanner);
+
+            // Importar
+            document.getElementById('confirmImportInventory').addEventListener('click', importInventory);
+            document.getElementById('confirmImportCodes').addEventListener('click', importCodes);
+
+            // Búsqueda en inventario
+            document.getElementById('searchInventory').addEventListener('input', function () {
+                loadInventory(this.value.trim());
+            });
+            document.getElementById('refreshInventory').addEventListener('click', function () {
+                document.getElementById('searchInventory').value = '';
+                loadInventory();
+            });
+
+            // Cerrar notificación
+            document.getElementById('closeNotification').addEventListener('click', function () {
+                clearTimeout(notificationTimer);
+                document.getElementById('notification').classList.add('hidden');
+                resetNotificationCard();
+            });
+        });
+
+        // ===== UTILIDADES DE FECHA =====
+        function getTodayISO() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm   = String(today.getMonth() + 1).padStart(2, '0');
+            const dd   = String(today.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function setTodayDate() {
+            document.getElementById('fechaInventario').value = getTodayISO();
+        }
+
+        // ===== NAVEGACIÓN =====
+        function initNavigation() {
+            document.getElementById('menuToggle').addEventListener('click', function () {
+                document.querySelector('.sidebar').classList.add('open');
+                document.getElementById('mobileOverlay').classList.add('open');
+            });
+
+            document.getElementById('closeSidebar').addEventListener('click', closeSidebar);
+            document.getElementById('mobileOverlay').addEventListener('click', closeSidebar);
+
+            function closeSidebar() {
+                document.querySelector('.sidebar').classList.remove('open');
+                document.getElementById('mobileOverlay').classList.remove('open');
+            }
+
+            const sectionTitles = {
+                'dashboard':          'Dashboard',
+                'inventario-diario':  'Inventario Diario',
+                'inventario':         'Inventario',
+                'exportar':           'Exportar CSV',
+                'importar-inventario':'Importar Inventario',
+                'importar-codigos':   'Importar Base de Datos',
+                'usuarios':           'Gestión de Usuarios'
+            };
+
+            document.querySelectorAll('.nav-item').forEach(function (item) {
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    document.querySelectorAll('.nav-item').forEach(function (nav) {
+                        nav.classList.remove('active');
+                    });
+                    this.classList.add('active');
+
+                    document.querySelectorAll('.section-content').forEach(function (section) {
+                        section.classList.add('hidden');
+                    });
+
+                    const sectionKey = this.getAttribute('data-section');
+                    document.getElementById(sectionKey + '-section').classList.remove('hidden');
+                    document.getElementById('currentSectionTitle').textContent = sectionTitles[sectionKey] || '';
+
+                    // Cerrar sidebar en mobile
+                    if (window.innerWidth < 768) {
+                        closeSidebar();
+                    }
+
+                    // Acciones específicas por sección
+                    if (sectionKey === 'inventario') {
+                        loadInventory();
+                    } else if (sectionKey === 'usuarios') {
+                        loadUsers();
+                    } else if (sectionKey === 'dashboard') {
+                        loadDashboardData();
+                    }
+                });
+            });
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', function () {
+                sessionStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+            });
+        }
+
+        // ===== DASHBOARD =====
+        function loadDashboardData() {
+            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+
+            document.getElementById('totalArticulos').textContent = inventario.length;
+
+            const totalUnidades = inventario.reduce(function (sum, item) {
+                return sum + ((item.cajasFardos || 0) * (item.factorConversion || 1)) + (item.unidades || 0);
+            }, 0);
+            document.getElementById('totalUnidadesDashboard').textContent = totalUnidades.toLocaleString();
+
+            const proveedoresUnicos = new Set(inventario.map(function (item) { return item.proveedor; })).size;
+            document.getElementById('totalProveedores').textContent = proveedoresUnicos;
+
+            if (inventario.length > 0) {
+                const timestamps = inventario.map(function (item) { return new Date(item.timestamp); });
+                const lastUpdate = new Date(Math.max.apply(null, timestamps));
+                document.getElementById('ultimaActualizacion').textContent =
+                    lastUpdate.toLocaleDateString() + ' ' + lastUpdate.toLocaleTimeString();
+            } else {
+                document.getElementById('ultimaActualizacion').textContent = '-';
+            }
+
+            // Artículos recientes (últimos 5)
+            const recentContainer = document.getElementById('recentItems');
+            if (inventario.length === 0) {
+                recentContainer.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-inbox text-3xl mb-2"></i>
+                        <p>No hay artículos recientes</p>
+                    </div>`;
+            } else {
+                const sorted = inventario.slice().sort(function (a, b) {
+                    return new Date(b.timestamp) - new Date(a.timestamp);
+                }).slice(0, 5);
+                recentContainer.innerHTML = sorted.map(function (item) {
+                    return `
+                        <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                            <div>
+                                <p class="font-medium text-sm text-gray-800">${escapeHtml(item.descripcion || item.codigo)}</p>
+                                <p class="text-xs text-gray-500">${escapeHtml(item.codigo)} &mdash; ${escapeHtml(item.proveedor || '')}</p>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-700">${((item.cajasFardos || 0) * (item.factorConversion || 1) + (item.unidades || 0)).toFixed(2)}</span>
+                        </div>`;
+                }).join('');
+            }
+
+            // Distribución por proveedor (simple lista de barras)
+            const chartContainer = document.getElementById('proveedorChart');
+            if (inventario.length === 0) {
+                chartContainer.innerHTML = `
+                    <div class="text-center text-gray-500">
+                        <i class="fas fa-chart-pie text-3xl mb-2"></i>
+                        <p>No hay datos disponibles</p>
+                    </div>`;
+            } else {
+                const countByProveedor = {};
+                inventario.forEach(function (item) {
+                    const p = item.proveedor || 'Sin proveedor';
+                    countByProveedor[p] = (countByProveedor[p] || 0) + 1;
+                });
+                const total = inventario.length;
+                const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-red-500', 'bg-yellow-500'];
+                let idx = 0;
+                chartContainer.innerHTML = `<div class="w-full space-y-3">` +
+                    Object.entries(countByProveedor).map(function (entry) {
+                        const label   = entry[0];
+                        const count   = entry[1];
+                        const pct     = Math.round((count / total) * 100);
+                        const color   = colors[idx++ % colors.length];
+                        return `
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-700">${escapeHtml(label)}</span>
+                                    <span class="text-gray-500">${count} (${pct}%)</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="${color} h-2 rounded-full" style="width:${pct}%"></div>
+                                </div>
+                            </div>`;
+                    }).join('') + `</div>`;
+            }
+        }
+
+        // ===== INVENTARIO DIARIO =====
+        function cargarDatosArticulo(codigo) {
+            if (!codigo) return;
+
+            const articulo = baseDatosArticulos.find(function (item) { return item.codigo === codigo; });
+
+            if (articulo) {
+                document.getElementById('proveedor').value            = articulo.proveedor             || '';
+                document.getElementById('descripcion').value          = articulo.descripcion            || '';
+                document.getElementById('inventarioReporteria').value = articulo.inventarioReporteria  || 0;
+                document.getElementById('factorConversion').value     = articulo.factorConversion      || 1;
+
+                // Pre-cargar valores existentes en el inventario
+                const inventario  = JSON.parse(localStorage.getItem('inventario') || '[]');
+                const existencia  = inventario.find(function (item) { return item.codigo === codigo; });
+                if (existencia) {
+                    document.getElementById('cajasFardos').value        = existencia.cajasFardos || 0;
+                    document.getElementById('unidades').value           = existencia.unidades    || 0;
+                    document.getElementById('fechaInventario').value    = existencia.fecha       || getTodayISO();
+                }
+
+                calcularTotalUnidades();
+                showNotification('Éxito', 'Datos del artículo cargados correctamente', 'success');
+            } else {
+                showNotification('Advertencia', 'Artículo no encontrado en la base de datos. Puede ingresar los datos manualmente.', 'warning');
+                document.getElementById('proveedor').value            = '';
+                document.getElementById('descripcion').value          = '';
+                document.getElementById('inventarioReporteria').value = 0;
+                document.getElementById('factorConversion').value     = 1;
+                document.getElementById('cajasFardos').value          = 0;
+                document.getElementById('unidades').value             = 0;
+                calcularTotalUnidades();
+            }
+        }
+
+        function calcularTotalUnidades() {
+            const cajas    = parseFloat(document.getElementById('cajasFardos').value)     || 0;
+            const factor   = parseFloat(document.getElementById('factorConversion').value) || 1;
+            const unidades = parseFloat(document.getElementById('unidades').value)         || 0;
+            document.getElementById('totalUnidadesCalculo').textContent = ((cajas * factor) + unidades).toFixed(2);
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('codigoArticulo').value        = '';
+            document.getElementById('proveedor').value             = '';
+            document.getElementById('descripcion').value           = '';
+            document.getElementById('inventarioReporteria').value  = '';
+            document.getElementById('factorConversion').value      = '';
+            document.getElementById('cajasFardos').value           = '';
+            document.getElementById('unidades').value              = '';
+            document.getElementById('totalUnidadesCalculo').textContent = '0';
+            setTodayDate();
+        }
+
+        function agregarArticulo() {
+            const fecha               = document.getElementById('fechaInventario').value;
+            const codigo              = document.getElementById('codigoArticulo').value.trim();
+            const cajas               = parseFloat(document.getElementById('cajasFardos').value)             || 0;
+            const unidades            = parseFloat(document.getElementById('unidades').value)                || 0;
+            const proveedor           = document.getElementById('proveedor').value.trim();
+            const descripcion         = document.getElementById('descripcion').value.trim();
+            const inventarioReporteria= parseFloat(document.getElementById('inventarioReporteria').value)    || 0;
+            const factorConversion    = parseFloat(document.getElementById('factorConversion').value)        || 1;
+
+            if (!codigo || !fecha) {
+                showNotification('Error', 'El código del artículo y la fecha son requeridos', 'error');
+                return;
+            }
+
+            let articuloBase = baseDatosArticulos.find(function (item) { return item.codigo === codigo; });
+            if (!articuloBase) {
+                articuloBase = { codigo, descripcion, proveedor, inventarioReporteria, factorConversion };
+            }
+
+            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            const index      = inventario.findIndex(function (item) { return item.codigo === codigo; });
+
+            const articulo = Object.assign({}, articuloBase, {
+                fecha,
+                cajasFardos: cajas,
+                unidades,
+                timestamp: new Date().toISOString()
+            });
+
+            if (index !== -1) {
+                inventario[index] = articulo;
+            } else {
+                inventario.push(articulo);
+            }
+
+            localStorage.setItem('inventario', JSON.stringify(inventario));
+            limpiarFormulario();
+            showNotification('Éxito', 'Artículo agregado/actualizado correctamente', 'success');
+            loadDashboardData();
+            loadInventory();
+        }
+
+        // ===== ESCÁNER DE CÓDIGO DE BARRAS =====
+        function startScanner() {
+            if (scannerActive) return;
+
+            const scannerArea = document.getElementById('scanner-area');
+            scannerArea.classList.remove('hidden');
+            document.getElementById('startScannerBtn').classList.add('hidden');
+
+            Quagga.init({
+                inputStream: {
+                    name: 'Live',
+                    type: 'LiveStream',
+                    target: document.querySelector('#scanner'),
+                    constraints: { facingMode: 'environment' }
+                },
+                decoder: {
+                    readers: [
+                        'code_128_reader', 'ean_reader', 'ean_8_reader',
+                        'code_39_reader', 'upc_reader', 'upc_e_reader', 'code_93_reader'
+                    ]
+                }
+            }, function (err) {
+                if (err) {
+                    console.error('Quagga init error:', err);
+                    showNotification('Error', 'No se pudo iniciar el escáner: ' + (err.message || err), 'error');
+                    scannerArea.classList.add('hidden');
+                    document.getElementById('startScannerBtn').classList.remove('hidden');
+                    return;
+                }
+                Quagga.start();
+                scannerActive = true;
+            });
+
+            Quagga.onDetected(function (result) {
+                const code = result.codeResult.code;
+                document.getElementById('codigoArticulo').value = code;
+                cargarDatosArticulo(code);
+                stopScanner();
+                showNotification('Escaneo Exitoso', 'Código detectado: ' + code, 'success');
+            });
+        }
+
+        function stopScanner() {
+            if (!scannerActive) return;
+            Quagga.stop();
+            scannerActive = false;
+            document.getElementById('scanner-area').classList.add('hidden');
+            document.getElementById('startScannerBtn').classList.remove('hidden');
+        }
+
+        // ===== VER INVENTARIO =====
+        function loadInventory(filtro) {
+            let inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            const tbody    = document.getElementById('inventoryTableBody');
+
+            if (filtro) {
+                const q = filtro.toLowerCase();
+                inventario = inventario.filter(function (item) {
+                    return (item.codigo      || '').toLowerCase().includes(q) ||
+                           (item.descripcion || '').toLowerCase().includes(q) ||
+                           (item.proveedor   || '').toLowerCase().includes(q);
+                });
+            }
+
+            if (inventario.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="11" class="py-8 text-center text-gray-500">
+                            <i class="fas fa-inbox text-3xl mb-2"></i>
+                            <p>${filtro ? 'No se encontraron artículos' : 'No hay artículos en el inventario'}</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = inventario.map(function (item) {
+                const total      = ((item.cajasFardos || 0) * (item.factorConversion || 1)) + (item.unidades || 0);
+                const diferencia = (item.inventarioReporteria || 0) - total;
+                let validacion, badgeClass;
+
+                if (diferencia === 0) {
+                    validacion = 'OK';   badgeClass = 'bg-green-100 text-green-800';
+                } else if (diferencia < 0) {
+                    validacion = 'VAL+'; badgeClass = 'bg-blue-100 text-blue-800';
+                } else {
+                    validacion = 'VAL-'; badgeClass = 'bg-red-100 text-red-800';
+                }
+
+                return `
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-4 px-4 text-sm">${escapeHtml(item.fecha || 'N/A')}</td>
+                        <td class="py-4 px-4 font-mono text-sm">${escapeHtml(item.codigo)}</td>
+                        <td class="py-4 px-4 max-w-xs">${escapeHtml(item.descripcion || '')}</td>
+                        <td class="py-4 px-4 text-center">${item.inventarioReporteria || 0}</td>
+                        <td class="py-4 px-4 text-center">${item.factorConversion || 1}</td>
+                        <td class="py-4 px-4 text-center">${item.cajasFardos || 0}</td>
+                        <td class="py-4 px-4 text-center">${item.unidades || 0}</td>
+                        <td class="py-4 px-4 text-center font-bold">${total.toFixed(2)}</td>
+                        <td class="py-4 px-4 text-center">${diferencia.toFixed(2)}</td>
+                        <td class="py-4 px-4 text-center">
+                            <span class="px-2 py-1 rounded-full text-xs ${badgeClass}">${validacion}</span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <div class="flex space-x-2 justify-center">
+                                <button class="text-blue-600 hover:text-blue-800" onclick="editarArticulo('${escapeHtml(item.codigo)}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-800" onclick="eliminarArticulo('${escapeHtml(item.codigo)}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+            }).join('');
+        }
+
+        function editarArticulo(codigo) {
+            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            const articulo   = inventario.find(function (item) { return item.codigo === codigo; });
+
+            if (articulo) {
+                document.getElementById('fechaInventario').value        = articulo.fecha               || getTodayISO();
+                document.getElementById('codigoArticulo').value         = articulo.codigo;
+                document.getElementById('proveedor').value              = articulo.proveedor            || '';
+                document.getElementById('descripcion').value            = articulo.descripcion          || '';
+                document.getElementById('inventarioReporteria').value   = articulo.inventarioReporteria || 0;
+                document.getElementById('factorConversion').value       = articulo.factorConversion     || 1;
+                document.getElementById('cajasFardos').value            = articulo.cajasFardos          || 0;
+                document.getElementById('unidades').value               = articulo.unidades             || 0;
+                calcularTotalUnidades();
+
+                document.querySelectorAll('.nav-item').forEach(function (nav) { nav.classList.remove('active'); });
+                document.querySelector('[data-section="inventario-diario"]').classList.add('active');
+                document.querySelectorAll('.section-content').forEach(function (section) { section.classList.add('hidden'); });
+                document.getElementById('inventario-diario-section').classList.remove('hidden');
+                document.getElementById('currentSectionTitle').textContent = 'Editar Artículo de Inventario';
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function eliminarArticulo(codigo) {
+            if (confirm('¿Estás seguro de eliminar el artículo ' + codigo + '?')) {
+                let inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+                inventario     = inventario.filter(function (item) { return item.codigo !== codigo; });
+                localStorage.setItem('inventario', JSON.stringify(inventario));
+                loadInventory();
+                loadDashboardData();
+                showNotification('Éxito', 'Artículo eliminado correctamente', 'success');
+            }
+        }
+
+        // ===== EXPORTAR CSV =====
+        function exportToCSV() {
+            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+
+            if (inventario.length === 0) {
+                showNotification('Advertencia', 'No hay datos para exportar', 'warning');
+                return;
+            }
+
+            const selectedFields = Array.from(document.querySelectorAll('input[name="exportFields"]:checked'))
+                                        .map(function (cb) { return cb.value; });
+
+            if (selectedFields.length === 0) {
+                showNotification('Advertencia', 'Seleccione al menos un campo para exportar', 'warning');
+                return;
+            }
+
+            const headersMap = {
+                fecha:                'Fecha',
+                codigo:               'Codigo',
+                descripcion:          'Descripcion',
+                proveedor:            'Proveedor',
+                inventarioReporteria: 'Inventario Reporteria',
+                factorConversion:     'Factor',
+                cajasFardos:          'Cajas/Fardos',
+                unidades:             'Unidades',
+                total:                'Total',
+                diferencia:           'Diferencia',
+                validacion:           'Validacion'
+            };
+
+            const headers    = selectedFields.map(function (f) { return headersMap[f]; });
+            const csvContent = inventario.map(function (item) {
+                const total      = ((item.cajasFardos || 0) * (item.factorConversion || 1)) + (item.unidades || 0);
+                const diferencia = (item.inventarioReporteria || 0) - total;
+                let validacion   = diferencia === 0 ? 'OK' : diferencia < 0 ? 'VAL+' : 'VAL-';
+
+                const rowData = {
+                    fecha:                item.fecha                || '',
+                    codigo:               item.codigo               || '',
+                    descripcion:          item.descripcion          || '',
+                    proveedor:            item.proveedor            || '',
+                    inventarioReporteria: item.inventarioReporteria || 0,
+                    factorConversion:     item.factorConversion     || 1,
+                    cajasFardos:          item.cajasFardos          || 0,
+                    unidades:             item.unidades             || 0,
+                    total:                total.toFixed(2),
+                    diferencia:           diferencia.toFixed(2),
+                    validacion:           validacion
+                };
+
+                return selectedFields.map(function (field) {
+                    return '"' + String(rowData[field]).replace(/"/g, '""') + '"';
+                }).join(',');
+            }).join('\n');
+
+            const csv  = '\uFEFF' + headers.join(',') + '\n' + csvContent; // BOM para compatibilidad con Excel
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url  = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'inventario_' + new Date().toISOString().split('T')[0] + '.csv');
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showNotification('Éxito', 'Archivo CSV exportado correctamente', 'success');
+        }
+
+        // ===== IMPORTAR DATOS =====
+        function parseCsvLines(text) {
+            return text.split('\n').filter(function (line) { return line.trim() !== ''; });
+        }
+
+        function previewInventoryFile(input) {
+            const previewDiv  = document.getElementById('inventoryPreview');
+            const previewHead = document.getElementById('inventoryPreviewHead');
+            const previewBody = document.getElementById('inventoryPreviewBody');
+            const confirmBtn  = document.getElementById('confirmImportInventory');
+            const file        = input.files[0];
+
+            if (!file) {
+                previewDiv.classList.add('hidden');
+                confirmBtn.disabled = true;
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const lines = parseCsvLines(e.target.result);
+                if (lines.length > 0) {
+                    const headers = lines[0].split(',');
+                    previewHead.innerHTML = '<tr>' + headers.map(function (h) { return '<th class="pb-2 text-left text-gray-600 pr-4">' + escapeHtml(h) + '</th>'; }).join('') + '</tr>';
+                    let bodyHtml = '';
+                    for (let i = 1; i < Math.min(lines.length, 6); i++) {
+                        const cells = lines[i].split(',');
+                        bodyHtml += '<tr>' + cells.map(function (c) { return '<td class="py-1 pr-4 text-gray-700">' + escapeHtml(c) + '</td>'; }).join('') + '</tr>';
+                    }
+                    previewBody.innerHTML  = bodyHtml;
+                    previewDiv.classList.remove('hidden');
+                    confirmBtn.disabled = false;
+                } else {
+                    previewDiv.classList.add('hidden');
+                    confirmBtn.disabled = true;
+                    showNotification('Advertencia', 'El archivo CSV está vacío.', 'warning');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function importInventory() {
+            const fileInput = document.getElementById('importInventoryFile');
+            const file      = fileInput.files[0];
+
+            if (!file) {
+                showNotification('Error', 'Por favor, seleccione un archivo para importar.', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const lines = parseCsvLines(e.target.result);
+
+                if (lines.length < 2) {
+                    showNotification('Error', 'El archivo no contiene datos válidos.', 'error');
+                    return;
+                }
+
+                const headers         = lines[0].split(',').map(function (h) { return h.trim(); });
+                const expectedHeaders = ['Fecha', 'Proveedor', 'Codigo', 'Descripcion', 'Inventario Reporteria', 'Factor'];
+
+                if (headers.length !== expectedHeaders.length || !headers.every(function (h, i) { return h === expectedHeaders[i]; })) {
+                    showNotification('Error', 'Encabezado incorrecto. Esperado: ' + expectedHeaders.join(','), 'error');
+                    return;
+                }
+
+                let importedCount = 0, updatedCount = 0;
+                let inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',');
+                    if (values.length === headers.length) {
+                        const item = {
+                            fecha:                values[0].trim(),
+                            proveedor:            values[1].trim(),
+                            codigo:               values[2].trim(),
+                            descripcion:          values[3].trim(),
+                            inventarioReporteria: parseFloat(values[4].trim()) || 0,
+                            factorConversion:     parseFloat(values[5].trim()) || 1,
+                            cajasFardos:          0,
+                            unidades:             0,
+                            timestamp:            new Date().toISOString()
+                        };
+                        const idx = inventario.findIndex(function (inv) { return inv.codigo === item.codigo; });
+                        if (idx !== -1) {
+                            inventario[idx] = Object.assign({}, item, {
+                                cajasFardos: inventario[idx].cajasFardos || 0,
+                                unidades:    inventario[idx].unidades    || 0
+                            });
+                            updatedCount++;
+                        } else {
+                            inventario.push(item);
+                            importedCount++;
+                        }
+                    }
+                }
+
+                localStorage.setItem('inventario', JSON.stringify(inventario));
+                showNotification('Importación Completa', importedCount + ' nuevos, ' + updatedCount + ' actualizados.', 'success');
+                document.getElementById('inventoryPreview').classList.add('hidden');
+                document.getElementById('confirmImportInventory').disabled = true;
+                fileInput.value = '';
+                loadInventory();
+                loadDashboardData();
+            };
+            reader.readAsText(file);
+        }
+
+        function previewCodesFile(input) {
+            const previewDiv  = document.getElementById('codesPreview');
+            const previewHead = document.getElementById('codesPreviewHead');
+            const previewBody = document.getElementById('codesPreviewBody');
+            const confirmBtn  = document.getElementById('confirmImportCodes');
+            const file        = input.files[0];
+
+            if (!file) {
+                previewDiv.classList.add('hidden');
+                confirmBtn.disabled = true;
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const lines = parseCsvLines(e.target.result);
+                if (lines.length > 0) {
+                    const headers = lines[0].split(',');
+                    previewHead.innerHTML = '<tr>' + headers.map(function (h) { return '<th class="pb-2 text-left text-gray-600 pr-4">' + escapeHtml(h) + '</th>'; }).join('') + '</tr>';
+                    let bodyHtml = '';
+                    for (let i = 1; i < Math.min(lines.length, 6); i++) {
+                        const cells = lines[i].split(',');
+                        bodyHtml += '<tr>' + cells.map(function (c) { return '<td class="py-1 pr-4 text-gray-700">' + escapeHtml(c) + '</td>'; }).join('') + '</tr>';
+                    }
+                    previewBody.innerHTML  = bodyHtml;
+                    previewDiv.classList.remove('hidden');
+                    confirmBtn.disabled = false;
+                } else {
+                    previewDiv.classList.add('hidden');
+                    confirmBtn.disabled = true;
+                    showNotification('Advertencia', 'El archivo CSV está vacío.', 'warning');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function importCodes() {
+            const fileInput = document.getElementById('importCodesFile');
+            const file      = fileInput.files[0];
+
+            if (!file) {
+                showNotification('Error', 'Por favor, seleccione un archivo para importar.', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const lines = parseCsvLines(e.target.result);
+
+                if (lines.length < 2) {
+                    showNotification('Error', 'El archivo no contiene datos válidos.', 'error');
+                    return;
+                }
+
+                const headers         = lines[0].split(',').map(function (h) { return h.trim(); });
+                const expectedHeaders = ['Codigo', 'Descripcion', 'Proveedor', 'Factor', 'Codigo de Barra'];
+
+                if (headers.length !== expectedHeaders.length || !headers.every(function (h, i) { return h === expectedHeaders[i]; })) {
+                    showNotification('Error', 'Encabezado incorrecto. Esperado: ' + expectedHeaders.join(','), 'error');
+                    return;
+                }
+
+                let importedCount = 0, updatedCount = 0;
+                let currentBase = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
+
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',');
+                    if (values.length === headers.length) {
+                        const item = {
+                            codigo:           values[0].trim(),
+                            descripcion:      values[1].trim(),
+                            proveedor:        values[2].trim(),
+                            factorConversion: parseFloat(values[3].trim()) || 1,
+                            codigoDeBarra:    values[4].trim()
+                        };
+                        const idx = currentBase.findIndex(function (b) { return b.codigo === item.codigo; });
+                        if (idx !== -1) {
+                            currentBase[idx] = item;
+                            updatedCount++;
+                        } else {
+                            currentBase.push(item);
+                            importedCount++;
+                        }
+                    }
+                }
+
+                localStorage.setItem('baseDatosArticulos', JSON.stringify(currentBase));
+                baseDatosArticulos = currentBase;
+                showNotification('Importación Completa', importedCount + ' nuevos, ' + updatedCount + ' actualizados.', 'success');
+                document.getElementById('codesPreview').classList.add('hidden');
+                document.getElementById('confirmImportCodes').disabled = true;
+                fileInput.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        // ===== NOTIFICACIONES =====
+        function resetNotificationCard() {
+            document.getElementById('notificationCard').className = 'bg-white rounded-lg shadow-lg p-4 max-w-sm';
+        }
+
+        function showNotification(title, message, type) {
+            type = type || 'info';
+            const notification     = document.getElementById('notification');
+            const notificationCard = document.getElementById('notificationCard');
+            const icon             = document.getElementById('notificationIcon');
+
+            const styles = {
+                success: { icon: 'fas fa-check-circle text-green-500',       card: 'bg-green-50 rounded-lg shadow-lg p-4 max-w-sm border border-green-200' },
+                error:   { icon: 'fas fa-exclamation-circle text-red-500',   card: 'bg-red-50 rounded-lg shadow-lg p-4 max-w-sm border border-red-200'   },
+                warning: { icon: 'fas fa-exclamation-triangle text-yellow-500', card: 'bg-yellow-50 rounded-lg shadow-lg p-4 max-w-sm border border-yellow-200' },
+                info:    { icon: 'fas fa-info-circle text-blue-500',         card: 'bg-blue-50 rounded-lg shadow-lg p-4 max-w-sm border border-blue-200'   }
+            };
+
+            const style = styles[type] || styles.info;
+            icon.className                                              = style.icon;
+            notificationCard.className                                  = style.card;
+            document.getElementById('notificationTitle').textContent   = title;
+            document.getElementById('notificationMessage').textContent = message;
+
+            notification.classList.remove('hidden');
+
+            clearTimeout(notificationTimer);
+            notificationTimer = setTimeout(function () {
+                notification.classList.add('hidden');
+                resetNotificationCard();
+            }, 5000);
+        }
+
+        // ===== GESTIÓN DE USUARIOS =====
+        function initUsers() {
+            const form      = document.getElementById('userForm');
+            const formTitle = document.getElementById('userFormTitle');
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const username        = document.getElementById('userUsername').value.trim();
+                const email           = document.getElementById('userEmail').value.trim();
+                const password        = document.getElementById('userPassword').value;
+                const confirmPassword = document.getElementById('userConfirmPassword').value;
+                const role            = document.getElementById('userRole').value;
+                const userId          = document.getElementById('userId').value;
+
+                if (password !== confirmPassword) {
+                    showNotification('Error', 'Las contraseñas no coinciden', 'error');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showNotification('Error', 'La contraseña debe tener al menos 6 caracteres', 'error');
+                    return;
+                }
+
+                let users = JSON.parse(localStorage.getItem('users') || '[]');
+
+                if (userId) {
+                    const idx = users.findIndex(function (u) { return u.username === userId; });
+                    if (idx !== -1) {
+                        users[idx] = { username: userId, email, password, role };
+                    }
+                } else {
+                    if (users.some(function (u) { return u.username === username; })) {
+                        showNotification('Error', 'El nombre de usuario ya existe', 'error');
+                        return;
+                    }
+                    users.push({ username, email, password, role });
+                }
+
+                localStorage.setItem('users', JSON.stringify(users));
+                resetUserForm();
+                loadUsers();
+                showNotification('Éxito', userId ? 'Usuario actualizado' : 'Usuario creado', 'success');
+            });
+
+            document.getElementById('cancelUserBtn').addEventListener('click', resetUserForm);
+
+            loadUsers();
+        }
+
+        function resetUserForm() {
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value              = '';
+            document.getElementById('userFormTitle').textContent = 'Crear Nuevo Usuario';
+            document.getElementById('userUsername').disabled     = false;
+        }
+
+        function loadUsers() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const tbody = document.getElementById('usersTableBody');
+
+            if (users.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-8 text-center text-gray-500">
+                            <i class="fas fa-users text-3xl mb-2"></i>
+                            <p>No hay usuarios registrados</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = users.map(function (user) {
+                const isCurrentUser = currentUser && user.username === currentUser.username;
+                return `
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-4 font-medium">${escapeHtml(user.username)}</td>
+                        <td class="py-3 px-4">${escapeHtml(user.email)}</td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-1 rounded-full text-xs ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}">
+                                ${user.role === 'admin' ? 'Administrador' : 'Usuario'}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="flex space-x-2">
+                                <button type="button" class="text-blue-600 hover:text-blue-800 edit-user" data-username="${escapeHtml(user.username)}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                ${!isCurrentUser ? `
+                                <button type="button" class="text-red-600 hover:text-red-800 delete-user" data-username="${escapeHtml(user.username)}">
+                                    <i class="fas fa-trash"></i>
+                                </button>` : ''}
+                            </div>
+                        </td>
+                    </tr>`;
+            }).join('');
+
+            document.querySelectorAll('.edit-user').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    editUser(this.getAttribute('data-username'));
+                });
+            });
+
+            document.querySelectorAll('.delete-user').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    deleteUser(this.getAttribute('data-username'));
+                });
+            });
+        }
+
+        function editUser(username) {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user  = users.find(function (u) { return u.username === username; });
+
+            if (user) {
+                document.getElementById('userUsername').value        = user.username;
+                document.getElementById('userEmail').value           = user.email;
+                document.getElementById('userPassword').value        = '';
+                document.getElementById('userConfirmPassword').value = '';
+                document.getElementById('userRole').value            = user.role;
+                document.getElementById('userId').value              = user.username;
+                document.getElementById('userFormTitle').textContent = 'Editar Usuario';
+                document.getElementById('userUsername').disabled     = true;
+                document.getElementById('userPassword').required     = false;
+                document.getElementById('userConfirmPassword').required = false;
+            }
+        }
+
+        function deleteUser(username) {
+            if (confirm('¿Estás seguro de que quieres eliminar al usuario ' + username + '?')) {
+                let users = JSON.parse(localStorage.getItem('users') || '[]');
+                users     = users.filter(function (u) { return u.username !== username; });
+                localStorage.setItem('users', JSON.stringify(users));
+                loadUsers();
+                showNotification('Eliminado', 'Usuario ' + username + ' eliminado', 'success');
+            }
+        }
+
+        // ===== UTILIDAD: ESCAPADO HTML =====
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
 </body>
 </html>
