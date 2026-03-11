@@ -765,7 +765,20 @@
         let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
         let baseDatosInventario = JSON.parse(localStorage.getItem('baseDatosInventario') || '[]');
 
+        // ===== CONEXION CON SQL SUPABASE =====
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script>
+            const SUPABASE_URL = "https://czxzghhwgfciyrgmgtai.supabase.co";
+            const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6eHpnaGh3Z2ZjaXlyZ21ndGFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNzYxMTgsImV4cCI6MjA4ODc1MjExOH0.LdODWE1RDggRq11NkfgFTUVv6g1E5iQxTfOtZnV0gF0";
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        </script>
+        
         // ===== INICIALIZACIÓN =====
+
+        document.addEventListener("DOMContentLoaded", () => {
+        cargarInventario();
+        });
+    
         document.addEventListener('DOMContentLoaded', function() {
             // Verificar autenticación
             const userData = sessionStorage.getItem('currentUser');
@@ -912,6 +925,13 @@
         }
         
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
+
+            async function guardarInventarioDiario(registro){
+            const { error } = await supabase
+            .from("inventarios_diarios")
+            .insert([registro]);
+        }
+                        
         function cargarDatosArticulo(codigo) {
             const articulo = baseDatosArticulos.find(item => item.codigo === codigo);
             
@@ -1113,6 +1133,37 @@
 }
 
         // ===== VER INVENTARIO =====
+
+            async function verInventario(){
+            const { data, error } = await supabase
+            .from("inventarios_diarios")
+            .select(`
+            id,
+            codigo,
+            cantidad,
+            fecha_registro,
+            skus(descripcion)
+            `)
+            .order("fecha_registro", { ascending:false });
+            return data;
+        }
+
+            async function cargarInventario(){
+            const inventario = await verInventario();
+            const tabla = document.getElementById("tablaInventario");
+            tabla.innerHTML = "";
+            inventario.forEach(item => {
+            tabla.innerHTML += `
+                <tr>
+                    <td>${item.sku}</td>
+                    <td>${item.skus?.descripcion ?? ""}</td>
+                    <td>${item.cantidad}</td>
+                    <td>${item.fecha_registro}</td>
+                </tr>
+            `;
+        });
+    }
+                        
         function loadInventory() {
             const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
             const tbody = document.getElementById('inventoryTableBody');
@@ -1290,6 +1341,19 @@
         }
 
         // ===== IMPORTAR DATOS =====
+
+        async function guardarInventario(data) {
+        const { error } = await supabase
+        .from("inventario_reporteria")
+        .insert(data);
+
+        if (error) {
+            console.error("Error:", error);
+        } else {
+            alert("Inventario importado correctamente");
+        }
+    }
+        
         function previewInventoryFile(input) {
             const file = input.files[0];
             const previewDiv = document.getElementById('inventoryPreview');
@@ -1443,6 +1507,16 @@
             }
         }
 
+        async function importarSKUs(data){
+        const { error } = await supabase
+        .from("skus")
+        .insert(data);
+
+        if(error){
+            console.log(error);
+        }
+    }
+                            
         function importCodes() {
             const fileInput = document.getElementById('importCodesFile');
             const file = fileInput.files[0];
@@ -1565,6 +1639,34 @@
         });
 
         // ===== GESTIÓN DE USUARIOS =====
+
+            async function obtenerUsuarios(){
+            const { data, error } = await supabase
+            .from("usuarios")
+            .select("*");
+            return data;
+        }
+
+            async function crearUsuario(usuario){
+            const { error } = await supabase
+            .from("usuarios")
+            .insert([usuario]);
+        }
+
+            async function actualizarUsuario(id, datos){
+            const { error } = await supabase
+            .from("usuarios")
+            .update(datos)
+            .eq("id", id);
+        }
+
+            async function eliminarUsuario(id){
+            const { error } = await supabase
+            .from("usuarios")
+            .delete()
+            .eq("id", id);
+        }
+                    
         function initUsers() {
             const form = document.getElementById('userForm');
             const formTitle = document.getElementById('userFormTitle');
