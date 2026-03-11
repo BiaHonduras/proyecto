@@ -762,10 +762,12 @@
 
     <script>
         // ===== VARIABLES GLOBALES =====
-        let currentUser = null;
-        let scannerActive = false;
-        let notificationTimer = null;
-        let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
+        const AppState = {
+          currentUser: null,
+          scannerActive: false,
+          articulos: JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]'),
+          inventario: JSON.parse(localStorage.getItem('baseDatosInventario') || '[]')
+        };
 
         // ===== INICIALIZACIÓN DE DATOS DE EJEMPLO =====
         if (baseDatosArticulos.length === 0) {
