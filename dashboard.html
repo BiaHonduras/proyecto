@@ -1745,21 +1745,32 @@ if (error) {
     `).join('');
 }
         
-        function editUser(username) {
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = users.find(u => u.username === username);
+        function editUser(usuario, correo, rol) {
+        document.getElementById('userUsername').value = usuario;
+        document.getElementById('userEmail').value = correo;
+        document.getElementById('userRole').value = rol;
+        document.getElementById('userPassword').value = '';
+        document.getElementById('userConfirmPassword').value = '';
+        document.getElementById('userId').value = usuario;
+        document.getElementById('userFormTitle').textContent = 'Editar Usuario';
+        document.getElementById('userUsername').disabled = true;
             
-            if (user) {
-                document.getElementById('userUsername').value = user.username;
-                document.getElementById('userEmail').value = user.email;
-                document.getElementById('userPassword').value = user.password; // Pre-fill password for convenience (in real app, don't do this)
-                document.getElementById('userConfirmPassword').value = user.password; // Pre-fill password for convenience
-                document.getElementById('userRole').value = user.role;
-                document.getElementById('userId').value = user.username; // Store original username for lookup
-                
-                document.getElementById('userFormTitle').textContent = 'Editar Usuario';
-                document.getElementById('userUsername').disabled = true; // Prevent changing username during edit
-            }
+            if (userId) {
+
+    const { error } = await supabase
+        .from('usuarios')
+        .update({
+            correo: email,
+            contraseña: password,
+            rol: role
+        })
+        .eq('usuario', userId);
+
+    if (error) {
+        showNotification('Error', 'No se pudo actualizar el usuario', 'error');
+        return;
+    }
+}
         }
         
         async function deleteUser(username) {
