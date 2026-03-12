@@ -7,6 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+
+    <script type="module">
+        import { supabase, verificarConexion } from './supabase-config.js';
+    
+    // Hacer supabase accesible globalmente
+        window.supabase = supabase;
+        window.verificarConexion = verificarConexion;
+    </script>
+    
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
