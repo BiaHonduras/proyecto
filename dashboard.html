@@ -773,6 +773,288 @@
         let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
         let baseDatosInventario = JSON.parse(localStorage.getItem('baseDatosInventario') || '[]');
 
+        import {
+    crearUsuario,
+    obtenerUsuarios,
+    eliminarUsuario,
+    obtenerSKUs,
+    obtenerSKUPorCodigo,
+    importarSKUs,
+    obtenerInventarioReporteria,
+    importarInventarioReporteria,
+    agregarArticuloInventario,
+    obtenerInventariosActuales,
+    eliminarArticuloInventario,
+    obtenerInventarioPorFecha
+} from './supabase-functions.js';
+
+// ===== MODIFICAR: loadDashboardData() =====
+async function loadDashboardData() {
+    try {
+        const inventarioResponse = await obtenerInventariosActuales();
+        if (!inventarioResponse.success) throw new Error('Error cargando inventario');
+        
+        const inventario = inventarioResponse.data || [];
+        
+        document.getElementById('totalArticulos').textContent = inventario.length;
+        
+        const totalUnidades = inventario.reduce((sum, item) => {
+            const total = (item.cajas_fardos * item.masterpack) + item.unidades;
+            return sum + total;
+        }, 0);
+        document.getElementById('totalUnidadesDashboard').textContent = totalUnidades.toLocaleString();
+        
+        const proveedoresUnicos = new Set(inventario.map(item => item.proveedor)).size;
+        document.getElementById('totalProveedores').textContent = proveedoresUnicos;
+        
+        if (inventario.length > 0) {
+            const lastUpdate = new Date(Math.max(...inventario.map(item => new Date(item.created_at))));
+            document.getElementById('ultimaActualizacion').textContent = 
+                lastUpdate.toLocaleDateString() + ' ' + lastUpdate.toLocaleTimeString();
+        }
+    } catch (error) {
+        console.error('Error cargando dashboard:', error);
+        showNotification('Error', 'No se pudo cargar los datos del dashboard', 'error');
+    }
+}
+
+// ===== MODIFICAR: cargarDatosArticulo() =====
+async function cargarDatosArticulo(codigo) {
+    try {
+        const response = await obtenerSKUPorCodigo(codigo);
+        
+        if (response.success && response.data) {
+            const articulo = response.data;
+            document.getElementById('proveedor').value = articulo.proveedor || '';
+            document.getElementById('descripcion').value = articulo.descripción || '';
+            document.getElementById('inventarioReporteria').value = articulo.masterpack || 0;
+            document.getElementById('factorConversion').value = articulo.masterpack || 1;
+            
+            calcularTotalUnidades();
+            showNotification('Éxito', 'Datos del artículo cargados correctamente', 'success');
+        } else {
+            showNotification('Advertencia', 'Artículo no encontrado en la base de datos', 'warning');
+            document.getElementById('proveedor').value = '';
+            document.getElementById('descripcion').value = '';
+            document.getElementById('inventarioReporteria').value = 0;
+            document.getElementById('factorConversion').value = 1;
+        }
+    } catch (error) {
+        console.error('Error cargando datos del artículo:', error);
+        showNotification('Error', 'Error al cargar datos del artículo', 'error');
+    }
+}
+
+// ===== MODIFICAR: agregarArticulo() =====
+
+async function agregarArticulo() {
+    const fecha = document.getElementById('fechaInventario').value;
+    const codigo = document.getElementById('codigoArticulo').value;
+    const proveedor = document.getElementById('proveedor').value;
+    const descripcion = document.getElementById('descripcion').value;
+    const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
+    const factorConversion = parseFloat(document.getElementById('factorConversion').value) || 1;
+    const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
+    const unidades = parseFloat(document.getElementById('unidades').value) || 0;
+
+    if (!codigo || !fecha) {
+        showNotification('Error', 'El código del artículo y la fecha son requeridos', 'error');
+        return;
+    }
+
+    try {
+        const total = (cajas * factorConversion) + unidades;
+        
+        const response = await agregarArticuloInventario({
+            codigo: codigo,
+            descripcion: descripcion,
+            proveedor: proveedor,
+            masterpack: factorConversion,
+            cajasFardos: cajas,
+            unidades: unidades,
+            total: total
+        });
+
+        if (response.success) {
+            showNotification('Éxito', 'Artículo agregado correctamente', 'success');
+            limpiarFormulario();
+            loadInventory();
+        } else {
+            throw response.error;
+        }
+    } catch (error) {
+        console.error('Error al agregar artículo:', error);
+        showNotification('Error', 'No se pudo agregar el artículo', 'error');
+    }
+}
+
+// ===== MODIFICAR: loadInventory() =====
+
+async function loadInventory() {
+    try {
+        const response = await obtenerInventariosActuales();
+        if (!response.success) throw new Error('Error cargando inventario');
+        
+        const inventario = response.data || [];
+        const tbody = document.getElementById('inventoryTableBody');
+        
+        if (inventario.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="11" class="py-8 text-center text-gray-500">
+                        <i class="fas fa-inbox text-3xl mb-2"></i>
+                        <p>No hay artículos en el inventario</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = inventario.map(item => `
+            <tr class="table-row border-b border-gray-200">
+                <td class="py-3">${item.fecha || '-'}</td>
+                <td class="py-3">${item.código}</td>
+                <td class="py-3">${item.descripción}</td>
+                <td class="py-3">${item.inventario_reporteria || 0}</td>
+                <td class="py-3">${item.masterpack || 1}</td>
+                <td class="py-3">${item.cajas_fardos}</td>
+                <td class="py-3">${item.unidades}</td>
+                <td class="py-3"><strong>${item.total}</strong></td>
+                <td class="py-3">${item.diferencia || '-'}</td>
+                <td class="py-3">${item.validacion || '-'}</td>
+                <td class="py-3">
+                    <button onclick="deleteArticulo(${item.id})" class="text-red-600 hover:text-red-800">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Error cargando inventario:', error);
+        showNotification('Error', 'Error al cargar el inventario', 'error');
+    }
+}
+
+// ===== NUEVA FUNCIÓN: deleteArticulo() =====
+
+async function deleteArticulo(id) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este artículo?')) return;
+    
+    try {
+        const response = await eliminarArticuloInventario(id);
+        if (response.success) {
+            showNotification('Éxito', 'Artículo eliminado correctamente', 'success');
+            loadInventory();
+        } else {
+            throw response.error;
+        }
+    } catch (error) {
+        console.error('Error al eliminar artículo:', error);
+        showNotification('Error', 'No se pudo eliminar el artículo', 'error');
+    }
+}
+
+// ===== MODIFICAR: initUsers() =====
+async function initUsers() {
+    try {
+        const response = await obtenerUsuarios();
+        if (response.success) {
+            loadUsers();
+        }
+    } catch (error) {
+        console.error('Error inicializando usuarios:', error);
+    }
+}
+
+// ===== MODIFICAR: loadUsers() =====
+async function loadUsers() {
+    try {
+        const response = await obtenerUsuarios();
+        if (!response.success) throw new Error('Error cargando usuarios');
+        
+        const usuarios = response.data || [];
+        const tbody = document.getElementById('usersTableBody');
+        
+        if (usuarios.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="py-8 text-center text-gray-500">
+                        <i class="fas fa-users text-3xl mb-2"></i>
+                        <p>No hay usuarios</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = usuarios.map(user => `
+            <tr>
+                <td class="py-3">${user.usuario}</td>
+                <td class="py-3">${user.correo}</td>
+                <td class="py-3"><span class="px-2 py-1 rounded text-sm ${user.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}">${user.rol}</span></td>
+                <td class="py-3">
+                    <button onclick="editUser(${user.id})" class="text-blue-600 hover:text-blue-800 mr-2">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteUser(${user.id})" class="text-red-600 hover:text-red-800">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Error cargando usuarios:', error);
+    }
+}
+
+// ===== NUEVA FUNCIÓN: deleteUser() =====
+async function deleteUser(id) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este usuario?')) return;
+    
+    try {
+        const response = await eliminarUsuario(id);
+        if (response.success) {
+            showNotification('Éxito', 'Usuario eliminado correctamente', 'success');
+            loadUsers();
+        } else {
+            throw response.error;
+        }
+    } catch (error) {
+        console.error('Error al eliminar usuario:', error);
+        showNotification('Error', 'No se pudo eliminar el usuario', 'error');
+    }
+}
+
+// ===== MODIFICAR: userForm submit =====
+document.getElementById('userForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('userUsername').value;
+    const email = document.getElementById('userEmail').value;
+    const password = document.getElementById('userPassword').value;
+    const confirmPassword = document.getElementById('userConfirmPassword').value;
+    const rol = document.getElementById('userRole').value;
+
+    if (password !== confirmPassword) {
+        showNotification('Error', 'Las contraseñas no coinciden', 'error');
+        return;
+    }
+
+    try {
+        const response = await crearUsuario(username, email, password, rol);
+        if (response.success) {
+            showNotification('Éxito', 'Usuario creado correctamente', 'success');
+            document.getElementById('userForm').reset();
+            loadUsers();
+        } else {
+            throw response.error;
+        }
+    } catch (error) {
+        console.error('Error creando usuario:', error);
+        showNotification('Error', 'No se pudo crear el usuario', 'error');
+    }
+});
+        
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', function() {
             // Verificar autenticación
