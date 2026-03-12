@@ -767,6 +767,22 @@
     </div>
 
     <script>
+        
+        import {
+            crearUsuario,
+            obtenerUsuarios,
+            eliminarUsuario,
+            obtenerSKUs,
+            obtenerSKUPorCodigo,
+            importarSKUs,
+            obtenerInventarioReporteria,
+            importarInventarioReporteria,
+            agregarArticuloInventario,
+            obtenerInventariosActuales,
+            eliminarArticuloInventario,
+            obtenerInventarioPorFecha
+        } from './supabase-functions.js';
+        
         // ===== VARIABLES GLOBALES =====
         let currentUser = null;
         let scannerActive = false;
