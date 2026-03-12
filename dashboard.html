@@ -759,6 +759,23 @@
     </div>
 
     <script>
+
+        // Importar funciones de Supabase al inicio
+            import {
+                crearUsuario,
+                obtenerUsuarios,
+                eliminarUsuario,
+                obtenerSKUs,
+                obtenerSKUPorCodigo,
+                importarSKUs,
+                obtenerInventarioReporteria,
+                importarInventarioReporteria,
+                agregarArticuloInventario,
+                obtenerInventariosActuales,
+                eliminarArticuloInventario,
+                obtenerInventarioPorFecha
+        } from './supabase-functions.js';
+        
         // ===== VARIABLES GLOBALES =====
         let currentUser = null;
         let scannerActive = false;
@@ -883,68 +900,66 @@
         }
 
         // ===== DASHBOARD =====
-        function loadDashboardData() {
-            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
-            
-            // Actualizar estadísticas
-            document.getElementById('totalArticulos').textContent = inventario.length;
-            
-            const totalUnidades = inventario.reduce((sum, item) => {
-                const total = (item.cajasFardos * item.factorConversion) + item.unidades;
-                return sum + total;
-            }, 0);
-            document.getElementById('totalUnidadesDashboard').textContent = totalUnidades.toLocaleString();
-            
-            const proveedoresUnicos = new Set(inventario.map(item => item.proveedor)).size;
-            document.getElementById('totalProveedores').textContent = proveedoresUnicos;
-            
-            if (inventario.length > 0) {
-                const lastUpdate = new Date(Math.max(...inventario.map(item => new Date(item.timestamp))));
-                document.getElementById('ultimaActualizacion').textContent = 
-                    lastUpdate.toLocaleDateString() + ' ' + lastUpdate.toLocaleTimeString();
-            }
+async function loadDashboardData() {
+    try {
+        const inventarioResponse = await obtenerInventariosActuales();
+        if (!inventarioResponse.success) throw new Error('Error cargando inventario');
+        
+        const inventario = inventarioResponse.data || [];
+        
+        document.getElementById('totalArticulos').textContent = inventario.length;
+        
+        const totalUnidades = inventario.reduce((sum, item) => {
+            const total = (item.cajas_fardos * item.masterpack) + item.unidades;
+            return sum + total;
+        }, 0);
+        document.getElementById('totalUnidadesDashboard').textContent = totalUnidades.toLocaleString();
+        
+        const proveedoresUnicos = new Set(inventario.map(item => item.proveedor)).size;
+        document.getElementById('totalProveedores').textContent = proveedoresUnicos;
+        
+        if (inventario.length > 0) {
+            const lastUpdate = new Date(Math.max(...inventario.map(item => new Date(item.created_at))));
+            document.getElementById('ultimaActualizacion').textContent = 
+                lastUpdate.toLocaleDateString() + ' ' + lastUpdate.toLocaleTimeString();
         }
-
+    } catch (error) {
+        console.error('Error cargando dashboard:', error);
+        showNotification('Error', 'No se pudo cargar los datos del dashboard', 'error');
+    }
+}
         // === FORMATO DE FECHA ====
         function formatearFecha(fechaISO) {
         const [año, mes, día] = fechaISO.split("-");
-        return `${día}/${mes}/${año}`;
+        return `${año}-${mes}-${dia}`;
         }
         
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
-        function cargarDatosArticulo(codigo) {
-            const articulo = baseDatosArticulos.find(item => item.codigo === codigo);
+async function cargarDatosArticulo(codigo) {
+    try {
+        const response = await obtenerSKUPorCodigo(codigo);
+        
+        if (response.success && response.data) {
+            const articulo = response.data;
+            document.getElementById('proveedor').value = articulo.proveedor || '';
+            document.getElementById('descripcion').value = articulo.descripción || '';
+            document.getElementById('inventarioReporteria').value = articulo.masterpack || 0;
+            document.getElementById('factorConversion').value = articulo.masterpack || 1;
             
-            if (articulo) {
-                document.getElementById('proveedor').value = articulo.proveedor || '';
-                document.getElementById('descripcion').value = articulo.descripcion || '';
-                document.getElementById('inventarioReporteria').value = articulo.inventarioReporteria || 0;
-                document.getElementById('factorConversion').value = articulo.factorConversion || 1;
-                
-                // Buscar en inventario existente
-                const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
-                const existencia = inventario.find(item => item.codigo === codigo);
-                
-                if (existencia) {
-                    document.getElementById('cajasFardos').value = existencia.cajasFardos || 0;
-                    document.getElementById('unidades').value = existencia.unidades || 0;
-                    document.getElementById('fechaInventario').value = existencia.fecha || document.getElementById('fechaInventario').value;
-                }
-                
-                calcularTotalUnidades();
-                showNotification('Éxito', 'Datos del artículo cargados correctamente', 'success');
-            } else {
-                showNotification('Advertencia', 'Artículo no encontrado en la base de datos. Por favor, ingrese los datos manualmente o importe la base de códigos.', 'warning');
-                // Clear fields if not found, except code
-                document.getElementById('proveedor').value = '';
-                document.getElementById('descripcion').value = '';
-                document.getElementById('inventarioReporteria').value = 0;
-                document.getElementById('factorConversion').value = 1;
-                document.getElementById('cajasFardos').value = 0;
-                document.getElementById('unidades').value = 0;
-                calcularTotalUnidades();
-            }
+            calcularTotalUnidades();
+            showNotification('Éxito', 'Datos del artículo cargados correctamente', 'success');
+        } else {
+            showNotification('Advertencia', 'Artículo no encontrado en la base de datos', 'warning');
+            document.getElementById('proveedor').value = '';
+            document.getElementById('descripcion').value = '';
+            document.getElementById('inventarioReporteria').value = 0;
+            document.getElementById('factorConversion').value = 1;
         }
+    } catch (error) {
+        console.error('Error cargando datos del artículo:', error);
+        showNotification('Error', 'Error al cargar datos del artículo', 'error');
+    }
+}
 
         function calcularTotalUnidades() {
             const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
