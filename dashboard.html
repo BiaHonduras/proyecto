@@ -1629,7 +1629,7 @@ function stopScanner() {
             const form = document.getElementById('userForm');
             const formTitle = document.getElementById('userFormTitle');
             
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
                 const username = document.getElementById('userUsername').value;
@@ -1670,12 +1670,21 @@ function stopScanner() {
                         return;
                     }
                     
-                    users.push({
-                        username: username,
-                        email: email,
-                        password: password, // In a real app, hash this!
-                        role: role
-                    });
+        const { error } = await supabase
+        .from('usuarios')
+        .insert([
+            {
+                usuario: username,
+                correo: email,
+                contraseña: password,
+                rol: role
+            }
+        ]);
+
+if (error) {
+    showNotification('Error', 'No se pudo crear el usuario', 'error');
+    return;
+};
                 }
                 
                 localStorage.setItem('users', JSON.stringify(users));
@@ -1703,62 +1712,50 @@ function stopScanner() {
             loadUsers(); // Initial load of users when the page loads
         }
         
-        function loadUsers() {
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const tbody = document.getElementById('usersTableBody');
+        async function loadUsers() {
             
-            if (users.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="4" class="py-8 text-center text-gray-500">
-                            <i class="fas fa-users text-3xl mb-2"></i>
-                            <p>No hay usuarios registrados</p>
-                        </td>
-                    </tr>
-                `;
-            } else {
-                tbody.innerHTML = users.map(user => `
-                    <tr class="border-b border-gray-200 hover:bg-gray-50">
-                        <td class="py-3 px-4 font-medium">${user.username}</td>
-                        <td class="py-3 px-4">${user.email}</td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 rounded-full text-xs ${
-                                user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                            }">
-                                ${user.role === 'admin' ? 'Administrador' : 'Usuario'}
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex space-x-2">
-                                <button type="button" class="text-blue-600 hover:text-blue-800 edit-user" data-username="${user.username}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                ${user.username !== currentUser.username ? `
-                                <button type="button" class="text-red-600 hover:text-red-800 delete-user" data-username="${user.username}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                                ` : ''}
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
-                
-                // Agregar event listeners
-                document.querySelectorAll('.edit-user').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const username = this.getAttribute('data-username');
-                        editUser(username);
-                    });
-                });
-                
-                document.querySelectorAll('.delete-user').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const username = this.getAttribute('data-username');
-                        deleteUser(username);
-                    });
-                });
-            }
-        }
+    const { data: users, error } = await supabase
+        .from('usuarios')
+        .select('*');
+    const tbody = document.getElementById('usersTableBody');
+
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudieron cargar los usuarios', 'error');
+        return;
+    }
+
+    if (!users || users.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="py-8 text-center text-gray-500">
+                    <i class="fas fa-users text-3xl mb-2"></i>
+                    <p>No hay usuarios registrados</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = users.map(user => `
+        <tr class="border-b border-gray-200 hover:bg-gray-50">
+            <td class="py-3 px-4 font-medium">${user.usuario}</td>
+            <td class="py-3 px-4">${user.correo}</td>
+            <td class="py-3 px-4">
+                <span class="px-2 py-1 rounded-full text-xs ${
+                    user.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                }">
+                    ${user.rol}
+                </span>
+            </td>
+            <td class="py-3 px-4">
+                <button class="text-red-600" onclick="deleteUser('${user.usuario}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
         
         function editUser(username) {
             const users = JSON.parse(localStorage.getItem('users') || '[]');
@@ -1777,16 +1774,23 @@ function stopScanner() {
             }
         }
         
-        function deleteUser(username) {
-            if (confirm(`¿Estás seguro de que quieres eliminar al usuario ${username}?`)) {
-                let users = JSON.parse(localStorage.getItem('users') || '[]');
-                users = users.filter(u => u.username !== username);
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                loadUsers();
-                showNotification('Eliminado', `Usuario ${username} eliminado`, 'success');
-            }
-        }
+        async function deleteUser(username) {
+
+    if (!confirm(`¿Eliminar usuario ${username}?`)) return;
+
+    const { error } = await supabase
+        .from('usuarios')
+        .delete()
+        .eq('usuario', username);
+
+    if (error) {
+        showNotification('Error', 'No se pudo eliminar el usuario', 'error');
+        return;
+    }
+
+    loadUsers();
+    showNotification('Éxito', 'Usuario eliminado', 'success');
+}
 
 
         // Inicializar base de datos de ejemplo si no existe
