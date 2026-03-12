@@ -7,15 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
-
-    <script type="module">
-        import { supabase, verificarConexion } from './supabase-config.js';
-    
-    // Hacer supabase accesible globalmente
-        window.supabase = supabase;
-        window.verificarConexion = verificarConexion;
-    </script>
-    
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -653,7 +644,7 @@
                             </table>
                         </div>
                         
-                        <button id="confirmImportCodes" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" enable>
+                        <button id="confirmImportCodes" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" disabled>
                             <i class="fas fa-upload mr-2"></i>
                             Confirmar Importación
                         </button>
@@ -768,21 +759,6 @@
     </div>
 
     <script>
-        import {
-            crearUsuario,
-            obtenerUsuarios,
-            eliminarUsuario,
-            obtenerSKUs,
-            obtenerSKUPorCodigo,
-            importarSKUs,
-            obtenerInventarioReporteria,
-            importarInventarioReporteria,
-            agregarArticuloInventario,
-            obtenerInventariosActuales,
-            eliminarArticuloInventario,
-            obtenerInventarioPorFecha
-        } from './supabase-functions.js';
-        
         // ===== VARIABLES GLOBALES =====
         let currentUser = null;
         let scannerActive = false;
@@ -823,7 +799,7 @@
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months start at 0!
             const dd = String(today.getDate()).padStart(2, '0');
-            document.getElementById('fechaInventario').value = `${dd}/${mm}/${yyyy}`;
+            document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
 
             // Scanner buttons
             document.getElementById('startScannerBtn').addEventListener('click', startScanner);
@@ -992,113 +968,117 @@
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
-            document.getElementById('fechaInventario').value = `${dd}/${mm}/${yyyy}`;
+            document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
         }
 
         function agregarArticulo() {
-            const fecha = document.getElementById('fechaInventario').value;
-            const codigo = document.getElementById('codigoArticulo').value;
-            const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
-            const unidades = parseFloat(document.getElementById('unidades').value) || 0;
-            const proveedor = document.getElementById('proveedor').value;
-            const descripcion = document.getElementById('descripcion').value;
-            const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
-            const factorConversion = parseFloat(document.getElementById('factorConversion').value) || 1;
-            
-            if (!codigo || !fecha) {
-                showNotification('Error', 'El código del artículo y la fecha son requeridos', 'error');
-                return;
-            }
-            
-            // Check if article exists in baseDatosArticulos, if not, allow adding with provided data
-            let articuloBase = baseDatosArticulos.find(item => item.codigo === codigo);
-            if (!articuloBase) {
-                // If not found, create a temporary base article from current form data
-                articuloBase = {
-                    codigo: codigo,
-                    descripcion: descripcion,
-                    proveedor: proveedor,
-                    inventarioReporteria: inventarioReporteria,
-                    factorConversion: factorConversion
-                };
-                // Optionally, add this new article to baseDatosArticulos for future use
-                // baseDatosArticulos.push(articuloBase);
-                // localStorage.setItem('baseDatosArticulos', JSON.stringify(baseDatosArticulos));
-            }
-            
-            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
-            const index = inventario.findIndex(item => item.codigo === codigo);
-            
-            const articulo = {
-                fecha: fecha,
-                ...articuloBase, // Use data from baseDatosArticulos or form
-                cajasFardos: cajas,
-                unidades: unidades,
-                timestamp: new Date().toISOString()
-            };
-            
-            if (index !== -1) {
-                inventario[index] = articulo;
-            } else {
-                inventario.push(articulo);
-            }
-            
-            localStorage.setItem('inventario', JSON.stringify(inventario));
-            limpiarFormulario();
-            showNotification('Éxito', 'Artículo agregado/actualizado correctamente', 'success');
-            loadDashboardData();
-            loadInventory(); // Refresh inventory table
-        }
+    // 1. PRIMERO: Obtener los valores del formulario
+    const fecha = document.getElementById('fechaInventario').value;
+    const codigo = document.getElementById('codigoArticulo').value;
+    const proveedor = document.getElementById('proveedor').value;
+    const descripcion = document.getElementById('descripcion').value;
+    const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
+    const factorConversion = parseFloat(document.getElementById('factorConversion').value) || 1;
+    const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
+    const unidades = parseFloat(document.getElementById('unidades').value) || 0;
+
+    // 2. SEGUNDO: Validar
+    if (!codigo || !fecha) {
+        showNotification('Error', 'El código del artículo y la fecha son requeridos', 'error');
+        return;
+    }
+
+    // 3. TERCERO: Crear objeto
+    const nuevoArticulo = {
+        id: Date.now(),
+        fecha: fecha,
+        codigo: codigo,
+        proveedor: proveedor,
+        descripcion: descripcion,
+        inventarioReporteria: inventarioReporteria,
+        factorConversion: factorConversion,
+        cajasFardos: cajas,
+        unidades: unidades,
+        total: (cajas * factorConversion) + unidades,
+        timestamp: new Date().toISOString()
+    };
+
+    // 4. CUARTO: Guardar
+    let inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+    inventario.push(nuevoArticulo);
+    localStorage.setItem('inventario', JSON.stringify(inventario));
+
+    showNotification('Éxito', 'Artículo agregado correctamente', 'success');
+    document.getElementById('articuloForm').reset();
+    limpiarFormulario();
+    loadInventory();
+}
 
         // Barcode Scanner Functions
-        function startScanner() {
-            if (scannerActive) return;
-
-            const scannerArea = document.getElementById('scanner-area');
-            scannerArea.classList.remove('hidden');
-            document.getElementById('startScannerBtn').classList.add('hidden');
-
-            Quagga.init({
-                inputStream : {
-                    name : "Live",
-                    type : "LiveStream",
-                    target: document.querySelector('#scanner'),
-                    constraints: {
-                        facingMode: "environment" // or "user" for front camera
-                    }
-                },
-                decoder : {
-                    readers : ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader", "code_39_vin_reader", "codabar_reader", "upc_reader", "upc_e_reader", "i2of5_reader", "2of5_reader", "code_93_reader", "code_32_reader", "databar_reader", "databar_expanded_reader", "qr_code_reader"]
-                }
-            }, function(err) {
-                if (err) {
-                    console.log(err);
-                    showNotification('Error', 'No se pudo iniciar el escáner: ' + err.message, 'error');
-                    scannerArea.classList.add('hidden');
-                    document.getElementById('startScannerBtn').classList.remove('hidden');
-                    return
-                }
-                console.log("Initialization finished. Ready to start");
-                Quagga.start();
-                scannerActive = true;
-            });
-
-            Quagga.onDetected(function(result) {
-                const code = result.codeResult.code;
-                document.getElementById('codigoArticulo').value = code;
-                cargarDatosArticulo(code);
-                stopScanner();
-                showNotification('Escaneo Exitoso', `Código detectado: ${code}`, 'success');
-            });
+        async function startScanner() {
+    document.getElementById('scanner-area').classList.remove('hidden');
+    
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } 
+        });
+        
+        const video = document.querySelector('#scanner video');
+        if (!video) {
+            const videoEl = document.createElement('video');
+            videoEl.id = 'scannerVideo';
+            videoEl.setAttribute('autoplay', true);
+            videoEl.setAttribute('playsinline', true);
+            document.getElementById('scanner').innerHTML = '';
+            document.getElementById('scanner').appendChild(videoEl);
         }
+        
+        const video_element = document.getElementById('scannerVideo') || document.querySelector('#scanner video');
+        video_element.srcObject = stream;
+        scannerActive = true;
+        
+        // Inicializar Quagga
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#scanner'),
+                constraints: {
+                    facingMode: "environment"
+                }
+            },
+            decoder: {
+                readers: ["code_128_reader", "ean_reader", "qr_reader"]
+            }
+        }, function(err) {
+            if (err) {
+                console.log(err);
+                showNotification('Error', 'No se pudo inicializar el escáner', 'error');
+                return;
+            }
+            Quagga.start();
+        });
+        
+        Quagga.onDetected(function(result) {
+            document.getElementById('codigoArticulo').value = result.codeResult.code;
+            cargarDatosArticulo(result.codeResult.code);
+        });
+        
+    } catch (error) {
+        console.error('Error al acceder a la cámara:', error);
+        showNotification('Error', 'No se pudo acceder a la cámara', 'error');
+    }
+}
 
-        function stopScanner() {
-            if (!scannerActive) return;
-            Quagga.stop();
-            scannerActive = false;
-            document.getElementById('scanner-area').classList.add('hidden');
-            document.getElementById('startScannerBtn').classList.remove('hidden');
-        }
+function stopScanner() {
+    if (scannerActive) {
+        Quagga.stop();
+        const stream = document.getElementById('scannerVideo').srcObject;
+        stream.getTracks().forEach(track => track.stop());
+        document.getElementById('scanner-area').classList.add('hidden');
+        scannerActive = false;
+    }
+}
 
         function importarReporteria() {
             const archivo = document.getElementById("archivoReporteria").files[0];
