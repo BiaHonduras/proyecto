@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
+
+// INICIO DE HEAD
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -168,6 +170,8 @@
         }
     </style>
 </head>
+
+// INICIO DEL BODY
 <body class="flex">
     <!-- Sidebar Navigation -->
     <div class="sidebar fixed top-0 left-0 h-full text-white">
@@ -767,7 +771,24 @@
         </div>
     </div>
 
+    // INICIO DE LOS SCRIPTS
     <script>
+
+        import {
+            crearUsuario,
+            obtenerUsuarios,
+            eliminarUsuario,
+            obtenerSKUs,
+            obtenerSKUPorCodigo,
+            importarSKUs,
+            obtenerInventarioReporteria,
+            importarInventarioReporteria,
+            agregarArticuloInventario,
+            obtenerInventariosActuales,
+            eliminarArticuloInventario,
+            obtenerInventarioPorFecha
+        } from './supabase-functions.js';
+        
         // ===== VARIABLES GLOBALES =====
         let currentUser = null;
         let scannerActive = false;
