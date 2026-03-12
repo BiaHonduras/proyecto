@@ -792,32 +792,18 @@ async function deleteUser(id) {
 }
 
 // ===== MODIFICAR: userForm submit =====
-document.getElementById('userForm').addEventListener('submit', async function(e) {
+document.getElementById("loginForm").addEventListener("submit", async function(e){
     e.preventDefault();
-    
-    const username = document.getElementById('userUsername').value;
-    const email = document.getElementById('userEmail').value;
-    const password = document.getElementById('userPassword').value;
-    const confirmPassword = document.getElementById('userConfirmPassword').value;
-    const rol = document.getElementById('userRole').value;
 
-    if (password !== confirmPassword) {
-        showNotification('Error', 'Las contraseñas no coinciden', 'error');
-        return;
-    }
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
 
-    try {
-        const response = await crearUsuario(username, email, password, rol);
-        if (response.success) {
-            showNotification('Éxito', 'Usuario creado correctamente', 'success');
-            document.getElementById('userForm').reset();
-            loadUsers();
-        } else {
-            throw response.error;
-        }
-    } catch (error) {
-        console.error('Error creando usuario:', error);
-        showNotification('Error', 'No se pudo crear el usuario', 'error');
+    const result = await login(username, password);
+
+    if(result.success){
+        window.location.href = "dashboard.html";
+    }else{
+        alert("Usuario o contraseña incorrectos");
     }
 });
         async function crearUsuario(username, email, password, rol) {
@@ -843,12 +829,9 @@ document.getElementById('userForm').addEventListener('submit', async function(e)
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', function() {
             // Verificar autenticación
-            const userData = sessionStorage.getItem('currentUser');
-            if (!userData) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
+            if(currentUser.role !== "admin"){
+    document.querySelector('[data-section="usuarios"]').style.display = "none";
+}
             currentUser = JSON.parse(userData);
             document.getElementById('currentUserName').textContent = currentUser.username;
             
@@ -1730,6 +1713,24 @@ if (error) {
 
             loadUsers(); // Initial load of users when the page loads
         }
+
+        async function updateUser(username, email, password, rol){
+
+    const { error } = await supabase
+        .from('usuarios')
+        .update({
+            correo: email,
+            contraseña: password,
+            rol: rol
+        })
+        .eq('usuario', username);
+
+    if(error){
+        return {success:false}
+    }
+
+    return {success:true}
+}
         
         async function loadUsers() {
             
@@ -1776,22 +1777,26 @@ if (error) {
     `).join('');
 }
         
-        function editUser(username) {
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = users.find(u => u.username === username);
-            
-            if (user) {
-                document.getElementById('userUsername').value = user.username;
-                document.getElementById('userEmail').value = user.email;
-                document.getElementById('userPassword').value = user.password; // Pre-fill password for convenience (in real app, don't do this)
-                document.getElementById('userConfirmPassword').value = user.password; // Pre-fill password for convenience
-                document.getElementById('userRole').value = user.role;
-                document.getElementById('userId').value = user.username; // Store original username for lookup
-                
-                document.getElementById('userFormTitle').textContent = 'Editar Usuario';
-                document.getElementById('userUsername').disabled = true; // Prevent changing username during edit
-            }
-        }
+        async function login(username, password) {
+
+    const { data, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('usuario', username)
+        .eq('contraseña', password)
+        .single();
+
+    if (error || !data) {
+        return { success: false };
+    }
+
+    sessionStorage.setItem('currentUser', JSON.stringify({
+        username: data.usuario,
+        role: data.rol
+    }));
+
+    return { success: true };
+}
         
         async function deleteUser(username) {
 
@@ -1859,19 +1864,6 @@ if (error) {
                 }
             ];
             localStorage.setItem('baseDatosArticulos', JSON.stringify(baseDatosArticulos));
-        }
-
-        // Initialize a default admin user if no users exist
-        if (!localStorage.getItem('users')) {
-            const defaultUsers = [
-                {
-                    username: 'admin',
-                    email: 'admin@example.com',
-                    password: 'adminpassword', // In a real application, hash this password!
-                    role: 'admin'
-                }
-            ];
-            localStorage.setItem('users', JSON.stringify(defaultUsers));
         }
     inventario.js </script>
 </body>
