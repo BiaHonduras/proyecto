@@ -820,6 +820,25 @@ document.getElementById('userForm').addEventListener('submit', async function(e)
         showNotification('Error', 'No se pudo crear el usuario', 'error');
     }
 });
+        async function crearUsuario(username, email, password, rol) {
+
+    const { data, error } = await supabase
+        .from('usuarios')
+        .insert([
+            {
+                usuario: username,
+                correo: email,
+                contraseña: password,
+                rol: rol
+            }
+        ]);
+
+    if (error) {
+        return { success: false, error };
+    }
+
+    return { success: true, data };
+}
         
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', function() {
