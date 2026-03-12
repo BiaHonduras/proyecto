@@ -781,6 +781,21 @@
                 window.location.href = 'index.html';
                 return;
             }
+
+            import {
+                crearUsuario,
+                obtenerUsuarios,
+                eliminarUsuario,
+                obtenerSKUs,
+                obtenerSKUPorCodigo,
+                importarSKUs,
+                obtenerInventarioReporteria,
+                importarInventarioReporteria,
+                agregarArticuloInventario,
+                obtenerInventariosActuales,
+                eliminarArticuloInventario,
+                obtenerInventarioPorFecha
+            } from './supabase-functions.js';
             
             currentUser = JSON.parse(userData);
             document.getElementById('currentUserName').textContent = currentUser.username;
