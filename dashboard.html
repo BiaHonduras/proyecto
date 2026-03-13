@@ -1012,10 +1012,10 @@ document.getElementById('userForm').addEventListener('submit', async function(e)
 
         function calcularTotalUnidades() {
             const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
-            const factor = parseFloat(document.getElementById('factorConversion').value) || 1;
+            const masterpack = parseFloat(document.getElementById('factorConversion').value) || 1;
             const unidades = parseFloat(document.getElementById('unidades').value) || 0;
             
-            const total = (cajas * factor) + unidades;
+            const total = (cajas * masterpack) + unidades;
             document.getElementById('totalUnidadesCalculo').textContent = total.toFixed(2);
         }
 
@@ -1301,7 +1301,7 @@ function stopScanner() {
                 descripcion: 'Descripcion',
                 proveedor: 'Proveedor',
                 inventarioReporteria: 'Inventario Reporteria',
-                factorConversion: 'Factor',
+                factorConversion: 'Masterpack',
                 cajasFardos: 'Cajas/Fardos',
                 unidades: 'Unidades',
                 total: 'Total',
@@ -1416,7 +1416,7 @@ function stopScanner() {
                 }
 
                 const headers = lines[0].split(',').map(h => h.trim());
-                const expectedHeaders = ['Fecha', 'Proveedor', 'Codigo', 'Descripcion', 'Inventario Reporteria', 'Factor'];
+                const expectedHeaders = ['Fecha', 'Proveedor', 'Codigo', 'Descripcion', 'Inventario Reporteria', 'Masterpack'];
 
                 // Basic header validation
                 if (headers.length !== expectedHeaders.length || !headers.every((h, i) => h === expectedHeaders[i])) {
