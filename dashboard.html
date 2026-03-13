@@ -1511,72 +1511,56 @@ function stopScanner() {
             }
         }
 
-        function importCodes() {
-            const fileInput = document.getElementById('importCodesFile');
-            const file = fileInput.files[0];
+        async function importCodes() {
+    const fileInput = document.getElementById('importCodesFile');
+    const file = fileInput.files[0];
 
-            if (!file) {
-                showNotification('Error', 'Por favor, seleccione un archivo para importar.', 'error');
-                return;
-            }
+    if (!file) {
+        showNotification('Error', 'Seleccione un archivo', 'error');
+        return;
+    }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const lines = text.split('\n').filter(line => line.trim() !== '');
+    const reader = new FileReader();
 
-                if (lines.length < 2) {
-                    showNotification('Error', 'El archivo CSV no contiene datos válidos (se espera al menos una fila de encabezado y una de datos).', 'error');
-                    return;
-                }
+    reader.onload = async function(e) {
 
-                const headers = lines[0].split(',').map(h => h.trim());
-                const expectedHeaders = ['Codigo', 'Descripcion', 'Proveedor', 'Factor', 'Codigo de Barra'];
+        const text = e.target.result;
+        const lines = text.split('\n').filter(line => line.trim() !== '');
 
-                // Basic header validation
-                if (headers.length !== expectedHeaders.length || !headers.every((h, i) => h === expectedHeaders[i])) {
-                    showNotification('Error', 'El formato del encabezado del archivo CSV no es el esperado. Formato esperado: ' + expectedHeaders.join(','), 'error');
-                    return;
-                }
+        let registros = [];
 
-                let importedCount = 0;
-                let updatedCount = 0;
-                let currentBaseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
+        for (let i = 1; i < lines.length; i++) {
 
-                for (let i = 1; i < lines.length; i++) {
-                    const values = lines[i].split(',');
-                    if (values.length === headers.length) {
-                        const item = {
-                            codigo: values[0].trim(),
-                            descripcion: values[1].trim(),
-                            proveedor: values[2].trim(),
-                            factorConversion: parseFloat(values[3].trim()) || 1,
-                            codigoDeBarra: values[4].trim() // Assuming this is the barcode
-                        };
+            const values = lines[i].split(',');
 
-                        const existingIndex = currentBaseDatosArticulos.findIndex(baseItem => baseItem.codigo === item.codigo);
-                        if (existingIndex !== -1) {
-                            currentBaseDatosArticulos[existingIndex] = item;
-                            updatedCount++;
-                        } else {
-                            currentBaseDatosArticulos.push(item);
-                            importedCount++;
-                        }
-                    }
-                }
-
-                localStorage.setItem('baseDatosArticulos', JSON.stringify(currentBaseDatosArticulos));
-                baseDatosArticulos = currentBaseDatosArticulos; // Update global variable
-                showNotification('Importación Completa', `Base de códigos importada: ${importedCount} nuevos, ${updatedCount} actualizados.`, 'success');
-                
-                // Clear preview and disable button
-                document.getElementById('codesPreview').classList.add('hidden');
-                document.getElementById('confirmImportCodes').disabled = true;
-                fileInput.value = ''; // Clear selected file
-            };
-            reader.readAsText(file);
-            cargarResumenCodigos();
+            registros.push({
+                codigo: values[0].trim(),
+                descripcion: values[1].trim(),
+                proveedor: values[2].trim(),
+                factor: parseFloat(values[3].trim()) || 1,
+                codigo_barra: values[4].trim(),
+                usuario: currentUser.username,
+                fecha_importacion: new Date()
+            });
         }
+
+        const { data, error } = await supabase
+            .from('Codigos')
+            .insert(registros);
+
+        if (error) {
+            console.error(error);
+            showNotification('Error', 'No se pudo importar', 'error');
+            return;
+        }
+
+        showNotification('Éxito', 'Códigos importados correctamente', 'success');
+
+        cargarResumenCodigos();
+    };
+
+    reader.readAsText(file);
+}
 
         // ===== NOTIFICACIONES =====
         function showNotification(title, message, type = 'info') {
