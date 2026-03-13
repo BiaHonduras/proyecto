@@ -1874,7 +1874,7 @@ if (error) {
 async function cargarResumenCodigos() {
 
     const { data, error } = await supabase
-        .from('skus')
+        .from('codigos')
         .select('*');
 
     if (error) {
@@ -1935,7 +1935,7 @@ async function cargarResumenCodigos() {
     if (!confirm("¿Eliminar este registro de importación?")) return;
 
     const { error } = await supabase
-        .from('skus')
+        .from('codigos')
         .delete()
         .eq('usuario', usuario)
         .gte('fecha_creacion', fecha + ' 00:00:00')
