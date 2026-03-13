@@ -1875,11 +1875,19 @@ async function cargarResumenCodigos() {
 
     const { data, error } = await supabase
         .from('skus')
-        .select('usuario, fecha_creacion');
+        .select('*');
 
     if (error) {
-        console.error(error);
+        console.error("Error Supabase:", error.message);
         showNotification('Error', 'No se pudo cargar el resumen', 'error');
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        document.getElementById('tablaResumenCodigos').innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-6">No hay registros</td>
+            </tr>`;
         return;
     }
 
@@ -1887,10 +1895,13 @@ async function cargarResumenCodigos() {
 
     data.forEach(item => {
 
-        const usuario = item.usuario;
-        const fecha = item.fecha_creacion.split('T')[0];
+        const usuario = item.usuario || "Sin usuario";
 
-        const key = usuario + '_' + fecha;
+        const fecha = item.fecha_creacion
+            ? item.fecha_creacion.split('T')[0]
+            : "Sin fecha";
+
+        const key = usuario + "_" + fecha;
 
         if (!resumen[key]) {
             resumen[key] = {
@@ -1901,18 +1912,9 @@ async function cargarResumenCodigos() {
         }
 
         resumen[key].cantidad++;
-
     });
 
     const tbody = document.getElementById('tablaResumenCodigos');
-
-    if (Object.keys(resumen).length === 0) {
-        tbody.innerHTML = `
-        <tr>
-            <td colspan="4" class="text-center py-6">No hay registros</td>
-        </tr>`;
-        return;
-    }
 
     tbody.innerHTML = Object.values(resumen).map(r => `
         <tr class="border-b hover:bg-gray-50">
@@ -1921,14 +1923,13 @@ async function cargarResumenCodigos() {
             <td class="text-center">${r.fecha}</td>
             <td class="text-center">
                 <button onclick="eliminarImportacion('${r.usuario}','${r.fecha}')"
-                    class="text-red-600 hover:text-red-800">
+                class="text-red-600 hover:text-red-800">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
         </tr>
     `).join('');
 }
-
         async function eliminarImportacion(usuario, fecha) {
 
     if (!confirm("¿Eliminar este registro de importación?")) return;
