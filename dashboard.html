@@ -1550,7 +1550,7 @@ function stopScanner() {
 
         if (error) {
             console.error(error);
-            showNotification('Error', 'No se pudo importar', 'error');
+            showNotification('Error: ', error.message, 'error');
             return;
         }
 
