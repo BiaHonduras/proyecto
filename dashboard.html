@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Control de Inventarios Diarios</title>
+    <!-- Favicon -->
+    <link href="../assets/images/favicon.png" rel="shortcut icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
@@ -644,20 +646,34 @@
                     </div>
                     
                     <div id="codesPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
-                        <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead id="codesPreviewHead"></thead>
-                                <tbody id="codesPreviewBody"></tbody>
-                            </table>
-                        </div>
 
-                        <!-- ===== RESUMEN DE IMPORTACIONES ===== -->
-<div class="mt-10">
-    <h3 class="text-lg font-semibold mb-4">Resumen de Códigos Importados</h3>
+    <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
 
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
+            <thead id="codesPreviewHead"></thead>
+            <tbody id="codesPreviewBody"></tbody>
+        </table>
+    </div>
+
+    <button id="confirmImportCodes"
+        class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" disabled>
+        <i class="fas fa-upload mr-2"></i>
+        Confirmar Importación
+    </button>
+
+</div>
+
+<!-- ===== RESUMEN DE IMPORTACIONES ===== -->
+<div class="mt-10">
+
+    <h3 class="text-lg font-semibold mb-4">
+        Últimos movimientos de códigos
+    </h3>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+
             <thead>
                 <tr class="border-b border-gray-200">
                     <th class="py-3 text-left">Usuario</th>
@@ -666,6 +682,7 @@
                     <th class="py-3 text-center">Acciones</th>
                 </tr>
             </thead>
+
             <tbody id="tablaResumenCodigos">
                 <tr>
                     <td colspan="4" class="text-center py-6 text-gray-500">
@@ -673,10 +690,11 @@
                     </td>
                 </tr>
             </tbody>
+
         </table>
     </div>
-</div>
-                        
+
+</div>                       
                         <button id="confirmImportCodes" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" disabled>
                             <i class="fas fa-upload mr-2"></i>
                             Confirmar Importación
@@ -1796,7 +1814,11 @@ async function cargarResumenCodigos() {
 
     const { data, error } = await supabase
         .from('codigos')
-        .select('*');
+        .select('usuario, fecha_importacion')
+        .order('fecha_importacion', { ascending: false})
+        .limit(5);
+    
+    const tabla = document.getElementById('tablaResumenCodigos');
 
     if (error) {
         console.error("Error Supabase:", error.message);
