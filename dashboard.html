@@ -1669,6 +1669,8 @@ if (error) {
 };
                 }
                 
+                localStorage.setItem('users', JSON.stringify(users));
+                
                 // Limpiar formulario
                 form.reset();
                 document.getElementById('userId').value = '';
@@ -1743,31 +1745,20 @@ if (error) {
     `).join('');
 }
         
-        function editUser(username, email, role) {
-            document.getElementById('userUsername').value = username;
-            document.getElementById('userEmail').value = email;
-            document.getElementById('userRole').value = role;
-            document.getElementById('userId').value = username;
-            document.getElementById('userFormTitle').textContent = "Editar Usuario";
-            document.getElementById('userUsername').disabled = true;
-            window.scrollTo(0,0);
+        function editUser(username) {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.username === username);
             
-            if (userId) {
-            const { error } = await supabase
-                .from('usuarios')
-                .update({
-                correo: email,
-                contraseña: password,
-                rol: role
-            })
-            .eq('usuario', userId);
-
-            if (error) {
-                showNotification('Error','No se pudo actualizar el usuario','error');
-                return;
-            }
-
-            showNotification('Éxito','Usuario actualizado correctamente','success');
+            if (user) {
+                document.getElementById('userUsername').value = user.username;
+                document.getElementById('userEmail').value = user.email;
+                document.getElementById('userPassword').value = user.password; // Pre-fill password for convenience (in real app, don't do this)
+                document.getElementById('userConfirmPassword').value = user.password; // Pre-fill password for convenience
+                document.getElementById('userRole').value = user.role;
+                document.getElementById('userId').value = user.username; // Store original username for lookup
+                
+                document.getElementById('userFormTitle').textContent = 'Editar Usuario';
+                document.getElementById('userUsername').disabled = true; // Prevent changing username during edit
             }
         }
         
