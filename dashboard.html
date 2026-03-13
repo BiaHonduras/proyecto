@@ -876,6 +876,11 @@ document.getElementById('userForm').addEventListener('submit', async function(e)
 
         // ===== NAVEGACIÓN =====
         function initNavigation() {
+
+            if (this.getAttribute('data-section') === 'importar-codigos') {
+                cargarResumenCodigos();
+            }
+            
             // Toggle sidebar en mobile
             document.getElementById('menuToggle').addEventListener('click', function() {
                 document.querySelector('.sidebar').classList.add('open');
@@ -1858,9 +1863,7 @@ async function cargarResumenCodigos() {
     const { error } = await supabase
         .from('codigos')
         .delete()
-        .eq('usuario', usuario)
-        .gte('fecha_creacion', fecha + ' 00:00:00')
-        .lte('fecha_creacion', fecha + ' 23:59:59');
+        .eq('id', id);
 
     if (error) {
         console.error(error);
