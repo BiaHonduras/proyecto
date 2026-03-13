@@ -1578,57 +1578,7 @@ function stopScanner() {
     };
 
     reader.readAsText(file);
-}
-
-        // ===== NOTIFICACIONES =====
-        function showNotification(title, message, type = 'info') {
-            const notification = document.getElementById('notification');
-            const icon = document.getElementById('notificationIcon');
-            const notificationTitle = document.getElementById('notificationTitle');
-            const notificationMessage = document.getElementById('notificationMessage');
-            
-            let iconClass = '';
-            let bgColorClass = '';
-            let textColorClass = '';
-
-            switch(type) {
-                case 'success':
-                    iconClass = 'fas fa-check-circle text-green-500';
-                    bgColorClass = 'bg-green-100';
-                    textColorClass = 'text-green-800';
-                    break;
-                case 'error':
-                    iconClass = 'fas fa-exclamation-circle text-red-500';
-                    bgColorClass = 'bg-red-100';
-                    textColorClass = 'text-red-800';
-                    break;
-                case 'warning':
-                    iconClass = 'fas fa-exclamation-triangle text-yellow-500';
-                    bgColorClass = 'bg-yellow-100';
-                    textColorClass = 'text-yellow-800';
-                    break;
-                default:
-                    iconClass = 'fas fa-info-circle text-blue-500';
-                    bgColorClass = 'bg-blue-100';
-                    textColorClass = 'text-blue-800';
-            }
-            
-            icon.className = iconClass;
-            notificationTitle.textContent = title;
-            notificationMessage.textContent = message;
-            
-            // Apply background and text color to the notification card itself
-            notification.querySelector('.bg-white').className = `rounded-lg shadow-lg p-4 max-w-sm ${bgColorClass} ${textColorClass}`;
-
-            notification.classList.remove('hidden');
-            
-            setTimeout(() => {
-                notification.classList.add('hidden');
-                // Reset to default white background after hiding
-                notification.querySelector('.rounded-lg').className = 'bg-white rounded-lg shadow-lg p-4 max-w-sm';
-            }, 5000);
-        }
-        
+}        
         document.getElementById('closeNotification').addEventListener('click', function() {
             document.getElementById('notification').classList.add('hidden');
             // Reset to default white background when closed manually
