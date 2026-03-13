@@ -1064,6 +1064,8 @@ document.getElementById('userForm').addEventListener('submit', async function(e)
     const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
     const unidades = parseFloat(document.getElementById('unidades').value) || 0;
 
+    const total = (cajas * masterpack) + unidades;
+
     // 2. SEGUNDO: Validar
     if (!codigo || !fecha) {
         showNotification('Error', 'El código del artículo y la fecha son requeridos', 'error');
@@ -1071,26 +1073,32 @@ document.getElementById('userForm').addEventListener('submit', async function(e)
     }
 
     // 3. TERCERO: Crear objeto
-    const nuevoArticulo = {
-        id: Date.now(),
-        fecha: fecha,
-        codigo: codigo,
+    const registro = {
         proveedor: proveedor,
+        codigo_barra: codigo,
+        codigo: codigo,
         descripcion: descripcion,
         inventarioReporteria: inventarioReporteria,
         masterpack: masterpack,
-        cajasFardos: cajas,
+        cajas_fardos: cajas,
         unidades: unidades,
-        total: (cajas * masterpack) + unidades,
-        timestamp: new Date().toISOString()
+        total: total,
+        fecha: fecha,
+        usuario: currentUser.username
     };
 
-    // 4. CUARTO: Guardar
-    let inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
-    inventario.push(nuevoArticulo);
-    localStorage.setItem('inventario', JSON.stringify(inventario));
+    onst { data, error } = await supabase
+        .from('inventarios_diarios')
+        .insert([registro]);
 
-    showNotification('Éxito', 'Artículo agregado correctamente', 'success');
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo guardar el inventario', 'error');
+        return;
+    }
+
+    showNotification('Éxito', 'Artículo guardado en inventario diario', 'success');
+
     document.getElementById('articuloForm').reset();
     limpiarFormulario();
     loadInventory();
