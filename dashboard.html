@@ -1534,15 +1534,15 @@ function stopScanner() {
             const values = lines[i].split(',');
 
             registros.push({
-                codigo: values[0].trim(),
-                descripcion: values[1].trim(),
-                proveedor: values[2].trim(),
-                masterpack: parseFloat(values[3].trim()) || 1,
-                codigo_barra: values[4].trim(),
-                usuario: currentUser.username,
-                fecha_importacion: new Date()
-            });
-        }
+            codigo: values[0].replace(/"/g,'').trim(),
+            descripcion: values[1].replace(/"/g,'').trim(),
+            proveedor: values[2].replace(/"/g,'').trim(),
+            masterpack: parseFloat(values[3].replace(/"/g,'').trim()) || 1,
+            codigo_barra: values[4].replace(/"/g,'').trim(),
+            usuario: currentUser.username,
+            fecha_importacion: new Date()
+        });
+    }
 
         const { data, error } = await supabase
             .from('codigos')
