@@ -1414,82 +1414,64 @@ function stopScanner() {
             }
         }
 
-        function importInventory() {
-            const fileInput = document.getElementById('importInventoryFile');
-            const file = fileInput.files[0];
+        async function importInventory() {
 
-            if (!file) {
-                showNotification('Error', 'Por favor, seleccione un archivo para importar.', 'error');
-                return;
-            }
+    const fileInput = document.getElementById('importInventoryFile');
+    const file = fileInput.files[0];
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const lines = text.split('\n').filter(line => line.trim() !== '');
+    if (!file) {
+        showNotification('Error', 'Seleccione un archivo CSV', 'error');
+        return;
+    }
 
-                if (lines.length < 2) {
-                    showNotification('Error', 'El archivo CSV no contiene datos válidos (se espera al menos una fila de encabezado y una de datos).', 'error');
-                    return;
-                }
+    const reader = new FileReader();
 
-                const headers = lines[0].split(',').map(h => h.trim());
-                const expectedHeaders = ['Fecha', 'Proveedor', 'Codigo', 'Descripcion', 'Inventario Reporteria', 'Masterpack'];
+    reader.onload = async function(e) {
 
-                // Basic header validation
-                if (headers.length !== expectedHeaders.length || !headers.every((h, i) => h === expectedHeaders[i])) {
-                    showNotification('Error', 'El formato del encabezado del archivo CSV no es el esperado. Formato esperado: ' + expectedHeaders.join(','), 'error');
-                    return;
-                }
+        const text = e.target.result;
+        const lines = text.split('\n').filter(line => line.trim() !== '');
 
-                let importedCount = 0;
-                let updatedCount = 0;
-                let inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
-
-                for (let i = 1; i < lines.length; i++) {
-                    const values = lines[i].split(',');
-                    if (values.length === headers.length) {
-                        const item = {
-                            fecha: values[0].trim(),
-                            proveedor: values[1].trim(),
-                            codigo: values[2].trim(),
-                            descripcion: values[3].trim(),
-                            inventarioReporteria: parseFloat(values[4].trim()) || 0,
-                            masterpack: parseFloat(values[5].trim()) || 1,
-                            cajasFardos: 0, // Default for imported inventory
-                            unidades: 0,    // Default for imported inventory
-                            timestamp: new Date().toISOString()
-                        };
-
-                        const existingIndex = inventario.findIndex(invItem => invItem.codigo === item.codigo);
-                        if (existingIndex !== -1) {
-                            // Update existing item, preserving cajasFardos and unidades if they exist
-                            inventario[existingIndex] = {
-                                ...inventario[existingIndex], // Keep existing cajasFardos, unidades if not provided by import
-                                ...item, // Override with imported data
-                                cajasFardos: inventario[existingIndex].cajasFardos || 0,
-                                unidades: inventario[existingIndex].unidades || 0,
-                            };
-                            updatedCount++;
-                        } else {
-                            inventario.push(item);
-                            importedCount++;
-                        }
-                    }
-                }
-
-                localStorage.setItem('inventario', JSON.stringify(inventario));
-                showNotification('Importación Completa', `Inventario importado: ${importedCount} nuevos, ${updatedCount} actualizados.`, 'success');
-                
-                // Clear preview and disable button
-                document.getElementById('inventoryPreview').classList.add('hidden');
-                document.getElementById('confirmImportInventory').disabled = true;
-                fileInput.value = ''; // Clear selected file
-                loadInventory();
-                loadDashboardData();
-            };
-            reader.readAsText(file);
+        if (lines.length < 2) {
+            showNotification('Error', 'El archivo no tiene datos', 'error');
+            return;
         }
+
+        let registros = [];
+
+        for (let i = 1; i < lines.length; i++) {
+
+            const values = lines[i].split(',');
+
+            registros.push({
+                fecha: values[0].replace(/"/g,'').trim(),
+                proveedor: values[1].replace(/"/g,'').trim(),
+                codigo: values[2].replace(/"/g,'').trim(),
+                descripcion: values[3].replace(/"/g,'').trim(),
+                inventario_reporteria: parseFloat(values[4].replace(/"/g,'').trim()) || 0,
+                masterpack: parseFloat(values[5].replace(/"/g,'').trim()) || 1,
+                codigo_barra: null
+            });
+        }
+
+        const { data, error } = await supabase
+            .from('inventario_reporteria')
+            .insert(registros);
+
+        if (error) {
+            console.error(error);
+            showNotification('Error', error.message, 'error');
+            return;
+        }
+
+        showNotification('Éxito', 'Inventario de reportería cargado correctamente', 'success');
+
+        document.getElementById('inventoryPreview').classList.add('hidden');
+        document.getElementById('confirmImportInventory').disabled = true;
+        fileInput.value = '';
+    };
+
+    reader.readAsText(file);
+}
 
         function previewCodesFile(input) {
             const file = input.files[0];
