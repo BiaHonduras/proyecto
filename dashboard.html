@@ -1440,7 +1440,7 @@ function stopScanner() {
 
         for (let i = 1; i < lines.length; i++) {
 
-            const values = lines[i].split(',').map(v => v.replace(/"/g,'').trim());
+            const values = lines[i].split(',');
 
             registros.push({
                 fecha: values[0].replace(/"/g,'').trim(),
@@ -1469,16 +1469,10 @@ function stopScanner() {
             .from('inventario_reporteria')
             .insert(registros);
 
-        const { error: deleteError } = await supabase
-            .from('inventario_reporteria')
-            .delete()
-            .neq('id',0);
-
-            if (deleteError) {
-                console.error(deleteError);
-                showNotification('Error', deleteError.message, 'error');
-            return;
-        }
+        if (insertError) {
+            console.error(insertError);
+            showNotification('Error', insertError.message, 'error');
+        return;
     }
         showNotification('Éxito', 'Inventario de reportería cargado correctamente', 'success');
 
@@ -1548,7 +1542,7 @@ function stopScanner() {
 
         for (let i = 1; i < lines.length; i++) {
 
-            const values = lines[i].split(',').map(v => v.replace(/"/g,'').trim());
+            const values = lines[i].split(',');
 
             registros.push({
             codigo: values[0].replace(/"/g,'').trim(),
