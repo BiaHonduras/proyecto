@@ -1445,11 +1445,11 @@ function stopScanner() {
             registros.push({
                 fecha: values[0].replace(/"/g,'').trim(),
                 proveedor: values[1].replace(/"/g,'').trim(),
-                codigo: values[2].replace(/"/g,'').trim(),
-                descripcion: values[3].replace(/"/g,'').trim(),
-                inventario_reporteria: parseFloat(values[4].replace(/"/g,'').trim()) || 0,
-                masterpack: parseFloat(values[5].replace(/"/g,'').trim()) || 1,
-                codigo_barra: null
+                codigo_barra: values[2].replace(/"/g,'').trim(),
+                codigo: values[3].replace(/"/g,'').trim(),
+                descripcion: values[4].replace(/"/g,'').trim(),
+                inventario_reporteria: parseFloat(values[5]) || 0,
+                masterpack: parseFloat(values[6]) || 1
             });
         }
 
@@ -1459,11 +1459,21 @@ function stopScanner() {
             .neq('id',0);
 
         if (error) {
-            console.error(error);
-            showNotification('Error', error.message, 'error');
+            console.error(deleteError);
+            showNotification('Error', deleteError.message, 'error');
             return;
         }
 
+        // INSERTAR LOS REGISTROS
+        const { error: insertError } = await supabase
+            .from('inventario_reporteria')
+            .insert(registros);
+
+        if (insertError) {
+            console.error(insertError);
+            showNotification('Error', insertError.message, 'error');
+        return;
+    }
         showNotification('Éxito', 'Inventario de reportería cargado correctamente', 'success');
 
         document.getElementById('inventoryPreview').classList.add('hidden');
