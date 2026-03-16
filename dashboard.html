@@ -892,8 +892,16 @@ document.getElementById('userForm').addEventListener('submit', async function(e)
                 return;
             }
             
-            currentUser = JSON.parse(userData);
+            currentUser = JSON.parse(userData);           
             document.getElementById('currentUserName').textContent = currentUser.username;
+
+            if(currentUser.role !== 'admin'){
+                document.querySelector('[data-section="usuarios"]').style.display = "none";
+            }
+
+            if(currentUser.role !== 'admin'){
+                document.getElementById('usuarios-section').remove();
+            }
             
             // Inicializar navegación
             initNavigation();
