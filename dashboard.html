@@ -1416,8 +1416,9 @@ function stopScanner() {
 
         async function importInventory() {
 
-    const fileInput = document.getElementById('importInventoryFile');
-    const file = fileInput.files[0];
+            console.log("Favor confirmar la Importación");
+            const fileInput = document.getElementById('importInventoryFile');
+            const file = fileInput.files[0];
 
     if (!file) {
         showNotification('Error', 'Seleccione un archivo CSV', 'error');
@@ -1454,9 +1455,9 @@ function stopScanner() {
         }
 
         const { error: deleteError } = await supabase
-            .from('inventario_reporteria')
-            .delete()
-            .neq('id',0);
+                .from('inventario_reporteria')
+                .delete()
+                .not('codigo','is',null);
 
             if (deleteError) {
                 console.error(deleteError);
