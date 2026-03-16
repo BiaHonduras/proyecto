@@ -930,6 +930,9 @@ document.getElementById('userForm').addEventListener('submit', async function(e)
             // Import buttons
             document.getElementById('confirmImportInventory').addEventListener('click', importInventory);
             document.getElementById('confirmImportCodes').addEventListener('click', importCodes);
+
+            
+            document.getElementById('deleteInventoryReporteria').addEventListener('click',eliminarInventarioReporteria);
         });
 
         // ===== NAVEGACIÓN =====
@@ -1547,6 +1550,26 @@ function stopScanner() {
             <td class="text-center">${new Date(r.fecha_importacion).toLocaleDateString()}</td>
         </tr>
     `).join('');
+}
+        async function eliminarInventarioReporteria() {
+
+    if (!confirm("¿Está seguro de eliminar TODO el inventario de reportería?")) {
+        return;
+    }
+
+    const { error } = await supabase
+        .from('inventario_reporteria')
+        .delete()
+        .not('id','is',null);
+
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo eliminar el inventario', 'error');
+        return;
+    }
+
+    showNotification('Éxito', 'Inventario de reportería eliminado completamente', 'success');
+
 }
 
         function previewCodesFile(input) {
