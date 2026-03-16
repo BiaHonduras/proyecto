@@ -701,6 +701,12 @@
         <i class="fas fa-upload mr-2"></i>
         Confirmar Inventario Reporteria
     </button>
+
+    <button id="deleteCodesDatabase"
+class="px-6 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">
+    <i class="fas fa-trash mr-2"></i>
+    Eliminar Base de Datos
+    </button>
                         
 </div>
 
@@ -719,13 +725,12 @@
                     <th class="py-3 text-left">Usuario</th>
                     <th class="py-3 text-center">Cantidad de Códigos</th>
                     <th class="py-3 text-center">Fecha</th>
-                    <th class="py-3 text-center">Acciones</th>
                 </tr>
             </thead>
 
             <tbody id="tablaResumenCodigos">
                 <tr>
-                    <td colspan="4" class="text-center py-6 text-gray-500">
+                    <td colspan="3" class="text-center py-6 text-gray-500">
                         No hay registros
                     </td>
                 </tr>
@@ -930,8 +935,7 @@ document.getElementById('userForm').addEventListener('submit', async function(e)
             // Import buttons
             document.getElementById('confirmImportInventory').addEventListener('click', importInventory);
             document.getElementById('confirmImportCodes').addEventListener('click', importCodes);
-
-            
+            document.getElementById('deleteCodesDatabase').addEventListener('click', eliminarBaseCodigos);            
             document.getElementById('deleteInventoryReporteria').addEventListener('click',eliminarInventarioReporteria);
         });
 
@@ -1659,7 +1663,30 @@ function stopScanner() {
     };
 
     reader.readAsText(file);
-}        
+}
+
+        async function eliminarBaseCodigos() {
+
+    if (!confirm("¿Está seguro de eliminar TODOS los códigos de la base de datos?")) {
+        return;
+    }
+
+    const { error } = await supabase
+        .from('codigos')
+        .delete()
+        .not('codigo','is',null);
+
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo eliminar la base de códigos', 'error');
+        return;
+    }
+
+    showNotification('Éxito', 'Base de códigos eliminada completamente', 'success');
+
+    cargarResumenCodigos();
+}
+        
         document.getElementById('closeNotification').addEventListener('click', function() {
             document.getElementById('notification').classList.add('hidden');
             // Reset to default white background when closed manually
