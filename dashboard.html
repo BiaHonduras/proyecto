@@ -659,7 +659,7 @@
     <button id="confirmImportCodes"
         class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" disabled>
         <i class="fas fa-upload mr-2"></i>
-        Confirmar Importación
+        Confirmar Inventario Reporteria
     </button>
                         
 </div>
@@ -1449,7 +1449,6 @@ function stopScanner() {
                 codigo_barra: values[2].replace(/"/g,'').trim(),
                 codigo: values[3].replace(/"/g,'').trim(),
                 descripcion: values[4].replace(/"/g,'').trim(),
-                inventario_reporteria: parseFloat(values[5]) || 0,
                 masterpack: parseFloat(values[6]) || 1
             });
         }
