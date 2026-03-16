@@ -352,7 +352,7 @@
                                    class="input-field w-full px-4 py-3 rounded-lg" 
                                    placeholder="Ingrese el código o escanee"
                                    required
-                                   onchange="cargarDatosArticulo(this.value)">
+                                   onblur="cargarDatosArticulo(this.value)">
                         </div>
                         
                         <div class="md:col-span-2">
@@ -854,14 +854,14 @@
         let baseDatosInventario = JSON.parse(localStorage.getItem('baseDatosInventario') || '[]');
 
 // ===== MODIFICAR: userForm submit =====
-document.getElementById('userForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+        document.getElementById('userForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
     
-    const username = document.getElementById('userUsername').value;
-    const email = document.getElementById('userEmail').value;
-    const password = document.getElementById('userPassword').value;
-    const confirmPassword = document.getElementById('userConfirmPassword').value;
-    const rol = document.getElementById('userRole').value;
+            const username = document.getElementById('userUsername').value;
+            const email = document.getElementById('userEmail').value;
+            const password = document.getElementById('userPassword').value;
+            const confirmPassword = document.getElementById('userConfirmPassword').value;
+            const rol = document.getElementById('userRole').value;
 
     if (password !== confirmPassword) {
         showNotification('Error', 'Las contraseñas no coinciden', 'error');
@@ -1041,39 +1041,31 @@ document.getElementById('userForm').addEventListener('submit', async function(e)
         }
         
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
-        function cargarDatosArticulo(codigo) {
-            const articulo = baseDatosArticulos.find(item => item.codigo === codigo);
-            
-            if (articulo) {
-                document.getElementById('proveedor').value = articulo.proveedor || '';
-                document.getElementById('descripcion').value = articulo.descripcion || '';
-                document.getElementById('inventarioReporteria').value = articulo.inventarioReporteria || 0;
-                document.getElementById('masterpack').value = articulo.masterpack || 1;
-                
-                // Buscar en inventario existente
-                const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
-                const existencia = inventario.find(item => item.codigo === codigo);
-                
-                if (existencia) {
-                    document.getElementById('cajasFardos').value = existencia.cajasFardos || 0;
-                    document.getElementById('unidades').value = existencia.unidades || 0;
-                    document.getElementById('fechaInventario').value = existencia.fecha || document.getElementById('fechaInventario').value;
-                }
-                
-                calcularTotalUnidades();
-                showNotification('Éxito', 'Datos del artículo cargados correctamente', 'success');
-            } else {
-                showNotification('Advertencia', 'Artículo no encontrado en la base de datos. Por favor, ingrese los datos manualmente o importe la base de códigos.', 'warning');
-                // Clear fields if not found, except code
-                document.getElementById('proveedor').value = '';
-                document.getElementById('descripcion').value = '';
-                document.getElementById('inventarioReporteria').value = 0;
-                document.getElementById('masterpack').value = 1;
-                document.getElementById('cajasFardos').value = 0;
-                document.getElementById('unidades').value = 0;
-                calcularTotalUnidades();
-            }
+        async function cargarDatosArticulo(codigo) {
+                if (!codigo) return;
+                const { data, error } = await supabase
+                    .from('inventario_reporteria')
+                    .select('*')
+                    .eq('codigo', codigo)
+                    .single();
+
+                if (error || !data) {
+                    showNotification('Advertencia', 'Artículo no encontrado en inventario de reportería', 'warning');
+
+                    document.getElementById('proveedor').value = '';
+                    document.getElementById('descripcion').value = '';
+                    document.getElementById('inventarioReporteria').value = 0;
+                    document.getElementById('masterpack').value = 1;
+            return;
         }
+
+                    document.getElementById('proveedor').value = data.proveedor || '';
+                    document.getElementById('descripcion').value = data.descripcion || '';
+                    document.getElementById('inventarioReporteria').value = data.inventario_reporteria || 0;
+                    document.getElementById('masterpack').value = data.masterpack || 1;
+                calcularTotalUnidades();
+            showNotification('Éxito', 'Datos cargados desde reportería', 'success');
+    }
 
         function calcularTotalUnidades() {
             const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
