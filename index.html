@@ -136,33 +136,33 @@
             localStorage.setItem('inventario', JSON.stringify([]));
         }
 
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+            const usuario = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = users.find(u => u.username === username && u.password === password);
-            
-            if (user) {
-                // Guardar usuario actual en sessionStorage
-                sessionStorage.setItem('currentUser', JSON.stringify(user));
-                
-                // Redirigir al dashboard
-                window.location.href = 'dashboard.html';
-            } else {
+
+            const { data, error } = await supabase
+                .from('usuarios')
+                .select('*')
+                .eq('usuario', usuario)
+                .eq('contraseña', password)
+                .single();
+
+            if (error || !data) {
                 const errorDiv = document.getElementById('errorMessage');
                 const errorText = document.getElementById('errorText');
                 errorText.textContent = 'Usuario o contraseña incorrectos';
                 errorDiv.classList.remove('hidden');
-                
-                // Ocultar mensaje después de 3 segundos
-                setTimeout(() => {
-                    errorDiv.classList.add('hidden');
-                }, 3000);
+            return;
             }
-        });
+
+            sessionStorage.setItem('currentUser', JSON.stringify({
+                username: data.usuario,
+                role: data.rol
+        }));
+    window.location.href = "dashboard.html";
+});
 
         document.getElementById('registerLink').addEventListener('click', function(e) {
             e.preventDefault();
