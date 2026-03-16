@@ -1673,23 +1673,19 @@ function stopScanner() {
 
         async function eliminarBaseCodigos() {
 
-    if (!confirm("¿Está seguro de eliminar TODOS los códigos de la base de datos?")) {
+    if (!confirm("¿Está seguro de eliminar TODOS los códigos de la Base de Datos?")) {
         return;
     }
-
     const { error } = await supabase
         .from('codigos')
         .delete()
         .not('codigo','is',null);
-
     if (error) {
         console.error(error);
         showNotification('Error', 'No se pudo eliminar la base de códigos', 'error');
         return;
     }
-
     showNotification('Éxito', 'Base de códigos eliminada completamente', 'success');
-
     cargarResumenCodigos();
 }
         
