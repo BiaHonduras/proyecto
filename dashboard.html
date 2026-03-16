@@ -1059,6 +1059,31 @@
             </div>
         `).join('');
     }
+            // Artículos recientes
+            const recentContainer = document.getElementById('recentItems');
+
+            if (inventario.length === 0) {
+                recentContainer.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                    <p>No hay artículos recientes</p>
+                </div>`;
+        } else {
+            const recientes = inventario
+                .sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp))
+                .slice(0,5);
+
+            recentContainer.innerHTML = recientes.map(item => `
+                <div class="flex justify-between border-b pb-2">
+                    <div>
+                        <div class="font-medium">${item.descripcion}</div>
+                        <div class="text-sm text-gray-500">${item.codigo}</div>
+                    </div>
+                <div class="text-sm font-semibold">
+                ${(item.cajasFardos * item.masterpack + item.unidades)}
+            </div>
+        </div>
+    `).join('');
+    }
 }
         // === FORMATO DE FECHA ====
         function formatearFecha(fechaISO) {
