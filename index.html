@@ -103,6 +103,25 @@
     </div>
 
     <script>
+            async function login(usuario, password) {
+                const { data, error } = await supabase
+                .from('usuarios')
+                .select('*')
+                .eq('usuario', usuario)
+                .eq('contraseña', password)
+                .single();
+
+                if(error || !data){
+                    alert("Usuario o contraseña incorrectos");
+                return;
+                }
+
+                sessionStorage.setItem('currentUser', JSON.stringify({
+                    username: data.usuario,
+                    role: data.rol
+            }));
+    window.location.href = "dashboard.html";
+}
         // Inicializar usuarios en localStorage si no existen
         if (!localStorage.getItem('users')) {
             const users = [
