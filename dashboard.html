@@ -966,7 +966,9 @@ document.getElementById('userForm').addEventListener('submit', async function(e)
 
         // ===== DASHBOARD =====
         function loadDashboardData() {
-            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            const inventario = await supabase
+                  .from('inventario_reporteria')
+                  .select('*');
             
             // Actualizar estadísticas
             document.getElementById('totalArticulos').textContent = inventario.length;
@@ -1004,7 +1006,9 @@ document.getElementById('userForm').addEventListener('submit', async function(e)
                 document.getElementById('masterpack').value = articulo.masterpack || 1;
                 
                 // Buscar en inventario existente
-                const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+                const inventario = await supabase
+                      .from('inventario_reporteria')
+                      .select('*');
                 const existencia = inventario.find(item => item.codigo === codigo);
                 
                 if (existencia) {
@@ -1200,7 +1204,9 @@ function stopScanner() {
 
         // ===== VER INVENTARIO =====
         function loadInventory() {
-            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            const inventario = await supabase
+                  .from('inventario_reporteria')
+                  .select('*');
             const tbody = document.getElementById('inventoryTableBody');
             
             if (inventario.length === 0) {
@@ -1263,7 +1269,9 @@ function stopScanner() {
         }
 
         function editarArticulo(codigo) {
-            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            const inventario = await supabase
+                  .from('inventario_reporteria')
+                  .select('*');
             const articulo = inventario.find(item => item.codigo === codigo);
             
             if (articulo) {
@@ -1303,7 +1311,9 @@ function stopScanner() {
 
         // ===== EXPORTAR CSV =====
         function exportToCSV() {
-            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+            const inventario = await supabase
+                  .from('inventario_reporteria')
+                  .select('*');
             
             if (inventario.length === 0) {
                 showNotification('Advertencia', 'No hay datos para exportar', 'warning');
