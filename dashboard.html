@@ -1833,7 +1833,33 @@ async function cargarResumenCodigos() {
 
     showNotification('Éxito', 'Registros eliminados', 'success');
     cargarResumenCodigos();
-}        
+}      
+
+    function showNotification(title, message, type = 'info') {
+
+    const notification = document.getElementById('notification');
+    const titleEl = document.getElementById('notificationTitle');
+    const messageEl = document.getElementById('notificationMessage');
+    const icon = document.getElementById('notificationIcon');
+
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+
+    let iconClass = 'fa-info-circle text-blue-500';
+
+    if (type === 'success') iconClass = 'fa-check-circle text-green-500';
+    if (type === 'error') iconClass = 'fa-times-circle text-red-500';
+    if (type === 'warning') iconClass = 'fa-exclamation-triangle text-yellow-500';
+
+    icon.innerHTML = `<i class="fas ${iconClass}"></i>`;
+
+    notification.classList.remove('hidden');
+
+    setTimeout(() => {
+        notification.classList.add('hidden');
+    }, 4000);
+}    
+        
     inventario.js </script>
 </body>
 </html>
