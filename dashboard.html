@@ -1420,13 +1420,12 @@ function stopScanner() {
             const fileInput = document.getElementById('importInventoryFile');
             const file = fileInput.files[0];
 
-    if (!file) {
-        showNotification('Error', 'Seleccione un archivo CSV', 'error');
-        return;
-    }
+            if (!file) {
+                showNotification('Error', 'Seleccione un archivo CSV', 'error');
+            return;
+         }
 
     const reader = new FileReader();
-
     reader.onload = async function(e) {
 
         const text = e.target.result;
@@ -1440,9 +1439,7 @@ function stopScanner() {
         let registros = [];
 
         for (let i = 1; i < lines.length; i++) {
-
             const values = lines[i].split(',').map(v => v.replace(/"/g,'').trim());
-
             registros.push({
                 fecha: values[0].replace(/"/g,'').trim(),
                 proveedor: values[1].replace(/"/g,'').trim(),
