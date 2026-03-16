@@ -1459,12 +1459,6 @@ function stopScanner() {
                 .delete()
                 .not('codigo','is',null);
 
-             if (insertError) {
-                console.error("Error Supabase:", insertError);
-                showNotification('Error', insertError.message, 'error');
-            return;
-        }
-
             if (deleteError) {
                 console.error(deleteError);
                 showNotification('Error', deleteError.message, 'error');
