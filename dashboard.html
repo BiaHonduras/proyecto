@@ -1449,14 +1449,21 @@ function stopScanner() {
                 codigo_barra: values[2].replace(/"/g,'').trim(),
                 codigo: values[3].replace(/"/g,'').trim(),
                 descripcion: values[4].replace(/"/g,'').trim(),
+                inventario_reporteria: parseFloat(values[5]) || 0,
                 masterpack: parseFloat(values[6]) || 1
             });
         }
-
+        
         const { error: deleteError } = await supabase
                 .from('inventario_reporteria')
                 .delete()
                 .not('codigo','is',null);
+
+             if (insertError) {
+                console.error("Error Supabase:", insertError);
+                showNotification('Error', insertError.message, 'error');
+            return;
+        }
 
             if (deleteError) {
                 console.error(deleteError);
