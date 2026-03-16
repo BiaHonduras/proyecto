@@ -605,6 +605,35 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- ===== RESUMEN DE IMPORTACIONES INVENTARIO ===== -->
+                    <div class="mt-6">
+
+                        <h4 class="font-semibold mb-3">
+                            Últimas 5 cargas de Inventario
+                        </h4>
+
+                        <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                <th class="py-3 text-left">Usuario</th>
+                                <th class="py-3 text-center">Cantidad de Códigos</th>
+                                <th class="py-3 text-center">Fecha</th>
+                            </tr>
+                    </thead>
+
+                    <tbody id="tablaResumenInventario">
+                        <tr>
+                            <td colspan="3" class="text-center py-6 text-gray-500">
+                            No hay registros
+                        </td>
+                    </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
                     
                     <div id="inventoryPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
                         <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
@@ -614,15 +643,21 @@
                                 <tbody id="inventoryPreviewBody"></tbody>
                             </table>
                         </div>
-                        
-                        <button id="confirmImportInventory" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" disabled>
+                    </div>
+
+                    <!-- BOTONES ACCIÓN -->
+                    <div class="flex gap-4 mt-6">
+
+                        <button id="confirmImportInventory"
+                            class="btn-primary px-6 py-2 rounded-lg text-white" disabled>
                             <i class="fas fa-upload mr-2"></i>
                             Confirmar Importación
                         </button>
 
-                        <button id="deleteInventoryReporteria" class="mt-4 px-6 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">
+                        <button id="deleteInventoryReporteria"
+                            class="px-6 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">
                             <i class="fas fa-trash mr-2"></i>
-                        Eliminar Inventario Reporteria
+                            Eliminar Inventario Reporteria
                         </button>
                     </div>
                 </div>
@@ -1485,6 +1520,33 @@ function stopScanner() {
     };
 
     reader.readAsText(file);
+}
+
+        async function cargarResumenInventario() {
+
+    const { data, error } = await supabase
+        .from('inventario_reporteria')
+        .select('usuario, fecha_importacion')
+        .order('fecha_importacion', { ascending: false })
+        .limit(5);
+
+    const tabla = document.getElementById('tablaResumenInventario');
+
+    if (error || !data) {
+        tabla.innerHTML = `
+        <tr>
+            <td colspan="3" class="text-center py-6">No hay registros</td>
+        </tr>`;
+        return;
+    }
+
+    tabla.innerHTML = data.map(r => `
+        <tr class="border-b hover:bg-gray-50">
+            <td class="py-3">${r.usuario}</td>
+            <td class="text-center">${r.cantidad || '-'}</td>
+            <td class="text-center">${new Date(r.fecha_importacion).toLocaleDateString()}</td>
+        </tr>
+    `).join('');
 }
 
         function previewCodesFile(input) {
