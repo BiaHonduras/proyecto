@@ -125,8 +125,9 @@
                 }
 
                 sessionStorage.setItem('currentUser', JSON.stringify({
-                    username: data.usuario,
-                    role: data.rol
+                    username: user.usuario,
+                    nombre_corto: user.nombre_corto,
+                role: user.rol
             }));
     window.location.href = "dashboard.html";
 }
