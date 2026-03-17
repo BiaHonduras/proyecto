@@ -103,7 +103,8 @@
             }
             
             .main-content {
-                margin-left: 0;
+                margin-left: var(--sidebar-width);
+                width: calc(100% - var(--sidebar-width));
             }
             
             .mobile-overlay {
@@ -174,7 +175,9 @@
         }
     </style>
 </head>
-<body>
+<body {
+    display: flex;
+    }>
     <!-- Sidebar Navigation -->
     <div class="sidebar fixed top-0 left-0 h-full text-white">
         <div class="p-6">
@@ -263,7 +266,7 @@
         </header>
 
         <!-- Content Sections -->
-        <main class="p-6 space-y-6">
+        <main class="p-6 space-y-6 max-w-7xl mx-auto">
             <!-- Dashboard Section -->
             <section id="dashboard-section" class="section-content">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
