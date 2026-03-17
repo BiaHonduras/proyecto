@@ -1002,6 +1002,10 @@
                 document.querySelectorAll('.section-content').forEach(section => {
                     section.classList.add('hidden');
                     section.classList.remove('fade-in');
+
+                    .section-content {
+                            min-height: calc(100vh - 100px);
+                        }
                 });
 
                 // Mostrar actual con animación
