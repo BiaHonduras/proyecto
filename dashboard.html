@@ -1131,7 +1131,8 @@
 
     if (error) {
         console.error(error);
-        showNotification('Error', 'No se pudo guardar en Supabase', 'error');
+        showNotification('Error', error.message, 'error');
+        console.error('Detalle Supabase:', error);
         return;
     }
 
