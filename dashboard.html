@@ -1150,6 +1150,35 @@ document.getElementById('masterpack').value = data.masterpack || 1;
 
     showNotification('Éxito', 'Guardado en Supabase correctamente', 'success');
 
+    if (window.editandoId) {
+
+    const { error } = await supabase
+        .from('inventarios_diarios')
+        .update({
+            fecha: fecha,
+            codigo: codigo,
+            proveedor: proveedor,
+            descripcion: descripcion,
+            inventario_reporteria: inventarioReporteria,
+            masterpack: masterpack,
+            cajas_fardos: cajas,
+            unidades: unidades
+        })
+        .eq('id', window.editandoId);
+
+    if (error) {
+        showNotification('Error', error.message, 'error');
+        return;
+    }
+
+    window.editandoId = null;
+    showNotification('Éxito', 'Registro actualizado', 'success');
+
+} else {
+
+    // INSERT normal (lo que ya tienes)
+}
+
     limpiarFormulario();
     loadInventory();
 }
@@ -1356,17 +1385,23 @@ async function loadInventory() {
     document.querySelector('[data-section="inventario-diario"]').click();
 }
 
-        function eliminarArticulo(codigo) {
-            if (confirm(`¿Estás seguro de eliminar el artículo ${codigo}?`)) {
-                let inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
-                inventario = inventario.filter(item => item.codigo !== codigo);
-                localStorage.setItem('inventario', JSON.stringify(inventario));
-                
-                loadInventory();
-                loadDashboardData();
-                showNotification('Éxito', 'Artículo eliminado correctamente', 'success');
-            }
-        }
+        async function eliminarArticulo(id) {
+
+    if (!confirm('¿Eliminar este registro?')) return;
+
+    const { error } = await supabase
+        .from('inventarios_diarios')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        showNotification('Error', 'No se pudo eliminar', 'error');
+        return;
+    }
+
+    loadInventory();
+    showNotification('Éxito', 'Registro eliminado', 'success');
+}
 
         // ===== EXPORTAR CSV =====
         function exportToCSV() {
