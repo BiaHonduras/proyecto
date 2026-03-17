@@ -23,19 +23,19 @@
     
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --sidebar-width: 260px;
+            --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            --sidebar-width: 230px;
         }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f8fafc;
+            background: #f1f5f9;
             min-height: 100vh;
         }
         
         .sidebar {
             width: var(--sidebar-width);
-            background: linear-gradient(180deg, #2d3748 0%, #4a5568 100%);
+            background: #111827; /* gris oscuro moderno */
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
@@ -47,9 +47,9 @@
         
         .card {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: none;
         }
         
         .btn-primary {
@@ -158,12 +158,12 @@
         }
         
         .nav-item:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             color: white;
         }
         
         .nav-item.active {
-            background: rgba(255, 255, 255, 0.15);
+            background: #2563eb;
             color: white;
             font-weight: 600;
         }
@@ -245,7 +245,7 @@
     <!-- Main Content -->
     <div class="main-content flex-1 min-h-screen">
         <!-- Header -->
-        <header class="bg-white shadow-sm border-b border-gray-200 p-4 flex items-center justify-between">
+        <header class="bg-white border-b border-gray-100 p-4 flex items-center justify-between">
             <button id="menuToggle" class="lg:hidden text-gray-600 hover:text-gray-800">
                 <i class="fas fa-bars text-xl"></i>
             </button>
