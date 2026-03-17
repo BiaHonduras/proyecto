@@ -1071,43 +1071,43 @@
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
         async function cargarDatosArticulo(codigo) {
 
-            document.getElementById('inventarioReporteria').value = data.inventario_reporteria || 0;
-document.getElementById('masterpack').value = data.masterpack || 1;
+    if (!codigo) return;
 
-            // 👉 NUEVO CÓDIGO
-            const inv = data.inventario_reporteria || 0;
-            const master = data.masterpack || 1;
-            const cajas = Math.floor(inv / master);
-            const unidades = inv % master;
+    const { data, error } = await supabase
+        .from('inventario_reporteria')
+        .select('*')
+        .eq('codigo', codigo)
+        .single();
 
-                document.getElementById('cajasFardos').value = cajas;
-            document.getElementById('unidades').value = unidades;
-        calcularTotalUnidades();
-            
-                if (!codigo) return;
-                const { data, error } = await supabase
-                    .from('inventario_reporteria')
-                    .select('*')
-                    .eq('codigo', codigo)
-                    .single();
+    if (error || !data) {
+        showNotification('Advertencia', 'Artículo no encontrado en inventario de reportería', 'warning');
 
-                if (error || !data) {
-                    showNotification('Advertencia', 'Artículo no encontrado en inventario de reportería', 'warning');
-
-                    document.getElementById('proveedor').value = '';
-                    document.getElementById('descripcion').value = '';
-                    document.getElementById('inventarioReporteria').value = 0;
-                    document.getElementById('masterpack').value = 1;
-            return;
-        }
-
-                    document.getElementById('proveedor').value = data.proveedor || '';
-                    document.getElementById('descripcion').value = data.descripcion || '';
-                    document.getElementById('inventarioReporteria').value = data.inventario_reporteria || 0;
-                    document.getElementById('masterpack').value = data.masterpack || 1;
-                calcularTotalUnidades();
-            showNotification('Éxito', 'Datos cargados desde reportería', 'success');
+        document.getElementById('proveedor').value = '';
+        document.getElementById('descripcion').value = '';
+        document.getElementById('inventarioReporteria').value = 0;
+        document.getElementById('masterpack').value = 1;
+        return;
     }
+
+    // ✅ AQUÍ ya existe data
+    document.getElementById('proveedor').value = data.proveedor || '';
+    document.getElementById('descripcion').value = data.descripcion || '';
+    document.getElementById('inventarioReporteria').value = data.inventario_reporteria || 0;
+    document.getElementById('masterpack').value = data.masterpack || 1;
+
+    // Cálculo automático
+    const inv = data.inventario_reporteria || 0;
+    const master = data.masterpack || 1;
+    const cajas = Math.floor(inv / master);
+    const unidades = inv % master;
+
+    document.getElementById('cajasFardos').value = cajas;
+    document.getElementById('unidades').value = unidades;
+
+    calcularTotalUnidades();
+
+    showNotification('Éxito', 'Datos cargados desde reportería', 'success');
+}
 
         function calcularTotalUnidades() {
             const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
