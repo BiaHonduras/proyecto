@@ -448,7 +448,7 @@
                             <button type="reset" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" onclick="limpiarFormulario()">
                                 Limpiar
                             </button>
-                            <button type="submit" class="btn-primary px-6 py-3 rounded-lg text-white">
+                            <button type="submit" id="btnGuardarArticulo" class="btn-primary px-6 py-3 rounded-lg text-white">
                                 <i class="fas fa-plus-circle mr-2"></i>
                                 Agregar Artículo
                             </button>
@@ -1186,14 +1186,14 @@ document.getElementById('masterpack').value = data.masterpack || 1;
     const { error } = await supabase
         .from('inventarios_diarios')
         .update({
-            fecha: fecha,
-            codigo: codigo,
-            proveedor: proveedor,
-            descripcion: descripcion,
+            fecha,
+            codigo,
+            proveedor,
+            descripcion,
             inventario_reporteria: inventarioReporteria,
-            masterpack: masterpack,
+            masterpack,
             cajas_fardos: cajas,
-            unidades: unidades
+            unidades
         })
         .eq('id', window.editandoId);
 
@@ -1207,11 +1207,34 @@ document.getElementById('masterpack').value = data.masterpack || 1;
 
 } else {
 
-    // INSERT normal (lo que ya tienes)
+    const { error } = await supabase
+        .from('inventarios_diarios')
+        .insert([{
+            fecha,
+            codigo,
+            proveedor,
+            descripcion,
+            inventario_reporteria: inventarioReporteria,
+            masterpack,
+            cajas_fardos: cajas,
+            unidades
+        }]);
+
+    if (error) {
+        showNotification('Error', error.message, 'error');
+        return;
+    }
+
+    showNotification('Éxito', 'Guardado correctamente', 'success');
 }
 
     limpiarFormulario();
     loadInventory();
+
+    document.getElementById('btnGuardarArticulo').innerHTML = `
+    <i class="fas fa-plus-circle mr-2"></i>
+    Agregar Artículo
+`;
 }
 
         // Barcode Scanner Functions
@@ -1414,6 +1437,12 @@ async function loadInventory() {
 
     // Cambiar vista
     document.querySelector('[data-section="inventario-diario"]').click();
+
+    // Cambiar texto del botón
+document.getElementById('btnGuardarArticulo').innerHTML = `
+    <i class="fas fa-save mr-2"></i>
+    Guardar Modificaciones
+`;
 }
 
         async function eliminarArticulo(id) {
