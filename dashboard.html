@@ -1125,8 +1125,13 @@
     const cajas = Math.floor(inv / master);
     const unidades = inv % master;
 
-    document.getElementById('cajasFardos').value = cajas;
-    document.getElementById('unidades').value = unidades;
+    // 👉 NUEVOS CAMPOS (Reportería)
+    document.getElementById('cajasFardosReporteria').value = cajas;
+    document.getElementById('unidadesReporteria').value = unidades;
+
+    // 👉 DEJAR VACÍOS LOS CAMPOS MANUALES
+    document.getElementById('cajasFardos').value = '';
+    document.getElementById('unidades').value = '';
 
     calcularTotalUnidades();
 
