@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Control de Inventarios Diarios</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="https://github.com/BiaHonduras/proyecto/blob/main/favicon.png">
+    <link rel="icon" type="image/png" href="https://biafoods.com/assets/images/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
@@ -1013,6 +1013,7 @@
 
         // ===== DASHBOARD =====
         function loadDashboardData() {
+            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
             
             // Actualizar estadísticas
             document.getElementById('totalArticulos').textContent = inventario.length;
@@ -1091,47 +1092,47 @@
             document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
         }
 
-        async function agregarArticulo() {
-            const fecha = document.getElementById('fechaInventario').value;
-            const codigo = document.getElementById('codigoArticulo').value;
-            const proveedor = document.getElementById('proveedor').value;
-            const descripcion = document.getElementById('descripcion').value;
-            const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
-            const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
-            const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
-            const unidades = parseFloat(document.getElementById('unidades').value) || 0;
+        function agregarArticulo() {
+    // 1. PRIMERO: Obtener los valores del formulario
+    const fecha = document.getElementById('fechaInventario').value;
+    const codigo = document.getElementById('codigoArticulo').value;
+    const proveedor = document.getElementById('proveedor').value;
+    const descripcion = document.getElementById('descripcion').value;
+    const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
+    const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
+    const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
+    const unidades = parseFloat(document.getElementById('unidades').value) || 0;
 
-                if (!codigo || !fecha) {
-                    showNotification('Error', 'El código y fecha son requeridos', 'error');
-                return;
-            }
+    // 2. SEGUNDO: Validar
+    if (!codigo || !fecha) {
+        showNotification('Error', 'El código del artículo y la fecha son requeridos', 'error');
+        return;
+    }
 
-            const total = (cajas * masterpack) + unidades;
+    // 3. TERCERO: Crear objeto
+    const nuevoArticulo = {
+        id: Date.now(),
+        fecha: fecha,
+        codigo: codigo,
+        proveedor: proveedor,
+        descripcion: descripcion,
+        inventarioReporteria: inventarioReporteria,
+        masterpack: masterpack,
+        cajasFardos: cajas,
+        unidades: unidades,
+        total: (cajas * masterpack) + unidades,
+        timestamp: new Date().toISOString()
+    };
 
-            const { error } = await supabase
-                .from('inventarios_diarios')
-                .insert([{
-                    fecha,
-                    codigo,
-                    proveedor,
-                    descripcion,
-                    inventario_reporteria: inventarioReporteria,
-                    masterpack,
-                    cajas_fardos: cajas,
-                    unidades,
-                    total
-                }]);
+    // 4. CUARTO: Guardar
+    let inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+    inventario.push(nuevoArticulo);
+    localStorage.setItem('inventario', JSON.stringify(inventario));
 
-                    if (error) {
-                        console.error(error);
-                        showNotification('Error', 'No se pudo guardar en SQL', 'error');
-                    return;
-                }
-
-            showNotification('Éxito', 'Guardado en base de datos', 'success');
-
-            limpiarFormulario();
-            loadInventory();
+    showNotification('Éxito', 'Artículo agregado correctamente', 'success');
+    document.getElementById('articuloForm').reset();
+    limpiarFormulario();
+    loadInventory();
 }
 
         // Barcode Scanner Functions
@@ -1237,43 +1238,68 @@ function stopScanner() {
 }
 
         // ===== VER INVENTARIO =====
-        async function loadInventory() {
-            const { data: inventario, error } = await supabase
-                .from('inventarios_diarios')
-                .select('*')
-                .order('fecha', { ascending: false });
-
+        function loadInventory() {
+            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
             const tbody = document.getElementById('inventoryTableBody');
+            
+            if (inventario.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="11" class="py-8 text-center text-gray-500">
+                            <i class="fas fa-inbox text-3xl mb-2"></i>
+                            <p>No hay artículos en el inventario</p>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                tbody.innerHTML = inventario.map(item => {
+                    const total = (item.cajasFardos * item.masterpack) + item.unidades;
+                    const diferencia = item.inventarioReporteria - total;
+                    let validacion = '';
 
-                if (error || !inventario || inventario.length === 0) {
-                    tbody.innerHTML = `<tr>
-                    <td colspan="11" class="text-center py-6">No hay datos</td>
-                    </tr>`;
-                return;
+                    if (diferencia === 0) {
+                        validacion = 'OK';
+                    } else if (diferencia < 0) {
+                        validacion = 'VAL+'; // Total > Inv. Reportería
+                    } else {
+                        validacion = 'VAL-'; // Inv. Reportería > Total
+                    }
+                    
+                    return `
+                        <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="py-4 px-4 text-sm">${item.fecha || 'N/A'}</td>
+                            <td class="py-4 px-4 font-mono text-sm">${item.codigo}</td>
+                            <td class="py-4 px-4 max-w-xs">${item.descripcion}</td>
+                            <td class="py-4 px-4 text-center">${item.inventarioReporteria}</td>
+                            <td class="py-4 px-4 text-center">${item.masterpack}</td>
+                            <td class="py-4 px-4 text-center">${item.cajasFardos || 0}</td>
+                            <td class="py-4 px-4 text-center">${item.unidades}</td>
+                            <td class="py-4 px-4 text-center font-bold">${total.toFixed(2)}</td>
+                            <td class="py-4 px-4 text-center">${diferencia.toFixed(2)}</td>
+                            <td class="py-4 px-4 text-center">
+                                <span class="px-2 py-1 rounded-full text-xs ${
+                                    validacion === 'OK' ? 'bg-green-100 text-green-800' :
+                                    validacion === 'VAL+' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-red-100 text-red-800'
+                                }">
+                                    ${validacion}
+                                </span>
+                            </td>
+                            <td class="py-4 px-4">
+                                <div class="flex space-x-2 justify-center">
+                                    <button class="text-blue-600 hover:text-blue-800" onclick="editarArticulo('${item.codigo}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-red-600 hover:text-red-800" onclick="eliminarArticulo('${item.codigo}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
             }
-    tbody.innerHTML = inventario.map(item => {
-        const diferencia = item.inventario_reporteria - item.total;
-
-        let validacion = '';
-        if (diferencia === 0) validacion = 'OK';
-        else if (diferencia < 0) validacion = 'VAL+';
-        else validacion = 'VAL-';
-
-        return `
-        <tr>
-            <td>${item.fecha}</td>
-            <td>${item.codigo}</td>
-            <td>${item.descripcion}</td>
-            <td>${item.inventario_reporteria}</td>
-            <td>${item.masterpack}</td>
-            <td>${item.cajas_fardos}</td>
-            <td>${item.unidades}</td>
-            <td>${item.total}</td>
-            <td>${diferencia}</td>
-            <td>${validacion}</td>
-        </tr>`;
-    }).join('');
-}
+        }
 
         function editarArticulo(codigo) {
             const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
@@ -1609,7 +1635,7 @@ function stopScanner() {
             masterpack: parseFloat(values[3].replace(/"/g,'').trim()) || 1,
             codigo_barra: values[4].replace(/"/g,'').trim(),
             usuario: currentUser.username,
-            fecha_importacion: new Date(),
+            fecha_importacion: new Date()
         });
     }
 
@@ -1846,9 +1872,9 @@ async function cargarResumenCodigos() {
     }
 
     if (!data || data.length === 0) {
-        tabla.innerHTML = `
+        document.getElementById('tablaResumenCodigos').innerHTML = `
             <tr>
-                <td colspan="3" class="text-center py-6">No hay registros</td>
+                <td colspan="4" class="text-center py-6">No hay registros</td>
             </tr>`;
         return;
     }
@@ -1869,7 +1895,7 @@ async function cargarResumenCodigos() {
             resumen[key] = {
                 usuario: usuario,
                 fecha: fecha,
-                cantidad: registros.length
+                cantidad: 0
             };
         }
 
