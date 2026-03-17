@@ -1641,6 +1641,21 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
         }
 
         // INSERTAR LOS REGISTROS
+                const usuario = currentUser.username;
+                const fecha_importacion = new Date();
+                const cantidad = registros.length;
+
+                const registrosConMeta = registros.map(r => ({
+                    ...r,
+                    usuario,
+                    fecha_importacion,
+                    cantidad
+                }));
+
+await supabase
+    .from('inventario_reporteria')
+    .insert(registrosConMeta);
+        
         const { error: insertError } = await supabase
             .from('inventario_reporteria')
             .insert(registros);
