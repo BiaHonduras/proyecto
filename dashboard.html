@@ -1013,27 +1013,49 @@
         }
 
         // ===== DASHBOARD =====
-        function loadDashboardData() {
-            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
-            
-            // Actualizar estadísticas
-            document.getElementById('totalArticulos').textContent = inventario.length;
-            
-            const totalUnidades = inventario.reduce((sum, item) => {
-                const total = (item.cajasFardos * item.masterpack) + item.unidades;
-                return sum + total;
-            }, 0);
-            document.getElementById('totalUnidadesDashboard').textContent = totalUnidades.toLocaleString();
-            
-            const proveedoresUnicos = new Set(inventario.map(item => item.proveedor)).size;
-            document.getElementById('totalProveedores').textContent = proveedoresUnicos;
-            
-            if (inventario.length > 0) {
-                const lastUpdate = new Date(Math.max(...inventario.map(item => new Date(item.timestamp))));
-                document.getElementById('ultimaActualizacion').textContent = 
-                    lastUpdate.toLocaleDateString() + ' ' + lastUpdate.toLocaleTimeString();
-            }
-        }
+        async function loadDashboardData() {
+
+    const { data: inventario, error } = await supabase
+        .from('inventarios_diarios')
+        .select('*');
+
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo cargar el dashboard', 'error');
+        return;
+    }
+
+    if (!inventario || inventario.length === 0) {
+        document.getElementById('totalArticulos').textContent = 0;
+        document.getElementById('totalUnidadesDashboard').textContent = 0;
+        document.getElementById('totalProveedores').textContent = 0;
+        document.getElementById('ultimaActualizacion').textContent = '-';
+        return;
+    }
+
+    // Total artículos
+    document.getElementById('totalArticulos').textContent = inventario.length;
+
+    // Total unidades
+    const totalUnidades = inventario.reduce((sum, item) => {
+        return sum + ((item.cajas_fardos * item.masterpack) + item.unidades);
+    }, 0);
+
+    document.getElementById('totalUnidadesDashboard').textContent =
+        totalUnidades.toLocaleString();
+
+    // Proveedores únicos
+    const proveedores = new Set(inventario.map(i => i.proveedor));
+    document.getElementById('totalProveedores').textContent = proveedores.size;
+
+    // Última actualización
+    const last = inventario.reduce((max, item) => {
+        return new Date(item.fecha) > new Date(max.fecha) ? item : max;
+    });
+
+    document.getElementById('ultimaActualizacion').textContent =
+        new Date(last.fecha).toLocaleDateString();
+}
 
         // === FORMATO DE FECHA ====
         function formatearFecha(fechaISO) {
