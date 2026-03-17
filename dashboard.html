@@ -9,6 +9,8 @@
     <link rel="icon" href="https://raw.githubusercontent.com/BiaHonduras/proyecto/blob/main/favicon.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
 
@@ -1175,6 +1177,10 @@ document.getElementById('masterpack').value = data.masterpack || 1;
 
     showNotification('Éxito', 'Guardado en Supabase correctamente', 'success');
 
+                cargarArticulosRecientes();
+                cargarGraficoProveedores();
+                loadDashboardData();
+
     if (window.editandoId) {
 
     const { error } = await supabase
@@ -2083,7 +2089,64 @@ async function cargarResumenCodigos() {
             </div>
         </div>
     `).join('');
-}      
+}
+async function cargarGraficoProveedores() {
+
+    const { data, error } = await supabase
+        .from('inventarios_diarios')
+        .select('proveedor');
+
+    const contenedor = document.getElementById('proveedorChart');
+
+    if (error || !data || data.length === 0) {
+        contenedor.innerHTML = `
+            <div class="text-center text-gray-500">
+                <i class="fas fa-chart-pie text-3xl mb-2"></i>
+                <p>No hay datos disponibles</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Agrupar proveedores
+    const conteo = {};
+
+    data.forEach(item => {
+        if (!item.proveedor) return;
+        conteo[item.proveedor] = (conteo[item.proveedor] || 0) + 1;
+    });
+
+    const labels = Object.keys(conteo);
+    const valores = Object.values(conteo);
+
+    renderPieChart(labels, valores);
+}
+        function renderPieChart(labels, data) {
+
+    const contenedor = document.getElementById('proveedorChart');
+
+    contenedor.innerHTML = `<canvas id="pieChart"></canvas>`;
+
+    const ctx = document.getElementById('pieChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
     inventario.js </script>
 </body>
 </html>
