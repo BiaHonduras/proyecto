@@ -1244,68 +1244,60 @@ function stopScanner() {
 }
 
         // ===== VER INVENTARIO =====
-        function loadInventory() {
-            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
-            const tbody = document.getElementById('inventoryTableBody');
-            
-            if (inventario.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="11" class="py-8 text-center text-gray-500">
-                            <i class="fas fa-inbox text-3xl mb-2"></i>
-                            <p>No hay artículos en el inventario</p>
-                        </td>
-                    </tr>
-                `;
-            } else {
-                tbody.innerHTML = inventario.map(item => {
-                    const total = (item.cajasFardos * item.masterpack) + item.unidades;
-                    const diferencia = item.inventarioReporteria - total;
-                    let validacion = '';
+async function loadInventory() {
 
-                    if (diferencia === 0) {
-                        validacion = 'OK';
-                    } else if (diferencia < 0) {
-                        validacion = 'VAL+'; // Total > Inv. Reportería
-                    } else {
-                        validacion = 'VAL-'; // Inv. Reportería > Total
-                    }
-                    
-                    return `
-                        <tr class="border-b border-gray-200 hover:bg-gray-50">
-                            <td class="py-4 px-4 text-sm">${item.fecha || 'N/A'}</td>
-                            <td class="py-4 px-4 font-mono text-sm">${item.codigo}</td>
-                            <td class="py-4 px-4 max-w-xs">${item.descripcion}</td>
-                            <td class="py-4 px-4 text-center">${item.inventarioReporteria}</td>
-                            <td class="py-4 px-4 text-center">${item.masterpack}</td>
-                            <td class="py-4 px-4 text-center">${item.cajasFardos || 0}</td>
-                            <td class="py-4 px-4 text-center">${item.unidades}</td>
-                            <td class="py-4 px-4 text-center font-bold">${total.toFixed(2)}</td>
-                            <td class="py-4 px-4 text-center">${diferencia.toFixed(2)}</td>
-                            <td class="py-4 px-4 text-center">
-                                <span class="px-2 py-1 rounded-full text-xs ${
-                                    validacion === 'OK' ? 'bg-green-100 text-green-800' :
-                                    validacion === 'VAL+' ? 'bg-blue-100 text-blue-800' :
-                                    'bg-red-100 text-red-800'
-                                }">
-                                    ${validacion}
-                                </span>
-                            </td>
-                            <td class="py-4 px-4">
-                                <div class="flex space-x-2 justify-center">
-                                    <button class="text-blue-600 hover:text-blue-800" onclick="editarArticulo('${item.codigo}')">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="text-red-600 hover:text-red-800" onclick="eliminarArticulo('${item.codigo}')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-        }
+    const { data: inventario, error } = await supabase
+        .from('inventarios_diarios')
+        .select('*')
+        .order('fecha', { ascending: false });
+
+    const tbody = document.getElementById('inventoryTableBody');
+
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo cargar el inventario', 'error');
+        return;
+    }
+
+    if (!inventario || inventario.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="11" class="py-8 text-center text-gray-500">
+                    <i class="fas fa-inbox text-3xl mb-2"></i>
+                    <p>No hay artículos en el inventario</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = inventario.map(item => {
+
+        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
+        const diferencia = item.inventario_reporteria - total;
+
+        let validacion = '';
+        if (diferencia === 0) validacion = 'OK';
+        else if (diferencia < 0) validacion = 'VAL+';
+        else validacion = 'VAL-';
+
+        return `
+            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                <td class="py-4 px-4 text-sm">${item.fecha}</td>
+                <td class="py-4 px-4 font-mono text-sm">${item.codigo}</td>
+                <td class="py-4 px-4">${item.descripcion}</td>
+                <td class="py-4 px-4 text-center">${item.inventario_reporteria}</td>
+                <td class="py-4 px-4 text-center">${item.masterpack}</td>
+                <td class="py-4 px-4 text-center">${item.cajas_fardos || 0}</td>
+                <td class="py-4 px-4 text-center">${item.unidades}</td>
+                <td class="py-4 px-4 text-center font-bold">${total.toFixed(2)}</td>
+                <td class="py-4 px-4 text-center">${diferencia.toFixed(2)}</td>
+                <td class="py-4 px-4 text-center">${validacion}</td>
+                <td class="py-4 px-4 text-center">-</td>
+            </tr>
+        `;
+    }).join('');
+}
 
         function editarArticulo(codigo) {
             const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
