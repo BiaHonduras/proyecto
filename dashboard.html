@@ -1625,6 +1625,8 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
                 descripcion: values[4].replace(/"/g,'').trim(),
                 inventario_reporteria: parseFloat(values[5]) || 0,
                 masterpack: parseFloat(values[6]) || 1
+                usuario: currentUser.username,
+                fecha_importacion: new date()
             });
         }
         
