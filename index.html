@@ -127,8 +127,8 @@
                 sessionStorage.setItem('currentUser', JSON.stringify({
                     username: user.usuario,
                     nombre_corto: user.nombre_corto,
-                role: user.rol
-            }));
+                    role: user.rol
+                }));
     window.location.href = "dashboard.html";
 }
         // Inicializar usuarios en localStorage si no existen
@@ -168,6 +168,7 @@
 
             sessionStorage.setItem('currentUser', JSON.stringify({
                 username: data.usuario,
+                nombre_corto: data.nombre_corto,
                 role: data.rol
         }));
     window.location.href = "dashboard.html";
