@@ -275,16 +275,9 @@
                             <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-box text-blue-600"></i>
                             </div>
-                            <div class="mt-6 flex justify-end">
-                                <button id="deleteTodayInventory"
-                                class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                                <i class="fas fa-trash mr-2"></i>
-                            Eliminar Inventario del Día
-                        </button>
+                        </div>
                     </div>
-                </div>
-            /div>
-
+                    
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -947,7 +940,6 @@
             document.getElementById('confirmImportCodes').addEventListener('click', importCodes);
             document.getElementById('deleteCodesDatabase').addEventListener('click', eliminarBaseCodigos);            
             document.getElementById('deleteInventoryReporteria').addEventListener('click',eliminarInventarioReporteria);
-            document.getElementById('deleteTodayInventory').addEventListener('click', eliminarInventarioDelDia);
         });
 
         // ===== NAVEGACIÓN =====
@@ -1102,6 +1094,13 @@
     document.getElementById('descripcion').value = data.descripcion || '';
     document.getElementById('inventarioReporteria').value = data.inventario_reporteria || 0;
     document.getElementById('masterpack').value = data.masterpack || 1;
+
+    // Cálculo automático
+    const inv = data.inventario_reporteria || 0;
+    const master = data.masterpack || 1;
+    const cajas = Math.floor(inv / master);
+    const unidades = inv % master;
+
     document.getElementById('cajasFardos').value = cajas;
     document.getElementById('unidades').value = unidades;
 
@@ -1151,55 +1150,91 @@
         return;
     }
 
-    if (window.editandoId) {
-        // ✅ UPDATE
-        const { error } = await supabase
-            .from('inventarios_diarios')
-            .update({
-                fecha,
-                codigo,
-                proveedor,
-                descripcion,
+    const total = (cajas * masterpack) + unidades;
+
+    // ✅ GUARDAR EN SUPABASE
+    const { error } = await supabase
+        .from('inventarios_diarios')
+        .insert([
+            {
+                fecha: fecha,
+                codigo: codigo,
+                proveedor: proveedor,
+                descripcion: descripcion,
                 inventario_reporteria: inventarioReporteria,
-                masterpack,
+                masterpack: masterpack,
                 cajas_fardos: cajas,
-                unidades
-            })
-            .eq('id', window.editandoId);
+                unidades: unidades,
+            }
+        ]);
 
-        if (error) {
-            showNotification('Error', error.message, 'error');
-            return;
-        }
-
-        window.editandoId = null;
-        showNotification('Éxito', 'Registro actualizado', 'success');
-
-    } else {
-        // ✅ INSERT SOLO UNA VEZ
-        const { error } = await supabase
-            .from('inventarios_diarios')
-            .insert([{
-                fecha,
-                codigo,
-                proveedor,
-                descripcion,
-                inventario_reporteria: inventarioReporteria,
-                masterpack,
-                cajas_fardos: cajas,
-                unidades
-            }]);
-
-        if (error) {
-            showNotification('Error', error.message, 'error');
-            return;
-        }
-
-        showNotification('Éxito', 'Guardado correctamente', 'success');
+    if (error) {
+        console.error(error);
+        showNotification('Error', error.message, 'error');
+        console.error('Detalle Supabase:', error);
+        return;
     }
+
+    showNotification('Éxito', 'Guardado en Supabase correctamente', 'success');
+
+                cargarArticulosRecientes();
+                cargarGraficoProveedores();
+                loadDashboardData();
+
+    if (window.editandoId) {
+
+    const { error } = await supabase
+        .from('inventarios_diarios')
+        .update({
+            fecha,
+            codigo,
+            proveedor,
+            descripcion,
+            inventario_reporteria: inventarioReporteria,
+            masterpack,
+            cajas_fardos: cajas,
+            unidades
+        })
+        .eq('id', window.editandoId);
+
+    if (error) {
+        showNotification('Error', error.message, 'error');
+        return;
+    }
+
+    window.editandoId = null;
+    showNotification('Éxito', 'Registro actualizado', 'success');
+
+} else {
+
+    const { error } = await supabase
+        .from('inventarios_diarios')
+        .insert([{
+            fecha,
+            codigo,
+            proveedor,
+            descripcion,
+            inventario_reporteria: inventarioReporteria,
+            masterpack,
+            cajas_fardos: cajas,
+            unidades
+        }]);
+
+    if (error) {
+        showNotification('Error', error.message, 'error');
+        return;
+    }
+
+    showNotification('Éxito', 'Guardado correctamente', 'success');
+}
 
     limpiarFormulario();
     loadInventory();
+
+    document.getElementById('btnGuardarArticulo').innerHTML = `
+    <i class="fas fa-plus-circle mr-2"></i>
+    Agregar Artículo
+`;
 }
 
         // Barcode Scanner Functions
@@ -2140,37 +2175,6 @@ async function cargarGraficoProveedores() {
             }
         }
     });
-}
-    async function eliminarInventarioDelDia() {
-
-    const fecha = document.getElementById('fechaInventario').value;
-
-    if (!fecha) {
-        showNotification('Error', 'No se encontró la fecha actual', 'error');
-        return;
-    }
-
-    const confirmar = confirm(
-        `⚠️ ¿Está seguro que desea eliminar TODO el inventario del día ${fecha}?\n\nEsta acción no se puede deshacer.`
-    );
-
-    if (!confirmar) return;
-
-    const { error } = await supabase
-        .from('inventarios_diarios')
-        .delete()
-        .eq('fecha', fecha);
-
-    if (error) {
-        console.error(error);
-        showNotification('Error', 'No se pudo eliminar el inventario', 'error');
-        return;
-    }
-
-    showNotification('Éxito', 'Inventario del día eliminado correctamente', 'success');
-
-    loadInventory();
-    loadDashboardData();
 }
     inventario.js </script>
 </body>
