@@ -484,53 +484,41 @@
         </section>
 
             <!-- Ver Inventario Section -->
-            <section id="inventario-section" class="section-content hidden">
-                <div class="card p-6">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-                        <h3 class="text-lg font-semibold">Inventario Actual</h3>
-                        
-                        <div class="flex space-x-4 mt-4 md:mt-0">
-                            <div class="relative">
-                                <input type="text" id="searchInventory" 
-                                       class="input-field pl-10 pr-4 py-2 rounded-lg" 
-                                       placeholder="Buscar artículo...">
-                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                            </div>
-                            <button id="refreshInventory" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                <i class="fas fa-sync"></i>
-                            </button>
-                        </div>
+<section id="inventario-section" class="section-content hidden">
+    <div class="grid grid-cols-1 gap-6">
+
+        <!-- Header Card -->
+        <div class="card p-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <h3 class="text-lg font-semibold">Inventario Actual</h3>
+
+                <div class="flex space-x-4 mt-4 md:mt-0">
+                    <div class="relative">
+                        <input type="text" id="searchInventory" 
+                               class="input-field pl-10 pr-4 py-2 rounded-lg" 
+                               placeholder="Buscar artículo...">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                     </div>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead>
-                                <tr class="border-b border-gray-200">
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Fecha</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Código</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Inv. Reportería</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Masterpack</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Cajas/Fardos</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Unidades</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Total</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Diferencia</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Validación</th>
-                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="inventoryTableBody">
-                                <tr>
-                                    <td colspan="11" class="py-8 text-center text-gray-500">
-                                        <i class="fas fa-inbox text-3xl mb-2"></i>
-                                        <p>No hay artículos en el inventario</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+
+                    <button id="refreshInventory"
+                        class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <i class="fas fa-sync"></i>
+                    </button>
                 </div>
-            </section>
+            </div>
+        </div>
+
+        <!-- Tabla Card -->
+        <div class="card p-6">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    ...
+                </table>
+            </div>
+        </div>
+
+    </div>
+</section>
 
             <!-- Exportar CSV Section -->
             <section id="exportar-section" class="section-content hidden">
