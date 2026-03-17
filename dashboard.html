@@ -621,13 +621,12 @@
                                 <th class="py-3 text-left">Usuario</th>
                                 <th class="py-3 text-center">Cantidad de Códigos</th>
                                 <th class="py-3 text-center">Fecha</th>
-                                <th class="py-3 text-center">Acciones</th>
                             </tr>
                     </thead>
 
                     <tbody id="tablaResumenInventario">
                         <tr>
-                            <td colspan="4" class="text-center py-6 text-gray-500">
+                            <td colspan="3" class="text-center py-6 text-gray-500">
                             No hay registros
                         </td>
                     </tr>
@@ -1611,7 +1610,6 @@ function stopScanner() {
             codigo_barra: values[4].replace(/"/g,'').trim(),
             usuario: currentUser.username,
             fecha_importacion: new Date(),
-            accion: 'CARGA'
         });
     }
 
@@ -1634,13 +1632,6 @@ function stopScanner() {
 }
 
         async function eliminarBaseCodigos() {
-
-            await supabase.from('codigos_historial').insert([{
-                usuario: currentUser.username,
-                fecha_importacion: new Date(),
-                cantidad: 0,
-                accion: 'ELIMINACIÓN'
-            }]);
 
     if (!confirm("¿Está seguro de eliminar TODOS los códigos de la Base de Datos?")) {
         return;
@@ -1842,7 +1833,7 @@ async function cargarResumenCodigos() {
 
     const { data, error } = await supabase
         .from('codigos')
-        .select('usuario, fecha_importacion, accion')
+        .select('usuario, fecha_importacion')
         .order('fecha_importacion', { ascending: false})
         .limit(5);
     
@@ -1878,7 +1869,6 @@ async function cargarResumenCodigos() {
             resumen[key] = {
                 usuario: usuario,
                 fecha: fecha,
-                accion,
                 cantidad: registros.length
             };
         }
@@ -1893,7 +1883,6 @@ async function cargarResumenCodigos() {
             <td class="py-3">${r.usuario}</td>
             <td class="text-center">${r.cantidad}</td>
             <td class="text-center">${r.fecha}</td>
-            <td class="text-center">${r.accion}</td>
         </tr>
     `).join('');
 }
