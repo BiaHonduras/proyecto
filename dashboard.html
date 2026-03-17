@@ -907,7 +907,7 @@
     }
 
     try {
-        const response = await crearUsuario(username, nombre_corto, email, password, rol);
+        const response = await crearUsuario(username, nombreCorto, email, password, rol);
         if (response.success) {
             showNotification('Éxito', 'Usuario creado correctamente', 'success');
             document.getElementById('userForm').reset();
