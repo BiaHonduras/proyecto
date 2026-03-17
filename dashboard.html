@@ -805,11 +805,19 @@
                             <input type="hidden" id="userId">
                             
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de Usuario *</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Usuario *</label>
                                 <input type="text" id="userUsername" 
                                        class="input-field w-full px-4 py-3 rounded-lg" 
                                        placeholder="nombre.usuario"
                                        required>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Corto *</label>
+                                <input type="text" id="userNombreCorto" 
+                                    class="input-field w-full px-4 py-3 rounded-lg" 
+                                    placeholder="Ej: Juan"
+                                    required>
                             </div>
                             
                             <div>
@@ -887,6 +895,7 @@
             e.preventDefault();
     
             const username = document.getElementById('userUsername').value;
+            const nombreCorto = document.getElementById('userNombreCorto').value;
             const email = document.getElementById('userEmail').value;
             const password = document.getElementById('userPassword').value;
             const confirmPassword = document.getElementById('userConfirmPassword').value;
@@ -922,7 +931,7 @@
             }
             
             currentUser = JSON.parse(userData);           
-            document.getElementById('currentUserName').textContent = currentUser.username;
+            document.getElementById('currentUserName').textContent = currentUser.nombre_corto || currentUser.username;
 
             if(currentUser.role !== 'admin'){
                 document.querySelector('[data-section="usuarios"]').style.display = "none";
@@ -1874,6 +1883,7 @@ await supabase
         .insert([
             {
                 usuario: username,
+                nombre_corto: nombreCorto,
                 correo: email,
                 contraseña: password,
                 rol: role
@@ -1967,6 +1977,7 @@ if (error) {
             
             if (user) {
                 document.getElementById('userUsername').value = user.username;
+                document.getElementById('userNombreCorto').value = data.nombre_corto || '';
                 document.getElementById('userEmail').value = user.email;
                 document.getElementById('userPassword').value = user.password; // Pre-fill password for convenience (in real app, don't do this)
                 document.getElementById('userConfirmPassword').value = user.password; // Pre-fill password for convenience
