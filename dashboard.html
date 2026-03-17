@@ -42,7 +42,7 @@
         
         .main-content {
             margin-left: var(--sidebar-width);
-            padding-top: 0;
+            width: 100%;
         }
         
         .card {
@@ -248,7 +248,7 @@
     <!-- Main Content -->
     <div class="main-content flex-1 min-h-screen">
         <!-- Header -->
-        <header class="bg-white border-b border-gray-100 p-4 flex items-center">
+        <header class="bg-white border-b border-gray-100 p-4 flex items-center w-full max-w-7xl mx-auto">
             <button id="menuToggle" class="lg:hidden text-gray-600 hover:text-gray-800">
                 <i class="fas fa-bars text-xl"></i>
             </button>
@@ -266,7 +266,7 @@
         </header>
 
         <!-- Content Sections -->
-        <main class="p-6 space-y-6 max-w-7xl mx-auto">
+        <main class="p-6 space-y-6 max-w-7xl mx-auto w-full">
             <!-- Dashboard Section -->
             <section id="dashboard-section" class="section-content">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
