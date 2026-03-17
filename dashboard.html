@@ -947,6 +947,7 @@
             document.getElementById('confirmImportCodes').addEventListener('click', importCodes);
             document.getElementById('deleteCodesDatabase').addEventListener('click', eliminarBaseCodigos);            
             document.getElementById('deleteInventoryReporteria').addEventListener('click',eliminarInventarioReporteria);
+            document.getElementById('deleteTodayInventory').addEventListener('click', eliminarInventarioDelDia);
         });
 
         // ===== NAVEGACIÓN =====
@@ -2139,6 +2140,37 @@ async function cargarGraficoProveedores() {
             }
         }
     });
+}
+    async function eliminarInventarioDelDia() {
+
+    const fecha = document.getElementById('fechaInventario').value;
+
+    if (!fecha) {
+        showNotification('Error', 'No se encontró la fecha actual', 'error');
+        return;
+    }
+
+    const confirmar = confirm(
+        `⚠️ ¿Está seguro que desea eliminar TODO el inventario del día ${fecha}?\n\nEsta acción no se puede deshacer.`
+    );
+
+    if (!confirmar) return;
+
+    const { error } = await supabase
+        .from('inventarios_diarios')
+        .delete()
+        .eq('fecha', fecha);
+
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo eliminar el inventario', 'error');
+        return;
+    }
+
+    showNotification('Éxito', 'Inventario del día eliminado correctamente', 'success');
+
+    loadInventory();
+    loadDashboardData();
 }
     inventario.js </script>
 </body>
