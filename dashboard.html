@@ -1625,8 +1625,6 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
                 descripcion: values[4].replace(/"/g,'').trim(),
                 inventario_reporteria: parseFloat(values[5]) || 0,
                 masterpack: parseFloat(values[6]) || 1
-                usuario: currentUser.username,
-                fecha_importacion: new date()
             });
         }
         
@@ -2025,8 +2023,8 @@ async function cargarResumenCodigos() {
 
         const usuario = item.usuario || "Sin usuario";
 
-        const fecha = item.fecha_importacion
-            ? item.fecha_importacion.split('T')[0]
+        const fecha = item.fecha_creacion
+            ? item.fecha_creacion.split('T')[0]
             : "Sin fecha";
 
         const key = usuario + "_" + fecha;
