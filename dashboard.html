@@ -621,13 +621,12 @@
                                 <th class="py-3 text-left">Usuario</th>
                                 <th class="py-3 text-center">Cantidad de Códigos</th>
                                 <th class="py-3 text-center">Fecha</th>
-                                <th class="py-3 text-center">Acciones</th>
                             </tr>
                     </thead>
 
                     <tbody id="tablaResumenInventario">
                         <tr>
-                            <td colspan="4" class="text-center py-6 text-gray-500">
+                            <td colspan="3" class="text-center py-6 text-gray-500">
                             No hay registros
                         </td>
                     </tr>
@@ -734,7 +733,7 @@
                     </button>
 
                     <button id="deleteCodesDatabase"
-                        class="mt-4 px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white">
+                        class="mt-4 px-6 py-2 rounded-lg bg-red-600 hover: bg-red-700 text-white">
                         <i class="fas fa-trash mr-2"></i>
                         Eliminar Base de Datos
                     </button>          
@@ -1634,16 +1633,6 @@ function stopScanner() {
 
         async function eliminarBaseCodigos() {
 
-        console.log("Eliminar Base de Datos");
-             if (!confirm("¿Está seguro de eliminar TODOS los códigos de la Base de Datos?")) {
-        return;
-    }
-            
-            await supabase.from('log_codigos').insert([{
-            usuario: currentUser.username,
-            accion: 'Eliminación',
-            fecha: new Date()
-
     if (!confirm("¿Está seguro de eliminar TODOS los códigos de la Base de Datos?")) {
         return;
     }
@@ -1845,55 +1834,55 @@ async function cargarResumenCodigos() {
     const { data, error } = await supabase
         .from('codigos')
         .select('usuario, fecha_importacion')
-        .order('fecha_importacion', { ascending: false });
-
+        .order('fecha_importacion', { ascending: false})
+        .limit(5);
+    
     const tabla = document.getElementById('tablaResumenCodigos');
 
-    if (error || !data) {
-        tabla.innerHTML = `
-        <tr>
-            <td colspan="4" class="text-center py-6">No hay registros</td>
-        </tr>`;
+    if (error) {
+        console.error("Error Supabase:", error.message);
+        showNotification('Error', 'No se pudo cargar el resumen', 'error');
         return;
     }
 
-    // ===== AGRUPAR POR USUARIO + FECHA =====
+    if (!data || data.length === 0) {
+        document.getElementById('tablaResumenCodigos').innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-6">No hay registros</td>
+            </tr>`;
+        return;
+    }
+
     const resumen = {};
 
     data.forEach(item => {
 
         const usuario = item.usuario || "Sin usuario";
 
-        const fecha = item.fecha_importacion
-            ? item.fecha_importacion.split('T')[0]
+        const fecha = item.fecha_creacion
+            ? item.fecha_creacion.split('T')[0]
             : "Sin fecha";
 
         const key = usuario + "_" + fecha;
 
         if (!resumen[key]) {
             resumen[key] = {
-                usuario,
-                fecha,
-                cantidad: 0,
-                accion: "Carga"
+                usuario: usuario,
+                fecha: fecha,
+                cantidad: 0
             };
         }
 
         resumen[key].cantidad++;
     });
 
-    const resultado = Object.values(resumen).slice(0,5);
+    const tbody = document.getElementById('tablaResumenCodigos');
 
-    tabla.innerHTML = resultado.map(r => `
+    tbody.innerHTML = Object.values(resumen).map(r => `
         <tr class="border-b hover:bg-gray-50">
             <td class="py-3">${r.usuario}</td>
             <td class="text-center">${r.cantidad}</td>
             <td class="text-center">${r.fecha}</td>
-            <td class="text-center">
-                <span class="px-2 py-1 rounded bg-green-100 text-green-700 text-xs">
-                    ${r.accion}
-                </span>
-            </td>
         </tr>
     `).join('');
 }
