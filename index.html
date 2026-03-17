@@ -118,6 +118,8 @@
 
     // Función de login reutilizable
     async function login(usuario, password) {
+        console.log("DATA LOGIN: ",data);
+        
         try {
             const { data, error } = await supabase
                 .from('usuarios')
