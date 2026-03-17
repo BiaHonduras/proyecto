@@ -1855,9 +1855,9 @@ async function cargarResumenCodigos() {
     }
 
     if (!data || data.length === 0) {
-        document.getElementById('tablaResumenCodigos').innerHTML = `
+        tabla.innerHTML = `
             <tr>
-                <td colspan="4" class="text-center py-6">No hay registros</td>
+                <td colspan="3" class="text-center py-6">No hay registros</td>
             </tr>`;
         return;
     }
@@ -1879,7 +1879,7 @@ async function cargarResumenCodigos() {
                 usuario: usuario,
                 fecha: fecha,
                 accion,
-                cantidad: 0
+                cantidad: registros.length
             };
         }
 
