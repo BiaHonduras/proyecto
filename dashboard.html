@@ -1094,8 +1094,8 @@
             document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
         }
 
-        function agregarArticulo() {
-    // 1. PRIMERO: Obtener los valores del formulario
+        async function agregarArticulo() {
+
     const fecha = document.getElementById('fechaInventario').value;
     const codigo = document.getElementById('codigoArticulo').value;
     const proveedor = document.getElementById('proveedor').value;
@@ -1105,34 +1105,38 @@
     const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
     const unidades = parseFloat(document.getElementById('unidades').value) || 0;
 
-    // 2. SEGUNDO: Validar
     if (!codigo || !fecha) {
-        showNotification('Error', 'El código del artículo y la fecha son requeridos', 'error');
+        showNotification('Error', 'El código y la fecha son requeridos', 'error');
         return;
     }
 
-    // 3. TERCERO: Crear objeto
-    const nuevoArticulo = {
-        id: Date.now(),
-        fecha: fecha,
-        codigo: codigo,
-        proveedor: proveedor,
-        descripcion: descripcion,
-        inventarioReporteria: inventarioReporteria,
-        masterpack: masterpack,
-        cajasFardos: cajas,
-        unidades: unidades,
-        total: (cajas * masterpack) + unidades,
-        timestamp: new Date().toISOString()
-    };
+    const total = (cajas * masterpack) + unidades;
 
-    // 4. CUARTO: Guardar
-    let inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
-    inventario.push(nuevoArticulo);
-    localStorage.setItem('inventario', JSON.stringify(inventario));
+    // ✅ GUARDAR EN SUPABASE
+    const { error } = await supabase
+        .from('inventarios_diarios')
+        .insert([
+            {
+                fecha: fecha,
+                codigo: codigo,
+                proveedor: proveedor,
+                descripcion: descripcion,
+                inventario_reporteria: inventarioReporteria,
+                masterpack: masterpack,
+                cajas_fardos: cajas,
+                unidades: unidades,
+                total: total
+            }
+        ]);
 
-    showNotification('Éxito', 'Artículo agregado correctamente', 'success');
-    document.getElementById('articuloForm').reset();
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo guardar en Supabase', 'error');
+        return;
+    }
+
+    showNotification('Éxito', 'Guardado en Supabase correctamente', 'success');
+
     limpiarFormulario();
     loadInventory();
 }
