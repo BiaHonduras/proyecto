@@ -1183,91 +1183,55 @@
         return;
     }
 
-    const total = (cajas * masterpack) + unidades;
-
-    // ✅ GUARDAR EN SUPABASE
-    const { error } = await supabase
-        .from('inventarios_diarios')
-        .insert([
-            {
-                fecha: fecha,
-                codigo: codigo,
-                proveedor: proveedor,
-                descripcion: descripcion,
-                inventario_reporteria: inventarioReporteria,
-                masterpack: masterpack,
-                cajas_fardos: cajas,
-                unidades: unidades,
-            }
-        ]);
-
-    if (error) {
-        console.error(error);
-        showNotification('Error', error.message, 'error');
-        console.error('Detalle Supabase:', error);
-        return;
-    }
-
-    showNotification('Éxito', 'Guardado en Supabase correctamente', 'success');
-
-                cargarArticulosRecientes();
-                cargarGraficoProveedores();
-                loadDashboardData();
-
     if (window.editandoId) {
+        // ✅ UPDATE
+        const { error } = await supabase
+            .from('inventarios_diarios')
+            .update({
+                fecha,
+                codigo,
+                proveedor,
+                descripcion,
+                inventario_reporteria: inventarioReporteria,
+                masterpack,
+                cajas_fardos: cajas,
+                unidades
+            })
+            .eq('id', window.editandoId);
 
-    const { error } = await supabase
-        .from('inventarios_diarios')
-        .update({
-            fecha,
-            codigo,
-            proveedor,
-            descripcion,
-            inventario_reporteria: inventarioReporteria,
-            masterpack,
-            cajas_fardos: cajas,
-            unidades
-        })
-        .eq('id', window.editandoId);
+        if (error) {
+            showNotification('Error', error.message, 'error');
+            return;
+        }
 
-    if (error) {
-        showNotification('Error', error.message, 'error');
-        return;
+        window.editandoId = null;
+        showNotification('Éxito', 'Registro actualizado', 'success');
+
+    } else {
+        // ✅ INSERT (SOLO UNA VEZ)
+        const { error } = await supabase
+            .from('inventarios_diarios')
+            .insert([{
+                fecha,
+                codigo,
+                proveedor,
+                descripcion,
+                inventario_reporteria: inventarioReporteria,
+                masterpack,
+                cajas_fardos: cajas,
+                unidades
+            }]);
+
+        if (error) {
+            showNotification('Error', error.message, 'error');
+            return;
+        }
+
+        showNotification('Éxito', 'Guardado correctamente', 'success');
     }
-
-    window.editandoId = null;
-    showNotification('Éxito', 'Registro actualizado', 'success');
-
-} else {
-
-    const { error } = await supabase
-        .from('inventarios_diarios')
-        .insert([{
-            fecha,
-            codigo,
-            proveedor,
-            descripcion,
-            inventario_reporteria: inventarioReporteria,
-            masterpack,
-            cajas_fardos: cajas,
-            unidades
-        }]);
-
-    if (error) {
-        showNotification('Error', error.message, 'error');
-        return;
-    }
-
-    showNotification('Éxito', 'Guardado correctamente', 'success');
-}
 
     limpiarFormulario();
     loadInventory();
-
-    document.getElementById('btnGuardarArticulo').innerHTML = `
-    <i class="fas fa-plus-circle mr-2"></i>
-    Agregar Artículo
-`;
 }
 
         // Barcode Scanner Functions
