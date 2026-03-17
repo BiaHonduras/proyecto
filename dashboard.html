@@ -1013,7 +1013,6 @@
 
         // ===== DASHBOARD =====
         function loadDashboardData() {
-            const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
             
             // Actualizar estadísticas
             document.getElementById('totalArticulos').textContent = inventario.length;
