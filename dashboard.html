@@ -931,7 +931,7 @@
             }
             
             currentUser = JSON.parse(userData);           
-            document.getElementById('currentUserName').textContent = currentUser.nombre_corto;
+            document.getElementById('currentUserName').textContent = currentUser.nombreCorto;
 
             if(currentUser.role !== 'admin'){
                 document.querySelector('[data-section="usuarios"]').style.display = "none";
