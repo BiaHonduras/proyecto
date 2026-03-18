@@ -351,7 +351,14 @@
                                    required
                                    onblur="cargarDatosArticulo(this.value)">
                         </div>
-                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Código de Barra</label>
+                            <input type="text" id="codigoBarra"
+                                    class="input-field w-full px-4 py-2 rounded-lg text-center text-lg tracking-widest"
+                                    placeholder="Escanear..."
+                                    maxlength="20"
+                                    autocomplete="off">
+                        </div>
                         <div class="md:col-span-2">
                             <button type="button" id="startScannerBtn" class="btn-primary w-full py-3 rounded-lg text-white">
                                 <i class="fas fa-barcode mr-2"></i>
@@ -1291,8 +1298,16 @@
         });
         
         Quagga.onDetected(function(result) {
-            document.getElementById('codigoArticulo').value = result.codeResult.code;
-            cargarDatosArticulo(result.codeResult.code);
+            const codigo = result.codeResult.code;
+
+            document.getElementById('codigoArticulo').value = codigo;
+            cargarDatosArticulo(codigo);
+
+            // 🔊 sonido
+           beep();
+
+            // 🛑 detener escáner automáticamente
+            stopScanner();
         });
         
     } catch (error) {
