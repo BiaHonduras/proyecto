@@ -1001,50 +1001,29 @@
             
             // Navegación entre secciones
             document.querySelectorAll('.nav-item').forEach(item => {
-                item.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // Actualizar navegación activa
-                    document.querySelectorAll('.nav-item').forEach(nav => {
-                        nav.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                    
-                    // Ocultar todas las secciones
-                    document.querySelectorAll('.section-content').forEach(section => {
-                        section.classList.add('hidden');
-                    });
-                    
-                    // Mostrar sección correspondiente
-                    const sectionId = this.getAttribute('data-section') + '-section';
-                    document.getElementById(sectionId).classList.remove('hidden');
-                    
-                    // Actualizar título
-                    const sectionTitles = {
-                        'dashboard': 'Dashboard',
-                        'inventario-diario': 'Inventario Diario',
-                        'inventario': 'Inventario',
-                        'exportar': 'Exportar CSV',
-                        'importar-inventario': 'Importar Inventario',
-                        'importar-codigos': 'Importar Base de Datos',
-                        'usuarios': 'Gestión de Usuarios'
-                    };
-                    document.getElementById('currentSectionTitle').textContent = sectionTitles[this.getAttribute('data-section')];
-                    
-                    // Cerrar sidebar en mobile
-                    if (window.innerWidth < 768) {
-                        document.querySelector('.sidebar').classList.remove('open');
-                        document.getElementById('mobileOverlay').classList.remove('open');
-                    }
+    item.addEventListener('click', function (e) {
+        e.preventDefault();
 
-                    // Specific actions for sections
-                    if (this.getAttribute('data-section') === 'inventario') {
-                        loadInventory(); // Reload inventory when viewing
-                    } else if (this.getAttribute('data-section') === 'usuarios') {
-                        loadUsers(); // Reload users when viewing
-                    }
-                });
-            });
+        const section = this.dataset.section;
+
+        // Active
+        document.querySelectorAll('.nav-item').forEach(i => {
+            i.classList.remove('active');
+        });
+        this.classList.add('active');
+
+        // Ocultar todas
+        document.querySelectorAll('.section-content').forEach(sec => {
+            sec.classList.add('hidden');
+        });
+
+        // Mostrar la correcta
+        const target = document.getElementById(section + '-section');
+        if (target) {
+            target.classList.remove('hidden');
+        }
+    });
+});
             
             // Logout
             document.getElementById('logoutBtn').addEventListener('click', function() {
