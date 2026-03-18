@@ -44,6 +44,7 @@
             margin-left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
             padding-top: 0;
+            overflow-x: hidden;
         }
         
         .card {
@@ -503,9 +504,9 @@
                         </div>
                     </div>
                     
-                    <div class="overflow-x-auto">
-                        <div class="max-h-[500px] overflow-y-auto">
-                        <table class="w-full">
+                    <div class="w-full overflow-x-auto">
+                        <div class="w-full">
+                        <table class="min-w-full">
                             <thead>
                                 <tr class="border-b border-gray-200">
                                     <th class="pb-3 text-left text-sm font-medium text-gray-600">Fecha</th>
