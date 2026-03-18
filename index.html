@@ -118,8 +118,7 @@
 
     // Función de login reutilizable
     async function login(usuario, password) {
-        console.log("DATA LOGIN: ",data);
-        
+       
         try {
             const { data, error } = await supabase
                 .from('usuarios')
@@ -127,6 +126,7 @@
                 .eq('usuario', usuario)
                 .eq('contraseña', password)
                 .single();
+            console.log("DATA LOGIN: ",data);
 
             if (error || !data) {
                 throw new Error('Usuario o contraseña incorrectos');
