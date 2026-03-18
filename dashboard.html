@@ -42,7 +42,8 @@
         
         .main-content {
             margin-left: var(--sidebar-width);
-            padding: 20px;
+            width: calc(100% - var(--sidebar-width));
+            padding-top: 0;
         }
         
         .card {
@@ -351,7 +352,7 @@
                                    oninput="cargarDatosArticulo(this.value)">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Código de Barra *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Código de Barra Artículo *</label>
                             <input type="text" id="codigoBarra"
                                     class="input-field w-full px-4 py-3 rounded-lg" 
                                    placeholder="Escanee o ingrese manualmente"
@@ -359,7 +360,7 @@
                                     autocomplete="off">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Escáner de Códigos de Barra *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Códigos de Barra *</label>
                             <button type="button" id="startScannerBtn"
                                     class="btn-primary w-full px-4 py-3 rounded-lg text-white">
                                     <i class="fas fa-barcode mr-2"></i>
@@ -431,7 +432,7 @@
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Cajas / Fardos *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cajas / Fardos</label>
                             <input type="number" id="cajasFardos" 
                                    class="input-field w-full px-4 py-3 rounded-lg" 
                                    placeholder="0"
@@ -441,7 +442,7 @@
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Unidades *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Unidades</label>
                             <input type="number" id="unidades" 
                                    class="input-field w-full px-4 py-3 rounded-lg" 
                                    placeholder="0"
@@ -483,65 +484,55 @@
             </div>
         </section>
 
-<!-- Ver Inventario Section -->
-<section id="inventario-section" class="section-content hidden">
-    <div class="card p-6">
-
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-            <h3 class="text-lg font-semibold">Inventario Actual</h3>
-
-            <div class="flex space-x-4">
-                <div class="relative">
-                    <input type="text" id="searchInventory" 
-                           class="input-field pl-10 pr-4 py-2 rounded-lg border border-gray-300"
-                           placeholder="Buscar artículo...">
-                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            <!-- Ver Inventario Section -->
+            <section id="inventario-section" class="section-content hidden">
+                <div class="card p-6">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-semibold text-gray-800">Inventario Actual</h3>
+                        
+                        <div class="flex space-x-4 mt-4 md:mt-0">
+                            <div class="relative">
+                                <input type="text" id="searchInventory" 
+                                       class="input-field pl-10 pr-4 py-2 rounded-lg" 
+                                       placeholder="Buscar artículo...">
+                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                            <button id="refreshInventory" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <div class="max-h-[500px] overflow-y-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Fecha</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Código</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Inv. Reportería</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Masterpack</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Cajas/Fardos</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Unidades</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Total</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Diferencia</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Validación</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                <tr>
+                                    <td colspan="11" class="py-8 text-center text-gray-500">
+                                        <i class="fas fa-inbox text-3xl mb-2"></i>
+                                        <p>No hay artículos en el inventario</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-
-                <button id="refreshInventory" 
-                        class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                    <i class="fas fa-sync"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Tabla -->
-        <div class="overflow-x-auto w-full">
-            <div class="max-h-[500px] overflow-y-auto">
-
-                <table class="w-full table-auto min-w-[1200px]">
-                    <thead>
-                        <tr class="border-b border-gray-200">
-                            <th class="pb-3 text-left text-sm font-medium text-gray-600 w-32">Fecha</th>
-                            <th class="pb-3 text-left text-sm font-medium text-gray-600 w-24">Código</th>
-                            <th class="pb-3 text-left text-sm font-medium text-gray-600 w-48">Descripción</th>
-                            <th class="pb-3 text-left text-sm font-medium text-gray-600 w-32">Inv. Reportería</th>
-                            <th class="pb-3 text-left text-sm font-medium text-gray-600 w-28">Masterpack</th>
-                            <th class="pb-3 text-left text-sm font-medium text-gray-600 w-32">Cajas/Fardos</th>
-                            <th class="pb-3 text-left text-sm font-medium text-gray-600 w-28">Unidades</th>
-                            <th class="pb-3 text-left text-sm font-medium text-gray-600 w-28">Total</th>
-                            <th class="pb-3 text-left text-sm font-medium text-gray-600 w-28">Diferencia</th>
-                            <th class="pb-3 text-left text-sm font-medium text-gray-600 w-32">Validación</th>
-                            <th class="pb-3 text-left text-sm font-medium text-gray-600 w-32">Acciones</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="inventoryTableBody">
-                        <tr>
-                            <td colspan="11" class="py-8 text-center text-gray-500">
-                                <i class="fas fa-inbox text-3xl mb-2"></i>
-                                <p>No hay artículos en el inventario</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
-            </div>
-        </div>
-
-    </div> <!-- cierre correcto del card -->
-</section>
+            </section>
 
             <!-- Exportar CSV Section -->
             <section id="exportar-section" class="section-content hidden">
