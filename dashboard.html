@@ -87,7 +87,7 @@
         .scanner-container video {
             width: 100%;
             height: auto;
-            display: block;
+            object-fit: cover;
         }
         
         /* Responsive */
@@ -348,7 +348,7 @@
                                    class="input-field w-full px-4 py-3 rounded-lg" 
                                    placeholder="Ingrese el código o escanee"
                                    required
-                                   onblur="cargarDatosArticulo(this.value)">
+                                   oninput="cargarDatosArticulo(this.value)">
                         </div>
                         
                         <div class="md:col-span-2">
@@ -360,7 +360,7 @@
 
                         <div id="scanner-area" class="md:col-span-2 hidden">
                             <div class="scanner-container mb-4 rounded-lg overflow-hidden">
-                                <div id="scanner" class="w-full h-64 bg-gray-200 flex items-center justify-center">
+                                <div id="scanner" class="w-full h-[70vh] bg-black">
                                     <div class="text-center text-gray-600">
                                         <i class="fas fa-camera text-3xl mb-2"></i>
                                         <p>Iniciando cámara...</p>
@@ -1247,11 +1247,6 @@
         // Barcode Scanner Functions
         async function startScanner() {
     document.getElementById('scanner-area').classList.remove('hidden');
-    
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } 
-        });
         
         const video = document.querySelector('#scanner video');
         if (!video) {
@@ -1278,7 +1273,13 @@
                 }
             },
             decoder: {
-                readers: ["code_128_reader", "ean_reader", "qr_reader"]
+                readers: [
+                    "code_128_reader",
+                    "ean_reader",
+                    "ean_8_reader",
+                    "upc_reader",
+                    "upc_e_reader"
+                ]
             }
         }, function(err) {
             if (err) {
@@ -1290,9 +1291,13 @@
         });
         
         Quagga.onDetected(function(result) {
-            document.getElementById('codigoArticulo').value = result.codeResult.code;
-            cargarDatosArticulo(result.codeResult.code);
-        });
+            const codigo = result.codeResult.code;
+
+        document.getElementById('codigoArticulo').value = codigo;
+        cargarDatosArticulo(codigo);
+
+        stopScanner(); // 🔥 DETENER automáticamente
+    });
         
     } catch (error) {
         console.error('Error al acceder a la cámara:', error);
