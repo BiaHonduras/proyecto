@@ -35,9 +35,11 @@
         
         .sidebar {
             width: var(--sidebar-width);
-            background: #111827; /* gris oscuro moderno */
+            background: #111827;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
+            position: fixed;
+            width: 250px;
             z-index: 50;
         }
         
@@ -258,11 +260,11 @@
         </header>
 
         <!-- Content Sections -->
-        <main class="p-6 space-y-6">
+        <main class="p-6 space-y-4">
             <!-- Dashboard Section -->
             <section id="dashboard-section" class="section-content">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                    <div class="card p-6">
+                    <div class="card p-6 mt-0">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-600">Total Artículos</p>
