@@ -87,7 +87,7 @@
         .scanner-container video {
             width: 100%;
             height: auto;
-            display: block;
+            object-fit: cover;
         }
         
         /* Responsive */
@@ -360,7 +360,7 @@
 
                         <div id="scanner-area" class="md:col-span-2 hidden">
                             <div class="scanner-container mb-4 rounded-lg overflow-hidden">
-                                <div id="scanner" class="w-full h-64 bg-gray-200 flex items-center justify-center">
+                                <div id="scanner" class="w-full h-[70vh] bg-black">
                                     <div class="text-center text-gray-600">
                                         <i class="fas fa-camera text-3xl mb-2"></i>
                                         <p>Iniciando cámara...</p>
@@ -1278,7 +1278,7 @@
                 }
             },
             decoder: {
-                readers: ["code_128_reader", "ean_reader", "qr_reader"]
+                readers: ["code_128_reader", "ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader"]
             }
         }, function(err) {
             if (err) {
