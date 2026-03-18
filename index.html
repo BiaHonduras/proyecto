@@ -126,6 +126,7 @@
                 .eq('usuario', usuario)
                 .eq('contraseña', password)
                 .single();
+            console.log("Data INDEX: ", data);
 
             if (error || !data) {
                 throw new Error('Usuario o contraseña incorrectos');
@@ -144,8 +145,6 @@
         } catch (err) {
             mostrarError(err.message);
         }
-        console.log("DATA LOGIN: ",data);
-        console.log("USER:", currentUser);
     }
 
     // Mostrar error en UI
