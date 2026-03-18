@@ -1247,11 +1247,6 @@
         // Barcode Scanner Functions
         async function startScanner() {
     document.getElementById('scanner-area').classList.remove('hidden');
-    
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } 
-        });
         
         const video = document.querySelector('#scanner video');
         if (!video) {
