@@ -329,7 +329,7 @@
                     
                     <div class="card p-6">
                         <h3 class="text-lg font-semibold mb-4">Distribución por Proveedor</h3>
-                        <div id="proveedorChart" class="h-64 flex items-center justify-center">
+                        <div id="proveedorChart" class="h-64 w-full">
                             <div class="text-center text-gray-500">
                                 <i class="fas fa-chart-pie text-3xl mb-2"></i>
                                 <p>No hay datos disponibles</p>
@@ -2177,7 +2177,11 @@ async function cargarGraficoProveedores() {
 
     const contenedor = document.getElementById('proveedorChart');
 
-    contenedor.innerHTML = `<canvas id="pieChart"></canvas>`;
+    contenedor.innerHTML = `
+        <div class="w-full h-full relative">
+            <canvas id="pieChart"></canvas>
+        </div>
+    `;
 
     const ctx = document.getElementById('pieChart').getContext('2d');
 
@@ -2191,6 +2195,7 @@ async function cargarGraficoProveedores() {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: 'bottom'
