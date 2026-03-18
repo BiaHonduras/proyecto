@@ -814,7 +814,7 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Corto *</label>
-                                <input type="text" id="userNombreCorto" 
+                                <input type="text" id="userNombre_corto" 
                                     class="input-field w-full px-4 py-3 rounded-lg" 
                                     placeholder="Ej: Juan"
                                     required>
@@ -895,7 +895,7 @@
             e.preventDefault();
     
             const username = document.getElementById('userUsername').value;
-            const nombreCorto = document.getElementById('userNombreCorto').value;
+            const nombre_corto = document.getElementById('userNombre_corto').value;
             const email = document.getElementById('userEmail').value;
             const password = document.getElementById('userPassword').value;
             const confirmPassword = document.getElementById('userConfirmPassword').value;
@@ -907,7 +907,7 @@
     }
 
     try {
-        const response = await crearUsuario(username, nombreCorto, email, password, rol);
+        const response = await crearUsuario(username, nombre_corto, email, password, rol);
         if (response.success) {
             showNotification('Éxito', 'Usuario creado correctamente', 'success');
             document.getElementById('userForm').reset();
@@ -931,7 +931,7 @@
             }
             
             currentUser = JSON.parse(userData);           
-            document.getElementById('currentUserName').textContent = currentUser.nombreCorto;
+            document.getElementById('currentUserName').textContent = currentUser.nombre_corto;
 
             if(currentUser.role !== 'admin'){
                 document.querySelector('[data-section="usuarios"]').style.display = "none";
@@ -1883,7 +1883,7 @@ await supabase
         .insert([
             {
                 usuario: username,
-                nombre_corto: nombreCorto,
+                nombre_corto: nombre_corto,
                 correo: email,
                 contraseña: password,
                 rol: role
@@ -1977,7 +1977,7 @@ if (error) {
             
             if (user) {
                 document.getElementById('userUsername').value = user.username;
-                document.getElementById('userNombreCorto').value = data.nombre_corto || '';
+                document.getElementById('userNombre_corto').value = data.nombre_corto || '';
                 document.getElementById('userEmail').value = user.email;
                 document.getElementById('userPassword').value = user.password; // Pre-fill password for convenience (in real app, don't do this)
                 document.getElementById('userConfirmPassword').value = user.password; // Pre-fill password for convenience
@@ -2235,12 +2235,12 @@ async function cargarGraficoProveedores() {
     loadInventory();
     loadDashboardData();
 }
-    async function crearUsuario(username, nombreCorto, email, password, rol) {
+    async function crearUsuario(username, nombre_corto, email, password, rol) {
     const { data, error } = await supabase
         .from('usuarios')
         .insert([{
             usuario: username,
-            nombre_corto: nombreCorto, // 🔴 ESTA LÍNEA ES LA CLAVE
+            nombre_corto: nombre_corto, // 🔴 ESTA LÍNEA ES LA CLAVE
             email: email,
             contraseña: password,
             rol: rol
