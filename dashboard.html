@@ -1292,8 +1292,11 @@
         });
         
         Quagga.onDetected(function(result) {
-            document.getElementById('codigoArticulo').value = result.codeResult.code;
-            cargarDatosArticulo(result.codeResult.code);
+            const codigo = result.codeResult.code;
+            document.getElementById('codigoArticulo').value = codigo;
+            cargarDatosArticulo(codigo);
+
+            stopScanner(); // 🔥 DETENER automáticamente
         });
         
     } catch (error) {
