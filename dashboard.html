@@ -44,6 +44,7 @@
             margin-left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
             padding-top: 0;
+            overflow-x: hidden;
         }
         
         .card {
@@ -481,7 +482,8 @@
                         </div>
                     </div>
                 </form>
-			</section>
+            </div>
+        </section>
 
             <!-- Ver Inventario Section -->
             <section id="inventario-section" class="section-content hidden">
@@ -502,36 +504,35 @@
                         </div>
                     </div>
                     
-                    <div class="overflow-x-auto">
-                        <div class="max-h-[500px] overflow-y-auto">
-							<table class="w-full">
-								<thead>
-									<tr class="border-b border-gray-200">
-										<th class="pb-3 text-left text-sm font-medium text-gray-600">Fecha</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-600">Código</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-600">Inv. Reportería</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-600">Masterpack</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-600">Cajas/Fardos</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-600">Unidades</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-600">Total</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-600">Diferencia</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-600">Validación</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
-									</tr>
-								</thead>
-								<tbody id="inventoryTableBody">
-									<tr>
-										<td colspan="11" class="py-8 text-center text-gray-500">
-											<i class="fas fa-inbox text-3xl mb-2"></i>
-											<p>No hay artículos en el inventario</p>
-										</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
+                    <div class="w-full overflow-x-auto">
+                        <div class="w-full">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Fecha</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Código</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Inv. Reportería</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Masterpack</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Cajas/Fardos</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Unidades</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Total</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Diferencia</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Validación</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                <tr>
+                                    <td colspan="11" class="py-8 text-center text-gray-500">
+                                        <i class="fas fa-inbox text-3xl mb-2"></i>
+                                        <p>No hay artículos en el inventario</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
 
             <!-- Exportar CSV Section -->
@@ -646,25 +647,25 @@
                         </h4>
 
                         <div class="overflow-x-auto">
-							<table class="w-full text-sm">
-								<thead>
-									<tr class="border-b border-gray-200">
-									<th class="py-3 text-left">Usuario</th>
-									<th class="py-3 text-center">Cantidad de Códigos</th>
-									<th class="py-3 text-center">Fecha</th>
-									</tr>
-								</thead>
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                <th class="py-3 text-left">Usuario</th>
+                                <th class="py-3 text-center">Cantidad de Códigos</th>
+                                <th class="py-3 text-center">Fecha</th>
+                            </tr>
+                    </thead>
 
-								<tbody id="tablaResumenInventario">
-									<tr>
-										<td colspan="3" class="text-center py-6 text-gray-500">
-										No hay registros
-										</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
+                    <tbody id="tablaResumenInventario">
+                        <tr>
+                            <td colspan="3" class="text-center py-6 text-gray-500">
+                            No hay registros
+                        </td>
+                    </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
                     
                     <div id="inventoryPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
                         <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
@@ -697,7 +698,8 @@
             <!-- Importar Códigos Section -->
             <section id="importar-codigos-section" class="section-content hidden">
                 <div class="card p-6">
-                <h3 class="text-lg font-semibold mb-6">Importar Base de Códigos</h3>
+                    <h3 class="text-lg font-semibold mb-6">Importar Base de Códigos</h3>
+                    
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Carga de Base de Códigos</label>
@@ -717,150 +719,155 @@
                     
                     <div id="codesPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
 
-						<h4 class="font-semibold mb-3">Vista previa del archivo</h4>
+    <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
 
-							<div class="overflow-x-auto">
-								<table class="w-full text-sm">
-									<thead id="codesPreviewHead"></thead>
-									<tbody id="codesPreviewBody"></tbody>
-								</table>
-							</div>            
-					</div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead id="codesPreviewHead"></thead>
+            <tbody id="codesPreviewBody"></tbody>
+        </table>
+    </div>            
+</div>
 
-					<!-- ===== RESUMEN DE IMPORTACIONES ===== -->
-						<div class="mt-10">
-							<h3 class="text-lg font-semibold mb-4">Últimos movimientos de Códigos</h3>
-								<div class="overflow-x-auto">
-									<table class="w-full text-sm">
-										<thead>
-											<tr class="border-b border-gray-200">
-											<th class="py-3 text-left">Usuario</th>
-											<th class="py-3 text-center">Cantidad de Códigos</th>
-											<th class="py-3 text-center">Fecha</th>
-											</tr>
-										</thead>
+<!-- ===== RESUMEN DE IMPORTACIONES ===== -->
+<div class="mt-10">
 
-										<tbody id="tablaResumenCodigos">
-											<tr>
-												<td colspan="3" class="text-center py-6 text-gray-500">
-												No hay registros
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</div>
-						</div>
+    <h3 class="text-lg font-semibold mb-4">
+        Últimos movimientos de códigos
+    </h3>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-200">
+                    <th class="py-3 text-left">Usuario</th>
+                    <th class="py-3 text-center">Cantidad de Códigos</th>
+                    <th class="py-3 text-center">Fecha</th>
+                </tr>
+            </thead>
+
+            <tbody id="tablaResumenCodigos">
+                <tr>
+                    <td colspan="3" class="text-center py-6 text-gray-500">
+                        No hay registros
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
                     
-								<button id="confirmImportCodes"
-									class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" disabled>
-									<i class="fas fa-upload mr-2"></i>
-									Importar Inventario Reporteria
-								</button>
+                    <button id="confirmImportCodes"
+                        class="btn-primary mt-4 px-6 py-2 rounded-lg text-white" disabled>
+                        <i class="fas fa-upload mr-2"></i>
+                        Importar Inventario Reporteria
+                    </button>
 
-								<button id="deleteCodesDatabase"
-									class="mt-4 px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white">
-									<i class="fas fa-trash mr-2"></i>
-									Eliminar Base de Datos
-								</button>          
+                    <button id="deleteCodesDatabase"
+                        class="mt-4 px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white">
+                        <i class="fas fa-trash mr-2"></i>
+                        Eliminar Base de Datos
+                    </button>          
                  </div>
-			</section>
+        </section>
 
-			<!-- Gestión de Usuarios Section -->
-			<section id="usuarios-section" class="section-content hidden">
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-					<div class="card p-6">
-						<h3 class="text-lg font-semibold mb-6">Gestión de Usuarios</h3>
-							<div class="overflow-x-auto mb-6">
-								<table class="w-full">
-									<thead>
-										<tr class="border-b border-gray-200">
-											<th class="pb-3 text-left text-sm font-medium text-gray-600">Usuario</th>
-											<th class="pb-3 text-left text-sm font-medium text-gray-600">Email</th>
-											<th class="pb-3 text-left text-sm font-medium text-gray-600">Rol</th>
-											<th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
-										</tr>
-									</thead>
-										<tbody id="usersTableBody">
-											<tr>
-												<td colspan="4" class="py-8 text-center text-gray-500">
-												<i class="fas fa-users text-3xl mb-2"></i>
-												<p>Cargando usuarios...</p>
-												</td>
-											</tr>
-										</tbody>
-								</table>
-							</div>
-					</div>
+ <!-- Gestión de Usuarios Section -->
+            <section id="usuarios-section" class="section-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-6">Gestión de Usuarios</h3>
+                        
+                        <div class="overflow-x-auto mb-6">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Usuario</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Email</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Rol</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr>
+                                        <td colspan="4" class="py-8 text-center text-gray-500">
+                                            <i class="fas fa-users text-3xl mb-2"></i>
+                                            <p>Cargando usuarios...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                     
-					<div class="card p-6">
-						<h3 class="text-lg font-semibold mb-6" id="userFormTitle">Crear Nuevo Usuario</h3>
-							<form id="userForm" class="space-y-4">
-								<input type="hidden" id="userId">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-6" id="userFormTitle">Crear Nuevo Usuario</h3>
+                        
+                        <form id="userForm" class="space-y-4">
+                            <input type="hidden" id="userId">
                             
-								<div>
-									<label class="block text-sm font-medium text-gray-700 mb-2">Usuario *</label>
-									<input type="text" id="userUsername" 
-										class="input-field w-full px-4 py-3 rounded-lg" 
-										placeholder="nombre.usuario"
-										required>
-								</div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Usuario *</label>
+                                <input type="text" id="userUsername" 
+                                       class="input-field w-full px-4 py-3 rounded-lg" 
+                                       placeholder="nombre.usuario"
+                                       required>
+                            </div>
 
-								<div>
-									<label class="block text-sm font-medium text-gray-700 mb-2">Nombre Corto *</label>
-									<input type="text" id="userNombre_corto" 
-										class="input-field w-full px-4 py-3 rounded-lg" 
-										placeholder="Ej: Juan"
-										required>
-								</div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Corto *</label>
+                                <input type="text" id="userNombre_corto" 
+                                    class="input-field w-full px-4 py-3 rounded-lg" 
+                                    placeholder="Ej: Juan"
+                                    required>
+                            </div>
                             
-								<div>
-									<label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-									<input type="email" id="userEmail" 
-										class="input-field w-full px-4 py-3 rounded-lg" 
-										placeholder="usuario@empresa.com"
-										required>
-								</div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                                <input type="email" id="userEmail" 
+                                       class="input-field w-full px-4 py-3 rounded-lg" 
+                                       placeholder="usuario@empresa.com"
+                                       required>
+                            </div>
                             
-								<div>
-									<label class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
-									<input type="password" id="userPassword" 
-										class="input-field w-full px-4 py-3 rounded-lg" 
-										placeholder="••••••••"
-										required>
-								</div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
+                                <input type="password" id="userPassword" 
+                                       class="input-field w-full px-4 py-3 rounded-lg" 
+                                       placeholder="••••••••"
+                                       required>
+                            </div>
                             
-								<div>
-									<label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña *</label>
-									<input type="password" id="userConfirmPassword" 
-										class="input-field w-full px-4 py-3 rounded-lg" 
-										placeholder="••••••••"
-										required>
-								</div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña *</label>
+                                <input type="password" id="userConfirmPassword" 
+                                       class="input-field w-full px-4 py-3 rounded-lg" 
+                                       placeholder="••••••••"
+                                       required>
+                            </div>
                             
-								<div>
-									<label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
-										<select id="userRole" class="input-field w-full px-4 py-3 rounded-lg">
-											<option value="user">Usuario</option>
-											<option value="admin">Administrador</option>
-										</select>
-								</div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
+                                <select id="userRole" class="input-field w-full px-4 py-3 rounded-lg">
+                                    <option value="user">Usuario</option>
+                                    <option value="admin">Administrador</option>
+                                </select>
+                            </div>
                             
-								<div class="flex space-x-4 pt-4">
-									<button type="reset" class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-									Cancelar
-									</button>
-										
-									<button type="submit" class="btn-primary flex-1 py-3 rounded-lg text-white">
-									<i class="fas fa-save mr-2"></i>
-									Guardar Usuario
-									</button>
-								</div>
-							</form>
-					</div>
-				</div>
-			</section>
+                            <div class="flex space-x-4 pt-4">
+                                <button type="reset" class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn-primary flex-1 py-3 rounded-lg text-white">
+                                    <i class="fas fa-save mr-2"></i>
+                                    Guardar Usuario
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
         </main>
-	</div>
+    </div>
 
     <!-- Notification Toast -->
     <div id="notification" class="notification hidden">
@@ -884,57 +891,42 @@
         let scannerActive = false;
         let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
 
-		// ===== MODIFICAR: userForm submit =====
-        document.getElementById('userForm').addEventListener('submit', async function(e) 
-			{
-				e.preventDefault();
+// ===== MODIFICAR: userForm submit =====
+        document.getElementById('userForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
     
-				const username = document.getElementById('userUsername').value;
-				const nombre_corto = document.getElementById('userNombre_corto').value;
-				const email = document.getElementById('userEmail').value;
-				const password = document.getElementById('userPassword').value;
-				const confirmPassword = document.getElementById('userConfirmPassword').value;
-				const rol = document.getElementById('userRole').value;
+            const username = document.getElementById('userUsername').value;
+            const nombre_corto = document.getElementById('userNombre_corto').value;
+            const email = document.getElementById('userEmail').value;
+            const password = document.getElementById('userPassword').value;
+            const confirmPassword = document.getElementById('userConfirmPassword').value;
+            const rol = document.getElementById('userRole').value;
 
-				if (password !== confirmPassword) 
-				{
-					showNotification('Error', 'Las contraseñas no coinciden', 'error');
-					return;
-				}
+    if (password !== confirmPassword) {
+        showNotification('Error', 'Las contraseñas no coinciden', 'error');
+        return;
+    }
 
-				try 
-				{
-					const response = await crearUsuario(username, nombre_corto, email, password, rol);
-				
-					if (response.success) 
-					{
-						showNotification('Éxito', 'Usuario creado correctamente', 'success');
-						document.getElementById('userForm').reset();
-						loadUsers();
-					} 
-				
-					else 
-					{
-						throw response.error;
-					}
-				} 
-			
-				catch (error) 
-				{
-					console.error('Error creando usuario:', error);
-					showNotification('Error', 'No se pudo crear el usuario', 'error');
-				}
-			}
-		);
+    try {
+        const response = await crearUsuario(username, nombre_corto, email, password, rol);
+        if (response.success) {
+            showNotification('Éxito', 'Usuario creado correctamente', 'success');
+            document.getElementById('userForm').reset();
+            loadUsers();
+        } else {
+            throw response.error;
+        }
+    } catch (error) {
+        console.error('Error creando usuario:', error);
+        showNotification('Error', 'No se pudo crear el usuario', 'error');
+    }
+});
         
         // ===== INICIALIZACIÓN =====
-        document.addEventListener('DOMContentLoaded', function() 
-		{
+        document.addEventListener('DOMContentLoaded', function() {
             // Verificar autenticación
             const userData = sessionStorage.getItem('currentUser');
-			
-            if (!userData) 
-			{
+            if (!userData) {
                 window.location.href = 'index.html';
                 return;
             }
@@ -944,13 +936,11 @@
             
             console.log("USER:", currentUser);
 
-            if(currentUser.role !== 'admin')
-			{
+            if(currentUser.role !== 'admin'){
                 document.querySelector('[data-section="usuarios"]').style.display = "none";
             }
 
-            if(currentUser.role !== 'admin')
-			{
+            if(currentUser.role !== 'admin'){
                 document.getElementById('usuarios-section').remove();
             }
             
@@ -965,12 +955,10 @@
             initUsers(); // Initialize user management
             
             // Configurar formulario de artículo
-            document.getElementById('articuloForm').addEventListener('submit', function(e) 
-				{
-					e.preventDefault();
-					agregarArticulo();
-				}
-			);
+            document.getElementById('articuloForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                agregarArticulo();
+            });
             
             // Configurar exportación CSV
             document.getElementById('exportCSV').addEventListener('click', exportToCSV);
@@ -992,177 +980,169 @@
             document.getElementById('deleteCodesDatabase').addEventListener('click', eliminarBaseCodigos);            
             document.getElementById('deleteInventoryReporteria').addEventListener('click',eliminarInventarioReporteria);
             document.getElementById('deleteTodayInventory').addEventListener('click', eliminarInventarioDelDia);
-        }
-	);
+        });
 
         // ===== NAVEGACIÓN =====
-        function initNavigation() 
-		{
-				// Toggle sidebar en mobile
-					document.getElementById('menuToggle').addEventListener('click', function() {
-					document.querySelector('.sidebar').classList.add('open');
-					document.getElementById('mobileOverlay').classList.add('open');
-				});
+        function initNavigation() {
+            // Toggle sidebar en mobile
+            document.getElementById('menuToggle').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.add('open');
+                document.getElementById('mobileOverlay').classList.add('open');
+            });
             
-					document.getElementById('closeSidebar').addEventListener('click', function() {
-					document.querySelector('.sidebar').classList.remove('open');
-					document.getElementById('mobileOverlay').classList.remove('open');
-				});
+            document.getElementById('closeSidebar').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.remove('open');
+                document.getElementById('mobileOverlay').classList.remove('open');
+            });
             
-					document.getElementById('mobileOverlay').addEventListener('click', function() {
-					document.querySelector('.sidebar').classList.remove('open');
-					this.classList.remove('open');
-				});
+            document.getElementById('mobileOverlay').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.remove('open');
+                this.classList.remove('open');
+            });
             
-				// Navegación entre secciones
-					document.querySelectorAll('.nav-item').forEach(item => {
-					item.addEventListener('click', function (e) {
-					e.preventDefault();
+            // Navegación entre secciones
+            document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function (e) {
+        e.preventDefault();
 
-				const section = this.dataset.section;
+        const section = this.dataset.section;
 
-				// Active
-					document.querySelectorAll('.nav-item').forEach(i => {
-					i.classList.remove('active');
-				});
-				this.classList.add('active');
+        // Active
+        document.querySelectorAll('.nav-item').forEach(i => {
+            i.classList.remove('active');
+        });
+        this.classList.add('active');
 
-				// Ocultar todas
-					document.querySelectorAll('.section-content').forEach(sec => {
-					sec.classList.add('hidden');
-				});
+        // Ocultar todas
+        document.querySelectorAll('.section-content').forEach(sec => {
+            sec.classList.add('hidden');
+        });
 
-				// Mostrar la correcta
-				const target = document.getElementById(section + '-section');
-					if (target) {
-						target.classList.remove('hidden');
-					}
-				});
-			});
+        // Mostrar la correcta
+        const target = document.getElementById(section + '-section');
+        if (target) {
+            target.classList.remove('hidden');
+        }
+    });
+});
             
-				// Logout
-				document.getElementById('logoutBtn').addEventListener('click', function() {
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', function() {
                 sessionStorage.removeItem('currentUser');
                 window.location.href = 'index.html';
-			});
+            });
         }
 
         // ===== DASHBOARD =====
-        async function loadDashboardData() 
-		{         
+        async function loadDashboardData() {         
 
-			const { data: inventario, error } = await supabase
-				.from('inventarios_diarios')
-				.select('*');
+    const { data: inventario, error } = await supabase
+        .from('inventarios_diarios')
+        .select('*');
 
-				if (error) {
-					console.error(error);
-					showNotification('Error', 'No se pudo cargar el dashboard', 'error');
-				return;
-				}
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo cargar el dashboard', 'error');
+        return;
+    }
 
-				if (!inventario || inventario.length === 0) {
-					document.getElementById('totalArticulos').textContent = 0;
-					document.getElementById('totalUnidadesDashboard').textContent = 0;
-					document.getElementById('totalProveedores').textContent = 0;
-					document.getElementById('ultimaActualizacion').textContent = '-';
-				return;
-				}
+    if (!inventario || inventario.length === 0) {
+        document.getElementById('totalArticulos').textContent = 0;
+        document.getElementById('totalUnidadesDashboard').textContent = 0;
+        document.getElementById('totalProveedores').textContent = 0;
+        document.getElementById('ultimaActualizacion').textContent = '-';
+        return;
+    }
 
-			// Total artículos
-			document.getElementById('totalArticulos').textContent = inventario.length;
+    // Total artículos
+    document.getElementById('totalArticulos').textContent = inventario.length;
 
-			// Total unidades
-			const totalUnidades = inventario.reduce((sum, item) => {
-				return sum + ((item.cajas_fardos * item.masterpack) + item.unidades);
-				}, 
-			0);
+    // Total unidades
+    const totalUnidades = inventario.reduce((sum, item) => {
+        return sum + ((item.cajas_fardos * item.masterpack) + item.unidades);
+    }, 0);
 
-			document.getElementById('totalUnidadesDashboard').textContent =
-			totalUnidades.toLocaleString();
+    document.getElementById('totalUnidadesDashboard').textContent =
+        totalUnidades.toLocaleString();
 
-			// Proveedores únicos
-			const proveedores = new Set(inventario.map(i => i.proveedor));
-			document.getElementById('totalProveedores').textContent = proveedores.size;
+    // Proveedores únicos
+    const proveedores = new Set(inventario.map(i => i.proveedor));
+    document.getElementById('totalProveedores').textContent = proveedores.size;
 
-			// Última actualización
-			const last = inventario.reduce((max, item) => {
-			return new Date(item.fecha) > new Date(max.fecha) ? item : max;
-			});
+    // Última actualización
+    const last = inventario.reduce((max, item) => {
+        return new Date(item.fecha) > new Date(max.fecha) ? item : max;
+    });
 
-			document.getElementById('ultimaActualizacion').textContent =
-			new Date(last.fecha).toLocaleDateString();
+    document.getElementById('ultimaActualizacion').textContent =
+        new Date(last.fecha).toLocaleDateString();
 
-            cargarArticulosRecientes();
-            cargarGraficoProveedores();
-		}
+                cargarArticulosRecientes();
+                cargarGraficoProveedores();
+}
 
         // === FORMATO DE FECHA ====
-        function formatearFecha(fechaISO) 
-		{
-			const [año, mes, día] = fechaISO.split("-");
-			return `${día}/${mes}/${año}`;
-		}
+        function formatearFecha(fechaISO) {
+        const [año, mes, día] = fechaISO.split("-");
+        return `${día}/${mes}/${año}`;
+        }
         
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
-        async function cargarDatosArticulo(codigo) 
-		{
+        async function cargarDatosArticulo(codigo) {
 
-			if (!codigo) return;
+    if (!codigo) return;
 
-			const { data, error } = await supabase
-				.from('inventario_reporteria')
-				.select('*')
-				.eq('codigo', codigo)
-				.single();
+    const { data, error } = await supabase
+        .from('inventario_reporteria')
+        .select('*')
+        .eq('codigo', codigo)
+        .single();
 
-			if (error || !data) {
-				showNotification('Advertencia', 'Artículo no encontrado en inventario de reportería', 'warning');
+    if (error || !data) {
+        showNotification('Advertencia', 'Artículo no encontrado en inventario de reportería', 'warning');
 
-			document.getElementById('proveedor').value = '';
-			document.getElementById('descripcion').value = '';
-			document.getElementById('inventarioReporteria').value = 0;
-			document.getElementById('masterpack').value = 1;
-			
-			return;
-			}
+        document.getElementById('proveedor').value = '';
+        document.getElementById('descripcion').value = '';
+        document.getElementById('inventarioReporteria').value = 0;
+        document.getElementById('masterpack').value = 1;
+        return;
+    }
 
-			// ✅ AQUÍ ya existe data
-				document.getElementById('proveedor').value = data.proveedor || '';
-				document.getElementById('descripcion').value = data.descripcion || '';
-				document.getElementById('inventarioReporteria').value = data.inventario_reporteria || 0;
-				document.getElementById('masterpack').value = data.masterpack || 1;
+    // ✅ AQUÍ ya existe data
+    document.getElementById('proveedor').value = data.proveedor || '';
+    document.getElementById('descripcion').value = data.descripcion || '';
+    document.getElementById('inventarioReporteria').value = data.inventario_reporteria || 0;
+    document.getElementById('masterpack').value = data.masterpack || 1;
 
-			// Cálculo automático
-				const inv = data.inventario_reporteria || 0;
-				const master = data.masterpack || 1;
-				const cajas = Math.floor(inv / master);
-				const unidades = inv % master;
+    // Cálculo automático
+    const inv = data.inventario_reporteria || 0;
+    const master = data.masterpack || 1;
+    const cajas = Math.floor(inv / master);
+    const unidades = inv % master;
 
-			// 👉 NUEVOS CAMPOS (Reportería)
-				document.getElementById('cajasFardosReporteria').value = cajas;
-				document.getElementById('unidadesReporteria').value = unidades;
+    // 👉 NUEVOS CAMPOS (Reportería)
+    document.getElementById('cajasFardosReporteria').value = cajas;
+    document.getElementById('unidadesReporteria').value = unidades;
 
-			// 👉 DEJAR VACÍOS LOS CAMPOS MANUALES
-				document.getElementById('cajasFardos').value = '';
-				document.getElementById('unidades').value = '';
+    // 👉 DEJAR VACÍOS LOS CAMPOS MANUALES
+    document.getElementById('cajasFardos').value = '';
+    document.getElementById('unidades').value = '';
 
-			calcularTotalUnidades();
-			showNotification('Éxito', 'Datos cargados desde reportería', 'success');
-		}
+    calcularTotalUnidades();
 
+    showNotification('Éxito', 'Datos cargados desde reportería', 'success');
+}
 
-        function calcularTotalUnidades() 
-		{
+        function calcularTotalUnidades() {
             const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
             const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
             const unidades = parseFloat(document.getElementById('unidades').value) || 0;
+            
             const total = (cajas * masterpack) + unidades;
             document.getElementById('totalUnidadesCalculo').textContent = total.toFixed(2);
         }
 
-        function limpiarFormulario() 
-		{
+        function limpiarFormulario() {
             document.getElementById('codigoArticulo').value = '';
             document.getElementById('proveedor').value = '';
             document.getElementById('descripcion').value = '';
@@ -1178,456 +1158,414 @@
             document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
         }
 
-        async function agregarArticulo() 
-		{
+        async function agregarArticulo() {
 
-			const fecha = document.getElementById('fechaInventario').value;
-			const codigo = document.getElementById('codigoArticulo').value;
-			const proveedor = document.getElementById('proveedor').value;
-			const descripcion = document.getElementById('descripcion').value;
-			const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
-			const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
-			const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
-			const unidades = parseFloat(document.getElementById('unidades').value) || 0;
+    const fecha = document.getElementById('fechaInventario').value;
+    const codigo = document.getElementById('codigoArticulo').value;
+    const proveedor = document.getElementById('proveedor').value;
+    const descripcion = document.getElementById('descripcion').value;
+    const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
+    const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
+    const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
+    const unidades = parseFloat(document.getElementById('unidades').value) || 0;
 
-				if (!codigo || !fecha) {
-					showNotification('Error', 'El código y la fecha son requeridos', 'error');
-					return;
-					}
+    if (!codigo || !fecha) {
+        showNotification('Error', 'El código y la fecha son requeridos', 'error');
+        return;
+    }
 
-				if (window.editandoId) 
-				{
-        
-				// ✅ UPDATE
-					const { error } = await supabase
-						.from('inventarios_diarios')
-						.update({
-							fecha,
-							codigo,
-							proveedor,
-							descripcion,
-							inventario_reporteria: inventarioReporteria,
-							masterpack,
-							cajas_fardos: cajas,
-							unidades
-						})
-					.eq('id', window.editandoId);
+    if (window.editandoId) {
+        // ✅ UPDATE
+        const { error } = await supabase
+            .from('inventarios_diarios')
+            .update({
+                fecha,
+                codigo,
+                proveedor,
+                descripcion,
+                inventario_reporteria: inventarioReporteria,
+                masterpack,
+                cajas_fardos: cajas,
+                unidades
+            })
+            .eq('id', window.editandoId);
 
-				if (error) {
-					showNotification('Error', error.message, 'error');
-					return;
-					}
+        if (error) {
+            showNotification('Error', error.message, 'error');
+            return;
+        }
 
-				window.editandoId = null;
-				showNotification('Éxito', 'Registro actualizado', 'success');
+        window.editandoId = null;
+        showNotification('Éxito', 'Registro actualizado', 'success');
 
-				} 
-				
-				else 
-				{
-				
-				// ✅ INSERT (SOLO UNA VEZ)
-					
-					const { error } = await supabase
-						.from('inventarios_diarios')
-						.insert([{
-							fecha,
-							codigo,
-							proveedor,
-							descripcion,
-							inventario_reporteria: inventarioReporteria,
-							masterpack,
-							cajas_fardos: cajas,
-							unidades
-						}]);
+    } else {
+        // ✅ INSERT (SOLO UNA VEZ)
+        const { error } = await supabase
+            .from('inventarios_diarios')
+            .insert([{
+                fecha,
+                codigo,
+                proveedor,
+                descripcion,
+                inventario_reporteria: inventarioReporteria,
+                masterpack,
+                cajas_fardos: cajas,
+                unidades
+            }]);
 
-					if (error) 
-					{
-						showNotification('Error', error.message, 'error');
-						return;
-					}
+        if (error) {
+            showNotification('Error', error.message, 'error');
+            return;
+        }
 
-				showNotification('Éxito', 'Guardado correctamente', 'success');
-				}
+        showNotification('Éxito', 'Guardado correctamente', 'success');
+    }
 
             // Reset botón a modo normal
-				document.getElementById('btnGuardarArticulo').innerHTML = `
+            document.getElementById('btnGuardarArticulo').innerHTML = `
                 <i class="fas fa-plus-circle mr-2"></i>
-				Agregar Artículo
-				`;
+            Agregar Artículo
+        `;
 
-			limpiarFormulario();
-			loadInventory();
+    limpiarFormulario();
+    loadInventory();
 
-			// 🔥 REDIRECCIÓN AUTOMÁTICA
-				document.querySelector('[data-section="inventario"]').click();
+    // 🔥 REDIRECCIÓN AUTOMÁTICA
+        document.querySelector('[data-section="inventario"]').click();
 }
-			// Barcode Scanner Functions
-			async function startScanner() 
-			{
-				document.getElementById('scanner-area').classList.remove('hidden');
+
+        // Barcode Scanner Functions
+        async function startScanner() {
+    document.getElementById('scanner-area').classList.remove('hidden');
     
-				try 
-				{
-					const stream = await navigator.mediaDevices.getUserMedia({ 
-					video: { facingMode: 'environment' } 
-					});
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } 
+        });
         
-					const video = document.querySelector('#scanner video');
-					
-						if (!video) 
-						{
-							const videoEl = document.createElement('video');
-								videoEl.id = 'scannerVideo';
-								videoEl.setAttribute('autoplay', true);
-								videoEl.setAttribute('playsinline', true);
-								document.getElementById('scanner').innerHTML = '';
-								document.getElementById('scanner').appendChild(videoEl);
-						}
+        const video = document.querySelector('#scanner video');
+        if (!video) {
+            const videoEl = document.createElement('video');
+            videoEl.id = 'scannerVideo';
+            videoEl.setAttribute('autoplay', true);
+            videoEl.setAttribute('playsinline', true);
+            document.getElementById('scanner').innerHTML = '';
+            document.getElementById('scanner').appendChild(videoEl);
+        }
         
-					const video_element = document.getElementById('scannerVideo') || document.querySelector('#scanner video');
-						video_element.srcObject = stream;
-						scannerActive = true;
+        const video_element = document.getElementById('scannerVideo') || document.querySelector('#scanner video');
+        video_element.srcObject = stream;
+        scannerActive = true;
         
-					// Inicializar Quagga
-					Quagga.init({
-					inputStream: {
-						name: "Live",
-						type: "LiveStream",
-						target: document.querySelector('#scanner'),
-						constraints: {
-							facingMode: "environment"
-							}
-						},
-					decoder: {
-						readers: ["code_128_reader", "ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader"]
-						}
-						}, 
-						
-						function(err) 
-						{
-							if (err) {
-								console.log(err);
-								showNotification('Error', 'No se pudo inicializar el escáner', 'error');
-								return;
-								}
-					Quagga.start();
-						});
+        // Inicializar Quagga
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#scanner'),
+                constraints: {
+                    facingMode: "environment"
+                }
+            },
+            decoder: {
+                readers: ["code_128_reader", "ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader"]
+            }
+        }, function(err) {
+            if (err) {
+                console.log(err);
+                showNotification('Error', 'No se pudo inicializar el escáner', 'error');
+                return;
+            }
+            Quagga.start();
+        });
         
-					Quagga.onDetected(function(result) {
-						const codigo = result.codeResult.code;
+        Quagga.onDetected(function(result) {
+            const codigo = result.codeResult.code;
 
-						document.getElementById('codigoArticulo').value = codigo;
-						cargarDatosArticulo(codigo);
+            document.getElementById('codigoArticulo').value = codigo;
+            cargarDatosArticulo(codigo);
 
-						// 🔊 sonido
-						beep();
+            // 🔊 sonido
+           beep();
 
-						// 🛑 detener escáner automáticamente
-						stopScanner();
-						});
+            // 🛑 detener escáner automáticamente
+            stopScanner();
+        });
         
-				} 
-				
-				catch (error) 
-				{
-					console.error('Error al acceder a la cámara:', error);
-					showNotification('Error', 'No se pudo acceder a la cámara', 'error');
-				}
-			}
+    } catch (error) {
+        console.error('Error al acceder a la cámara:', error);
+        showNotification('Error', 'No se pudo acceder a la cámara', 'error');
+    }
+}
 
-			function stopScanner() 
-			{
-				if (scannerActive) 
-				{
-					Quagga.stop();
-					const stream = document.getElementById('scannerVideo').srcObject;
-					stream.getTracks().forEach(track => track.stop());
-					document.getElementById('scanner-area').classList.add('hidden');
-					scannerActive = false;
-				}
-			}
+function stopScanner() {
+    if (scannerActive) {
+        Quagga.stop();
+        const stream = document.getElementById('scannerVideo').srcObject;
+        stream.getTracks().forEach(track => track.stop());
+        document.getElementById('scanner-area').classList.add('hidden');
+        scannerActive = false;
+    }
+}
 
-			function importarReporteria() 
-			{
-				const archivo = document.getElementById("archivoReporteria").files[0];
-            
-				if (!archivo) 
-				{
-					alert("Por favor selecciona un archivo Excel.");
-					return;
-				}
+        function importarReporteria() {
+            const archivo = document.getElementById("archivoReporteria").files[0];
+            if (!archivo) {
+            alert("Por favor selecciona un archivo Excel.");
+            return;
+    }
 
-				const lector = new FileReader();
-				
-					lector.onload = function(e) 
-					{
-						const datos = new Uint8Array(e.target.result);
-						const libro = XLSX.read(datos, { type: "array" });
+    const lector = new FileReader();
+        lector.onload = function(e) {
+        const datos = new Uint8Array(e.target.result);
+        const libro = XLSX.read(datos, { type: "array" });
 
-					// Asumimos que los datos están en la primera hoja
-						const hoja = libro.Sheets[libro.SheetNames[0]];
-						const json = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+        // Asumimos que los datos están en la primera hoja
+        const hoja = libro.Sheets[libro.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(hoja, { defval: "" });
 
-					// Construir diccionario por código de artículo
-					datosReporteria = {};
-					json.forEach(fila => 
-					{
-						const codArt = fila["Cod Art"];
-						const descripcion = fila["Cod Descrip"];
-						const cantidad = fila["Cantidad"];
-            
-						if (codArt && cantidad !== "") 
-						{
-							datosReporteria[String(codArt).trim()] = {
-							descripcion: descripcion,
-							cantidad: parseFloat(cantidad)
-							};
-						}
-					});
+        // Construir diccionario por código de artículo
+        datosReporteria = {};
+        json.forEach(fila => {
+            const codArt = fila["Cod Art"];
+            const descripcion = fila["Cod Descrip"];
+            const cantidad = fila["Cantidad"];
+            if (codArt && cantidad !== "") {
+                datosReporteria[String(codArt).trim()] = {
+                    descripcion: descripcion,
+                    cantidad: parseFloat(cantidad)
+                };
+            }
+        });
 
-						alert("Archivo de Reportería importado correctamente.");
-						console.log("Datos de Reportería:", datosReporteria);
-					};
-				lector.readAsArrayBuffer(archivo);
-			}
+        alert("Archivo de Reportería importado correctamente.");
+        console.log("Datos de Reportería:", datosReporteria);
+    };
+    lector.readAsArrayBuffer(archivo);
+}
 
         // ===== VER INVENTARIO =====
-		async function loadInventory() 
-		{
-			const { data: inventario, error } = await supabase
-				.from('inventarios_diarios')
-				.select('*')
-				.order('fecha', { ascending: false });
+async function loadInventory() {
 
-			const tbody = document.getElementById('inventoryTableBody');
+    const { data: inventario, error } = await supabase
+        .from('inventarios_diarios')
+        .select('*')
+        .order('fecha', { ascending: false });
 
-				if (error) 
-				{
-					console.error(error);
-					showNotification('Error', 'No se pudo cargar el inventario', 'error');
-					return;
-				}
+    const tbody = document.getElementById('inventoryTableBody');
 
-				if (!inventario || inventario.length === 0) 
-				{
-					tbody.innerHTML = `
-						<tr>
-							<td colspan="11" class="py-8 text-center text-gray-500">
-							<i class="fas fa-inbox text-3xl mb-2"></i>
-							<p>No hay artículos en el inventario</p>
-							</td>
-						</tr>
-						`;
-					return;
-				}
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo cargar el inventario', 'error');
+        return;
+    }
 
-			tbody.innerHTML = inventario.map(item => 
-			{
-				const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-				const diferencia = item.inventario_reporteria - total;
+    if (!inventario || inventario.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="11" class="py-8 text-center text-gray-500">
+                    <i class="fas fa-inbox text-3xl mb-2"></i>
+                    <p>No hay artículos en el inventario</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
 
-					let validacion = '';
-						if (diferencia === 0) validacion = 'OK';
-						else if (diferencia < 0) validacion = 'VAL+';
-						else validacion = 'VAL-';
+    tbody.innerHTML = inventario.map(item => {
 
-					return `
-						<tr class="border-b border-gray-200 hover:bg-gray-50">
-							<td class="py-4 px-4 text-sm">${item.fecha}</td>
-							<td class="py-4 px-4 font-mono text-sm">${item.codigo}</td>
-							<td class="py-4 px-4">${item.descripcion}</td>
-							<td class="py-4 px-4 text-center">${item.inventario_reporteria}</td>
-							<td class="py-4 px-4 text-center">${item.masterpack}</td>
-							<td class="py-4 px-4 text-center">${item.cajas_fardos || 0}</td>
-							<td class="py-4 px-4 text-center">${item.unidades}</td>
-							<td class="py-4 px-4 text-center font-bold">${total.toFixed(2)}</td>
-							<td class="py-4 px-4 text-center">${diferencia.toFixed(2)}</td>
-							<td class="py-4 px-4 text-center">${validacion}</td>
+        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
+        const diferencia = item.inventario_reporteria - total;
+
+        let validacion = '';
+        if (diferencia === 0) validacion = 'OK';
+        else if (diferencia < 0) validacion = 'VAL+';
+        else validacion = 'VAL-';
+
+        return `
+            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                <td class="py-4 px-4 text-sm">${item.fecha}</td>
+                <td class="py-4 px-4 font-mono text-sm">${item.codigo}</td>
+                <td class="py-4 px-4">${item.descripcion}</td>
+                <td class="py-4 px-4 text-center">${item.inventario_reporteria}</td>
+                <td class="py-4 px-4 text-center">${item.masterpack}</td>
+                <td class="py-4 px-4 text-center">${item.cajas_fardos || 0}</td>
+                <td class="py-4 px-4 text-center">${item.unidades}</td>
+                <td class="py-4 px-4 text-center font-bold">${total.toFixed(2)}</td>
+                <td class="py-4 px-4 text-center">${diferencia.toFixed(2)}</td>
+                <td class="py-4 px-4 text-center">${validacion}</td>
                 
-							<td class="py-4 px-4 text-center">
-								<div class="flex justify-center space-x-2">
-									<button class="text-blue-600 hover:text-blue-800"
-										onclick="editarArticulo('${item.id}')">
-										<i class="fas fa-edit"></i>
-									</button>
+                <td class="py-4 px-4 text-center">
+                    <div class="flex justify-center space-x-2">
+                        <button class="text-blue-600 hover:text-blue-800"
+                            onclick="editarArticulo('${item.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
 
-									<button class="text-red-600 hover:text-red-800"
-										onclick="eliminarArticulo('${item.id}')">
-										<i class="fas fa-trash"></i>
-									</button>
-								</div>
-							</td>
-						</tr>
-					`;
-			}
-			).join('');
-		}
+                        <button class="text-red-600 hover:text-red-800"
+                            onclick="eliminarArticulo('${item.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                </div>
+            </td>
+        </tr>
+        `;
+    }).join('');
+}
 
-        async function editarArticulo(id) 
-		{
-			const { data, error } = await supabase
-				.from('inventarios_diarios')
-				.select('*')
-				.eq('id', id)
-				.single();
+        async function editarArticulo(id) {
 
-					if (error || !data) 
-					{
-						showNotification('Error', 'No se pudo cargar el registro', 'error');
+                    const { data, error } = await supabase
+                        .from('inventarios_diarios')
+                        .select('*')
+                        .eq('id', id)
+                        .single();
+
+                        if (error || !data) {
+                            showNotification('Error', 'No se pudo cargar el registro', 'error');
                         return;
                     }
 
-            document.getElementById('fechaInventario').value = data.fecha;
-            document.getElementById('codigoArticulo').value = data.codigo;
-            await cargarDatosArticulo(data.codigo);
-			document.getElementById('proveedor').value = data.proveedor;
-			document.getElementById('descripcion').value = data.descripcion;
-			document.getElementById('inventarioReporteria').value = data.inventario_reporteria;
-			document.getElementById('masterpack').value = data.masterpack;
-			document.getElementById('cajasFardos').value = data.cajas_fardos;
-			document.getElementById('unidades').value = data.unidades;
+                document.getElementById('fechaInventario').value = data.fecha;
+                document.getElementById('codigoArticulo').value = data.codigo;
+                await cargarDatosArticulo(data.codigo);
+            
+                document.getElementById('proveedor').value = data.proveedor;
+                document.getElementById('descripcion').value = data.descripcion;
+                document.getElementById('inventarioReporteria').value = data.inventario_reporteria;
+                document.getElementById('masterpack').value = data.masterpack;
+                document.getElementById('cajasFardos').value = data.cajas_fardos;
+                document.getElementById('unidades').value = data.unidades;
 
-			calcularTotalUnidades();
+    calcularTotalUnidades();
 
-			// Guardar ID temporal
-				window.editandoId = id;
+    // Guardar ID temporal
+    window.editandoId = id;
 
-			// Cambiar vista
-				document.querySelector('[data-section="inventario-diario"]').click();
+    // Cambiar vista
+    document.querySelector('[data-section="inventario-diario"]').click();
 
-			// Cambiar texto del botón
-				document.getElementById('btnGuardarArticulo').innerHTML = `
-					<i class="fas fa-save mr-2"></i>
-					Guardar Modificaciones
-					`;
-		}
+    // Cambiar texto del botón
+document.getElementById('btnGuardarArticulo').innerHTML = `
+    <i class="fas fa-save mr-2"></i>
+    Guardar Modificaciones
+`;
+}
 
-		// ===== ELIMINAR ARTICULO =====
-        async function eliminarArticulo(id) 
-		{
-			if (!confirm('¿Eliminar este registro?')) return;
+        async function eliminarArticulo(id) {
 
-			const { error } = await supabase
-				.from('inventarios_diarios')
-				.delete()
-				.eq('id', id);
+    if (!confirm('¿Eliminar este registro?')) return;
 
-			if (error) 
-			{
-				showNotification('Error', 'No se pudo eliminar', 'error');
-				return;
-			}
+    const { error } = await supabase
+        .from('inventarios_diarios')
+        .delete()
+        .eq('id', id);
 
-			loadInventory();
-			showNotification('Éxito', 'Registro eliminado', 'success');
-		}
+    if (error) {
+        showNotification('Error', 'No se pudo eliminar', 'error');
+        return;
+    }
+
+    loadInventory();
+    showNotification('Éxito', 'Registro eliminado', 'success');
+}
 
         // ===== EXPORTAR CSV =====
-        async function exportToCSV() 
-		{
-			const { data: inventario, error } = await supabase
-				.from('inventarios_diarios')
-				.select('*');
+        async function exportToCSV() {
 
-				if (error) 
-				{
-					console.error(error);
-					showNotification('Error', 'No se pudo obtener datos de Supabase', 'error');
-					return;
-				}
+    const { data: inventario, error } = await supabase
+        .from('inventarios_diarios')
+        .select('*');
 
-				if (!inventario || inventario.length === 0) 
-				{
-					showNotification('Advertencia', 'No hay datos para exportar', 'warning');
-					return;
-				}
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo obtener datos de Supabase', 'error');
+        return;
+    }
 
-			const selectedFields = Array.from(document.querySelectorAll('input[name="exportFields"]:checked'))
-				.map(checkbox => checkbox.value);
+    if (!inventario || inventario.length === 0) {
+        showNotification('Advertencia', 'No hay datos para exportar', 'warning');
+        return;
+    }
 
-			const headersMap = 
-			{
-				fecha: 'Fecha',
-				codigo: 'Codigo',
-				descripcion: 'Descripcion',
-				proveedor: 'Proveedor',
-				inventarioReporteria: 'Inventario Reporteria',
-				masterpack: 'Masterpack',
-				cajasFardos: 'Cajas/Fardos',
-				unidades: 'Unidades',
-				total: 'Total',
-				diferencia: 'Diferencia',
-				validacion: 'Validacion'
-			};
+    const selectedFields = Array.from(document.querySelectorAll('input[name="exportFields"]:checked'))
+        .map(checkbox => checkbox.value);
 
-			const headers = selectedFields.map(field => headersMap[field]);
+    const headersMap = {
+        fecha: 'Fecha',
+        codigo: 'Codigo',
+        descripcion: 'Descripcion',
+        proveedor: 'Proveedor',
+        inventarioReporteria: 'Inventario Reporteria',
+        masterpack: 'Masterpack',
+        cajasFardos: 'Cajas/Fardos',
+        unidades: 'Unidades',
+        total: 'Total',
+        diferencia: 'Diferencia',
+        validacion: 'Validacion'
+    };
 
-			const csvContent = inventario.map(item => 
-			{
-				const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-				const diferencia = item.inventario_reporteria - total;
+    const headers = selectedFields.map(field => headersMap[field]);
 
-				let validacion = '';
-				if (diferencia === 0) validacion = 'OK';
-				else if (diferencia < 0) validacion = 'VAL+';
-				else validacion = 'VAL-';
+    const csvContent = inventario.map(item => {
 
-				const rowData = 
-				{
-					fecha: item.fecha,
-					codigo: item.codigo,
-					descripcion: item.descripcion,
-					proveedor: item.proveedor,
-					inventarioReporteria: item.inventario_reporteria,
-					masterpack: item.masterpack,
-					cajasFardos: item.cajas_fardos || 0,
-					unidades: item.unidades,
-					total: total.toFixed(2),
-					diferencia: diferencia.toFixed(2),
-					validacion: validacion
-				};
+        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
+        const diferencia = item.inventario_reporteria - total;
 
-				return selectedFields.map(field => `"${rowData[field]}"`).join(',');
-			}
-			).join('\n');
+        let validacion = '';
+        if (diferencia === 0) validacion = 'OK';
+        else if (diferencia < 0) validacion = 'VAL+';
+        else validacion = 'VAL-';
 
-			const csv = headers.join(',') + '\n' + csvContent;
+        const rowData = {
+            fecha: item.fecha,
+            codigo: item.codigo,
+            descripcion: item.descripcion,
+            proveedor: item.proveedor,
+            inventarioReporteria: item.inventario_reporteria,
+            masterpack: item.masterpack,
+            cajasFardos: item.cajas_fardos || 0,
+            unidades: item.unidades,
+            total: total.toFixed(2),
+            diferencia: diferencia.toFixed(2),
+            validacion: validacion
+        };
 
-			const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-			const link = document.createElement('a');
-			const url = URL.createObjectURL(blob);
+        return selectedFields.map(field => `"${rowData[field]}"`).join(',');
+    }).join('\n');
 
-			link.setAttribute('href', url);
-			link.setAttribute('download', `inventario_${new Date().toISOString().split('T')[0]}.csv`);
-			link.style.visibility = 'hidden';
+    const csv = headers.join(',') + '\n' + csvContent;
 
-			document.body.appendChild(link);
-			link.click();
-			document.body.removeChild(link);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
 
-			showNotification('Éxito', 'CSV exportado desde Supabase', 'success');
-		}
+    link.setAttribute('href', url);
+    link.setAttribute('download', `inventario_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showNotification('Éxito', 'CSV exportado desde Supabase', 'success');
+}
 
         // ===== IMPORTAR DATOS =====
-        function previewInventoryFile(input) 
-		{
+        function previewInventoryFile(input) {
             const file = input.files[0];
             const previewDiv = document.getElementById('inventoryPreview');
             const previewHead = document.getElementById('inventoryPreviewHead');
             const previewBody = document.getElementById('inventoryPreviewBody');
             const confirmBtn = document.getElementById('confirmImportInventory');
 
-            if (file) 
-			{
+            if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) 
-				{
+                reader.onload = function(e) {
                     const text = e.target.result;
                     const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
                     
-                    if (lines.length > 0) 
-					{
+                    if (lines.length > 0) {
                         const headers = lines[0].split(',');
                         previewHead.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
                         
@@ -1639,185 +1577,163 @@
                         previewBody.innerHTML = bodyHtml;
                         previewDiv.classList.remove('hidden');
                         confirmBtn.disabled = false;
-                    }
-					else 
-					{
+                    } else {
                         previewDiv.classList.add('hidden');
                         confirmBtn.disabled = true;
                         showNotification('Advertencia', 'El archivo CSV está vacío.', 'warning');
                     }
                 };
                 reader.readAsText(file);
-            } 
-			else 
-			{
+            } else {
                 previewDiv.classList.add('hidden');
                 confirmBtn.disabled = true;
             }
         }
 
-		// ===== IMPORTAR INVENTARIO =====
-        async function importInventory() 
-		{
+        async function importInventory() {
+
             console.log("Favor confirmar la Importación");
             const fileInput = document.getElementById('importInventoryFile');
             const file = fileInput.files[0];
 
-            if (!file) 
-			{
+            if (!file) {
                 showNotification('Error', 'Seleccione un archivo CSV', 'error');
-				return;
-			}
+            return;
+         }
 
-			const reader = new FileReader();
-			reader.onload = async function(e) {
+    const reader = new FileReader();
+    reader.onload = async function(e) {
 
-			const text = e.target.result;
-			const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+        const text = e.target.result;
+        const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
 
-			if (lines.length < 2) 
-			{
-				showNotification('Error', 'El archivo no tiene datos', 'error');
-				return;
-			}
+        if (lines.length < 2) {
+            showNotification('Error', 'El archivo no tiene datos', 'error');
+            return;
+        }
 
-			let registros = [];
+        let registros = [];
 
-			for (let i = 1; i < lines.length; i++) 
-			{
-				const values = lines[i].split(',').map(v => v.replace(/"/g,'').trim());
-				registros.push(
-				{
-					fecha: values[0].replace(/"/g,'').trim(),
-					proveedor: values[1].replace(/"/g,'').trim(),
-					codigo_barra: values[2].replace(/"/g,'').trim(),
-					codigo: values[3].replace(/"/g,'').trim(),
-					descripcion: values[4].replace(/"/g,'').trim(),
-					inventario_reporteria: parseFloat(values[5]) || 0,
-					masterpack: parseFloat(values[6]) || 1
-				}
-				);
-			}
+        for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',').map(v => v.replace(/"/g,'').trim());
+            registros.push({
+                fecha: values[0].replace(/"/g,'').trim(),
+                proveedor: values[1].replace(/"/g,'').trim(),
+                codigo_barra: values[2].replace(/"/g,'').trim(),
+                codigo: values[3].replace(/"/g,'').trim(),
+                descripcion: values[4].replace(/"/g,'').trim(),
+                inventario_reporteria: parseFloat(values[5]) || 0,
+                masterpack: parseFloat(values[6]) || 1
+            });
+        }
         
-			const { error: deleteError } = await supabase
+        const { error: deleteError } = await supabase
                 .from('inventario_reporteria')
                 .delete()
                 .not('codigo','is',null);
 
-            if (deleteError) 
-			{
+            if (deleteError) {
                 console.error(deleteError);
                 showNotification('Error', deleteError.message, 'error');
-				return;
-			}
+            return;
+        }
 
-			// ===== ISERTAR REGISTROS =====
+        // INSERTAR LOS REGISTROS
                 const usuario = currentUser.username;
                 const fecha_importacion = new Date();
                 const cantidad = registros.length;
 
-                const registrosConMeta = registros.map(r => (
-				{
+                const registrosConMeta = registros.map(r => ({
                     ...r,
                     usuario,
                     fecha_importacion,
                     cantidad
-                }
-				));
+                }));
 
-				await supabase
-					.from('inventario_reporteria')
-					.insert(registrosConMeta);
+await supabase
+    .from('inventario_reporteria')
+    .insert(registrosConMeta);
         
-				const { error: insertError } = await supabase
-					.from('inventario_reporteria')
-					.insert(registros);
+        const { error: insertError } = await supabase
+            .from('inventario_reporteria')
+            .insert(registros);
 
-					if (insertError) 
-					{
-						console.error(insertError);
-						showNotification('Error', insertError.message, 'error');
-						return;
-					}
-				showNotification('Éxito', 'Inventario de reportería cargado correctamente', 'success');
+        if (insertError) {
+            console.error(insertError);
+            showNotification('Error', insertError.message, 'error');
+        return;
+    }
+        showNotification('Éxito', 'Inventario de reportería cargado correctamente', 'success');
 
-				document.getElementById('inventoryPreview').classList.add('hidden');
-				document.getElementById('confirmImportInventory').disabled = true;
-				fileInput.value = '';
-		};
+        document.getElementById('inventoryPreview').classList.add('hidden');
+        document.getElementById('confirmImportInventory').disabled = true;
+        fileInput.value = '';
+    };
+
     reader.readAsText(file);
 }
-		// ===== CARGAR RESUMEN INVENTARIO =====
-        async function cargarResumenInventario() 
-		{
-			const { data, error } = await supabase
-				.from('inventario_reporteria')
-				.select('usuario, fecha_importacion, cantidad')
-				.order('fecha_importacion', { ascending: false })
-				.limit(5);
 
-			const tabla = document.getElementById('tablaResumenInventario');
+        async function cargarResumenInventario() {
 
-				if (error || !data) 
-				{
-					tabla.innerHTML = `
-					<tr>
-						<td colspan="3" class="text-center py-6">No hay registros</td>
-					</tr>`;
-					return;
-				}
+    const { data, error } = await supabase
+        .from('inventario_reporteria')
+        .select('usuario, fecha_importacion, cantidad')
+        .order('fecha_importacion', { ascending: false })
+        .limit(5);
 
-				tabla.innerHTML = data.map(r => `
-					<tr class="border-b hover:bg-gray-50">
-						<td class="py-3">${r.usuario}</td>
-						<td class="text-center">${r.cantidad || '-'}</td>
-						<td class="text-center">${new Date(r.fecha_importacion).toLocaleDateString()}</td>
-					</tr>
-				`).join('');
-		}
-        
-		// ===== ELIMINAR INVENTARIO REPORTERIA =====
-		async function eliminarInventarioReporteria() 
-		{
-			if (!confirm("¿Está seguro de eliminar TODO el inventario de reportería?")) 
-			{
-				return;
-			}
+    const tabla = document.getElementById('tablaResumenInventario');
 
-			const { error } = await supabase
-				.from('inventario_reporteria')
-				.delete()
-				.not('id','is',null);
+    if (error || !data) {
+        tabla.innerHTML = `
+        <tr>
+            <td colspan="3" class="text-center py-6">No hay registros</td>
+        </tr>`;
+        return;
+    }
 
-				if (error) 
-				{
-					console.error(error);
-					showNotification('Error', 'No se pudo eliminar el inventario', 'error');
-					return;
-				}
+    tabla.innerHTML = data.map(r => `
+        <tr class="border-b hover:bg-gray-50">
+            <td class="py-3">${r.usuario}</td>
+            <td class="text-center">${r.cantidad || '-'}</td>
+            <td class="text-center">${new Date(r.fecha_importacion).toLocaleDateString()}</td>
+        </tr>
+    `).join('');
+}
+        async function eliminarInventarioReporteria() {
 
-			showNotification('Éxito', 'Inventario de reportería eliminado completamente', 'success');
+    if (!confirm("¿Está seguro de eliminar TODO el inventario de reportería?")) {
+        return;
+    }
 
-		}
+    const { error } = await supabase
+        .from('inventario_reporteria')
+        .delete()
+        .not('id','is',null);
 
-        function previewCodesFile(input) 
-		{
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo eliminar el inventario', 'error');
+        return;
+    }
+
+    showNotification('Éxito', 'Inventario de reportería eliminado completamente', 'success');
+
+}
+
+        function previewCodesFile(input) {
             const file = input.files[0];
             const previewDiv = document.getElementById('codesPreview');
             const previewHead = document.getElementById('codesPreviewHead');
             const previewBody = document.getElementById('codesPreviewBody');
             const confirmBtn = document.getElementById('confirmImportCodes');
 
-            if (file) 
-			{
+            if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) 
-				{
+                reader.onload = function(e) {
                     const text = e.target.result;
                     const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
                     
-                    if (lines.length > 0) 
-					{
+                    if (lines.length > 0) {
                         const headers = lines[0].split(',');
                         previewHead.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
                         
@@ -1825,114 +1741,104 @@
                         for (let i = 1; i < Math.min(lines.length, 6); i++) { // Show max 5 rows
                             const cells = lines[i].split(',');
                             bodyHtml += `<tr>${cells.map(c => `<td>${c}</td>`).join('')}</tr>`;
-                    }
+                        }
                         previewBody.innerHTML = bodyHtml;
                         previewDiv.classList.remove('hidden');
                         confirmBtn.disabled = false;
-                    } 
-					
-					else 
-					{
+                    } else {
                         previewDiv.classList.add('hidden');
                         confirmBtn.disabled = true;
                         showNotification('Advertencia', 'El archivo CSV está vacío.', 'warning');
                     }
-            };
+                };
                 reader.readAsText(file);
-			else 
-			{
+            } else {
                 previewDiv.classList.add('hidden');
                 confirmBtn.disabled = true;
             }
         }
 
-        async function importCodes() 
-		{
-			const fileInput = document.getElementById('importCodesFile');
-			const file = fileInput.files[0];
+        async function importCodes() {
+    const fileInput = document.getElementById('importCodesFile');
+    const file = fileInput.files[0];
 
-				if (!file) 
-				{
-					showNotification('Error', 'Seleccione un archivo', 'error');
-					return;
-				}
+    if (!file) {
+        showNotification('Error', 'Seleccione un archivo', 'error');
+        return;
+    }
 
-			const reader = new FileReader();
+    const reader = new FileReader();
 
-			reader.onload = async function(e) 
-			{
-				const text = e.target.result;
-				const lines = text.split('\n').filter(line => line.trim() !== '');
+    reader.onload = async function(e) {
 
-				let registros = [];
+        const text = e.target.result;
+        const lines = text.split('\n').filter(line => line.trim() !== '');
 
-				for (let i = 1; i < lines.length; i++) 
-				{
-					const values = lines[i].split(',');
+        let registros = [];
 
-					registros.push(
-					{
-						codigo: values[0].replace(/"/g,'').trim(),
-						descripcion: values[1].replace(/"/g,'').trim(),
-						proveedor: values[2].replace(/"/g,'').trim(),
-						masterpack: parseFloat(values[3].replace(/"/g,'').trim()) || 1,
-						codigo_barra: values[4].replace(/"/g,'').trim(),
-						usuario: currentUser.username,
-						fecha_importacion: new Date()
-					});
-				}
+        for (let i = 1; i < lines.length; i++) {
 
-				const { data, error } = await supabase
-					.from('codigos')
-					.insert(registros);
+            const values = lines[i].split(',');
 
-				if (error) 
-				{
-					console.error(error);
-					showNotification('Error: ', error.message, 'error');
-					return;
-				}
+            registros.push({
+            codigo: values[0].replace(/"/g,'').trim(),
+            descripcion: values[1].replace(/"/g,'').trim(),
+            proveedor: values[2].replace(/"/g,'').trim(),
+            masterpack: parseFloat(values[3].replace(/"/g,'').trim()) || 1,
+            codigo_barra: values[4].replace(/"/g,'').trim(),
+            usuario: currentUser.username,
+            fecha_importacion: new Date()
+        });
+    }
 
-			showNotification('Éxito', 'Códigos importados correctamente', 'success');
-			cargarResumenCodigos();
-			reader.readAsText(file);
-		}
+        const { data, error } = await supabase
+            .from('codigos')
+            .insert(registros);
 
-        async function eliminarBaseCodigos() 
-		{
-			if (!confirm("¿Está seguro de eliminar TODOS los códigos de la Base de Datos?")) 
-			{
-				return;
-			}
-			const { error } = await supabase
-				.from('codigos')
-				.delete()
-				.not('codigo','is',null);
-				
-				if (error) 
-				{
-					console.error(error);
-					showNotification('Error', 'No se pudo eliminar la base de códigos', 'error');
-					return;
-				}
-			showNotification('Éxito', 'Base de códigos eliminada completamente', 'success');
-			cargarResumenCodigos();
-		}
+        if (error) {
+            console.error(error);
+            showNotification('Error: ', error.message, 'error');
+            return;
+        }
+
+        showNotification('Éxito', 'Códigos importados correctamente', 'success');
+
+        cargarResumenCodigos();
+    };
+
+    reader.readAsText(file);
+}
+
+        async function eliminarBaseCodigos() {
+
+    if (!confirm("¿Está seguro de eliminar TODOS los códigos de la Base de Datos?")) {
+        return;
+    }
+    const { error } = await supabase
+        .from('codigos')
+        .delete()
+        .not('codigo','is',null);
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo eliminar la base de códigos', 'error');
+        return;
+    }
+    showNotification('Éxito', 'Base de códigos eliminada completamente', 'success');
+    cargarResumenCodigos();
+}
         
-        document.getElementById('closeNotification').addEventListener('click', function() 
-		{
+        document.getElementById('closeNotification').addEventListener('click', function() {
             document.getElementById('notification').classList.add('hidden');
+            // Reset to default white background when closed manually
             document.getElementById('notification').querySelector('.rounded-lg').className = 'bg-white rounded-lg shadow-lg p-4 max-w-sm';
         });
 
         // ===== GESTIÓN DE USUARIOS =====
-        function initUsers() 
-		{
+        function initUsers() {
             const form = document.getElementById('userForm');
             const formTitle = document.getElementById('userFormTitle');
             
-            form.addEventListener('submit', async function(e) 
-			{
+            form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
                 const username = document.getElementById('userUsername').value;
@@ -1943,152 +1849,134 @@
                 const userId = document.getElementById('userId').value; // This will be the original username for editing
                 
                 // Validaciones
-                if (password !== confirmPassword) 
-				{
+                if (password !== confirmPassword) {
                     showNotification('Error', 'Las contraseñas no coinciden', 'error');
                     return;
                 }
                 
-                if (password.length < 6) 
-				{
+                if (password.length < 6) {
                     showNotification('Error', 'La contraseña debe tener al menos 6 caracteres', 'error');
                     return;
                 }
                 
                 let users = JSON.parse(localStorage.getItem('users') || '[]');
                 
-                if (userId) 
-				{
+                if (userId) {
                     // Editar usuario existente
                     const userIndex = users.findIndex(u => u.username === userId);
-                    if (userIndex !== -1) 
-					{
-                        users[userIndex] = 
-						{
+                    if (userIndex !== -1) {
+                        users[userIndex] = {
                             username: username, // Username might be changed, but we use original for lookup
                             email: email,
                             password: password, // In a real app, hash this!
                             role: role
                         };
                     }
-                } 
-				
-				else 
-				{
+                } else {
                     // Crear nuevo usuario
-                    if (users.some(u => u.username === username)) 
-					{
+                    if (users.some(u => u.username === username)) {
                         showNotification('Error', 'El nombre de usuario ya existe', 'error');
                         return;
                     }
                     
-					const { error } = await supabase
-						.from('usuarios')
-						.insert([
-							{
-								usuario: username,
-								nombre_corto: nombre_corto,
-								correo: email,
-								contraseña: password,
-								rol: role
-							}
-							]);
+        const { error } = await supabase
+        .from('usuarios')
+        .insert([
+            {
+                usuario: username,
+                nombre_corto: nombre_corto,
+                correo: email,
+                contraseña: password,
+                rol: role
+            }
+        ]);
 
-					if (error) 
-					{
-						showNotification('Error', 'No se pudo crear el usuario', 'error');
-						return;
-					};
+if (error) {
+    showNotification('Error', 'No se pudo crear el usuario', 'error');
+    return;
+};
                 }
                 
                 localStorage.setItem('users', JSON.stringify(users));
                 
                 // Limpiar formulario
-					form.reset();
-					document.getElementById('userId').value = '';
-					formTitle.textContent = 'Crear Nuevo Usuario';
-					document.getElementById('userUsername').disabled = false; // Enable username field for new user
+                form.reset();
+                document.getElementById('userId').value = '';
+                formTitle.textContent = 'Crear Nuevo Usuario';
+                document.getElementById('userUsername').disabled = false; // Enable username field for new user
                 
                 // Recargar lista de usuarios
                 loadUsers();
                 
                 showNotification('Éxito', userId ? 'Usuario actualizado' : 'Usuario creado', 'success');
+            });
             
-				// Cancelar edición
-					form.querySelector('button[type="reset"]').addEventListener('click', function() {
-					form.reset();
-					document.getElementById('userId').value = '';
-					formTitle.textContent = 'Crear Nuevo Usuario';
-					document.getElementById('userUsername').disabled = false; // Enable username field for new user
-				});
+            // Cancelar edición
+            form.querySelector('button[type="reset"]').addEventListener('click', function() {
+                form.reset();
+                document.getElementById('userId').value = '';
+                formTitle.textContent = 'Crear Nuevo Usuario';
+                document.getElementById('userUsername').disabled = false; // Enable username field for new user
+            });
 
             loadUsers(); // Initial load of users when the page loads
         }
         
-        async function loadUsers() 
-		{
+        async function loadUsers() {
             const { data: users, error } = await supabase
             .from('usuarios')
             .select('*');
-			
-			const tbody = document.getElementById('usersTableBody');
+        const tbody = document.getElementById('usersTableBody');
 
-			if (error) 
-			{
-				console.error(error);
-				showNotification('Error', 'No se pudieron cargar los usuarios', 'error');
-				return;
-			}
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudieron cargar los usuarios', 'error');
+        return;
+    }
 
-			if (!users || users.length === 0) 
-			{
-				tbody.innerHTML = `
-					<tr>
-						<td colspan="4" class="py-8 text-center text-gray-500">
-							<i class="fas fa-users text-3xl mb-2"></i>
-							<p>No hay usuarios registrados</p>
-						</td>
-					</tr>
-				`;
-				return;
-			}
+    if (!users || users.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="py-8 text-center text-gray-500">
+                    <i class="fas fa-users text-3xl mb-2"></i>
+                    <p>No hay usuarios registrados</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
 
-			tbody.innerHTML = users.map(user => `
-				<tr class="border-b border-gray-200 hover:bg-gray-50">
-					<td class="py-3 px-4 font-medium">${user.usuario}</td>
-					<td class="py-3 px-4">${user.correo}</td>
-					<td class="py-3 px-4">
-						<span class="px-2 py-1 rounded-full text-xs $
-						{
-							user.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-						}">
+    tbody.innerHTML = users.map(user => `
+        <tr class="border-b border-gray-200 hover:bg-gray-50">
+            <td class="py-3 px-4 font-medium">${user.usuario}</td>
+            <td class="py-3 px-4">${user.correo}</td>
+            <td class="py-3 px-4">
+                <span class="px-2 py-1 rounded-full text-xs ${
+                    user.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                }">
                     ${user.rol}
-					</span>
-					</td>
-					
-					<td class="py-3 px-4">
-    
-						<div class="flex space-x-3">
-							<button class="text-blue-600" onclick="editUser('${user.usuario}','${user.correo}','${user.rol}')">
-							<i class="fas fa-edit"></i>
-							</button>
+                </span>
+            </td>
+            <td class="py-3 px-4">
+    <div class="flex space-x-3">
+        <button class="text-blue-600" onclick="editUser('${user.usuario}','${user.correo}','${user.rol}')">
+            <i class="fas fa-edit"></i>
+        </button>
 
-							<button class="text-red-600" onclick="deleteUser('${user.usuario}')">
-							<i class="fas fa-trash"></i>
-							</button>
-						</div>
-					</td>
-				</tr>
-			`).join('');
-		}
+        <button class="text-red-600" onclick="deleteUser('${user.usuario}')">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+</td>
+        </tr>
+    `).join('');
+}
         
-        function editUser(username) 
-		{
+        function editUser(username) {
             const users = JSON.parse(localStorage.getItem('users') || '[]');
             const user = users.find(u => u.username === username);
             
-            if (user) 
-			{
+            if (user) {
                 document.getElementById('userUsername').value = user.username;
                 document.getElementById('userNombre_corto').value = data.nombre_corto || '';
                 document.getElementById('userEmail').value = user.email;
@@ -2102,290 +1990,271 @@
             }
         }
         
-        async function deleteUser(username) 
-		{
-			if (!confirm(`¿Eliminar usuario ${username}?`)) return;
+        async function deleteUser(username) {
 
-			const { error } = await supabase
-				.from('usuarios')
-				.delete()
-				.eq('usuario', username);
+    if (!confirm(`¿Eliminar usuario ${username}?`)) return;
 
-				if (error) 
-				{
-					showNotification('Error', 'No se pudo eliminar el usuario', 'error');
-					return;
-				}		
+    const { error } = await supabase
+        .from('usuarios')
+        .delete()
+        .eq('usuario', username);
 
-			loadUsers();
-			showNotification('Éxito', 'Usuario eliminado', 'success');
-		}
+    if (error) {
+        showNotification('Error', 'No se pudo eliminar el usuario', 'error');
+        return;
+    }
+
+    loadUsers();
+    showNotification('Éxito', 'Usuario eliminado', 'success');
+}
 
         // ===== RESUMEN IMPORTACIONES =====
-		async function cargarResumenCodigos() 
-		{
-			const { data, error } = await supabase
-				.from('codigos')
-				.select('usuario, fecha_importacion')
-				.order('fecha_importacion', { ascending: false})
-				.limit(5);
+async function cargarResumenCodigos() {
+
+    const { data, error } = await supabase
+        .from('codigos')
+        .select('usuario, fecha_importacion')
+        .order('fecha_importacion', { ascending: false})
+        .limit(5);
     
-			const tabla = document.getElementById('tablaResumenCodigos');
+    const tabla = document.getElementById('tablaResumenCodigos');
 
-				if (error) 
-				{
-					console.error("Error Supabase:", error.message);
-					showNotification('Error', 'No se pudo cargar el resumen', 'error');
-					return;
-				}
+    if (error) {
+        console.error("Error Supabase:", error.message);
+        showNotification('Error', 'No se pudo cargar el resumen', 'error');
+        return;
+    }
 
-				if (!data || data.length === 0)
-				{
-					document.getElementById('tablaResumenCodigos').innerHTML = `
-						<tr>
-							<td colspan="4" class="text-center py-6">No hay registros</td>
-						</tr>`;
-					return;
-				}
+    if (!data || data.length === 0) {
+        document.getElementById('tablaResumenCodigos').innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-6">No hay registros</td>
+            </tr>`;
+        return;
+    }
 
-			const resumen = {};
-			data.forEach(item => {
-				const usuario = item.usuario || "Sin usuario";
+    const resumen = {};
 
-				const fecha = item.fecha_creacion
-					? item.fecha_creacion.split('T')[0]
-					: "Sin fecha";
+    data.forEach(item => {
 
-				const key = usuario + "_" + fecha;
+        const usuario = item.usuario || "Sin usuario";
 
-					if (!resumen[key]) 
-					{
-						resumen[key] = {
-							usuario: usuario,
-							fecha: fecha,
-							cantidad: 0
-							};
-					}
+        const fecha = item.fecha_creacion
+            ? item.fecha_creacion.split('T')[0]
+            : "Sin fecha";
 
-				resumen[key].cantidad++;
-			});
+        const key = usuario + "_" + fecha;
 
-			const tbody = document.getElementById('tablaResumenCodigos');
+        if (!resumen[key]) {
+            resumen[key] = {
+                usuario: usuario,
+                fecha: fecha,
+                cantidad: 0
+            };
+        }
 
-			tbody.innerHTML = Object.values(resumen).map(r => `
-				<tr class="border-b hover:bg-gray-50">
-					<td class="py-3">${r.usuario}</td>
-					<td class="text-center">${r.cantidad}</td>
-					<td class="text-center">${r.fecha}</td>
-				</tr>
-			`).join('');
-		
-		}
-		
-        async function eliminarImportacion(usuario, fecha) 
-		{	
-			if (!confirm("¿Eliminar este registro de importación?")) return;
+        resumen[key].cantidad++;
+    });
 
-			const { error } = await supabase
-				.from('codigos')
-				.delete()
-				.eq('usuario', usuario)
-				.gte('fecha_creacion', fecha + ' 00:00:00')
-				.lte('fecha_creacion', fecha + ' 23:59:59');
+    const tbody = document.getElementById('tablaResumenCodigos');
 
-				if (error) 
-				{
-					console.error(error);
-					showNotification('Error', 'No se pudo eliminar', 'error');
-					return;
-				}
+    tbody.innerHTML = Object.values(resumen).map(r => `
+        <tr class="border-b hover:bg-gray-50">
+            <td class="py-3">${r.usuario}</td>
+            <td class="text-center">${r.cantidad}</td>
+            <td class="text-center">${r.fecha}</td>
+        </tr>
+    `).join('');
+}
+        async function eliminarImportacion(usuario, fecha) {
 
-			showNotification('Éxito', 'Registros eliminados', 'success');
-			cargarResumenCodigos();
-		}      
+    if (!confirm("¿Eliminar este registro de importación?")) return;
 
-		function showNotification(title, message, type = 'info') 
-		{
-			const notification = document.getElementById('notification');
-			const titleEl = document.getElementById('notificationTitle');
-			const messageEl = document.getElementById('notificationMessage');
-			const icon = document.getElementById('notificationIcon');
+    const { error } = await supabase
+        .from('codigos')
+        .delete()
+        .eq('usuario', usuario)
+        .gte('fecha_creacion', fecha + ' 00:00:00')
+        .lte('fecha_creacion', fecha + ' 23:59:59');
 
-				titleEl.textContent = title;
-				messageEl.textContent = message;
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo eliminar', 'error');
+        return;
+    }
 
-				let iconClass = 'fa-info-circle text-blue-500';
+    showNotification('Éxito', 'Registros eliminados', 'success');
+    cargarResumenCodigos();
+}      
 
-					if (type === 'success') iconClass = 'fa-check-circle text-green-500';
-					if (type === 'error') iconClass = 'fa-times-circle text-red-500';
-				if (type === 'warning') iconClass = 'fa-exclamation-triangle text-yellow-500';
+    function showNotification(title, message, type = 'info') {
 
-			icon.innerHTML = `<i class="fas ${iconClass}"></i>`;
-			notification.classList.remove('hidden');
+    const notification = document.getElementById('notification');
+    const titleEl = document.getElementById('notificationTitle');
+    const messageEl = document.getElementById('notificationMessage');
+    const icon = document.getElementById('notificationIcon');
 
-			setTimeout(() => 
-			{
-				notification.classList.add('hidden');
-			}, 4000);
-		}
-		
-		async function cargarArticulosRecientes() 
-		{
-			const { data, error } = await supabase
-				.from('inventarios_diarios')
-				.select('*')
-				.order('created_at', { ascending: false }) // o timestamp
-				.limit(5);
+    titleEl.textContent = title;
+    messageEl.textContent = message;
 
-			const contenedor = document.getElementById('recentItems');
+    let iconClass = 'fa-info-circle text-blue-500';
 
-				if (error || !data || data.length === 0)
-				{
-					contenedor.innerHTML = `
-						<div class="text-center py-8 text-gray-500">
-							<i class="fas fa-inbox text-3xl mb-2"></i>
-							<p>No hay artículos recientes</p>
-						</div>
-						`;
-					return;
-				}
+    if (type === 'success') iconClass = 'fa-check-circle text-green-500';
+    if (type === 'error') iconClass = 'fa-times-circle text-red-500';
+    if (type === 'warning') iconClass = 'fa-exclamation-triangle text-yellow-500';
 
-			contenedor.innerHTML = data.map(item => `
-				<div class="flex justify-between items-center border-b pb-2">
-					<div>
-						<p class="font-semibold">${item.descripcion}</p>
-						<p class="text-sm text-gray-500">${item.codigo}</p>
-					</div>
-					
-					<div class="text-right">
-						<p class="text-sm">${item.proveedor}</p>
-						<p class="text-xs text-gray-400">${item.fecha}</p>
-					</div>
-				</div>
-			`).join('');
-		}
-		
-		async function cargarGraficoProveedores() 
-		{
-			const { data, error } = await supabase
-				.from('inventarios_diarios')
-				.select('proveedor');
+    icon.innerHTML = `<i class="fas ${iconClass}"></i>`;
 
-			const contenedor = document.getElementById('proveedorChart');
+    notification.classList.remove('hidden');
 
-				if (error || !data || data.length === 0) 
-				{
-					contenedor.innerHTML = `
-						<div class="text-center text-gray-500">
-							<i class="fas fa-chart-pie text-3xl mb-2"></i>
-							<p>No hay datos disponibles</p>
-						</div>
-						`;
-					return;
-				}
+    setTimeout(() => {
+        notification.classList.add('hidden');
+    }, 4000);
+}
+    async function cargarArticulosRecientes() {
+    const { data, error } = await supabase
+        .from('inventarios_diarios')
+        .select('*')
+        .order('created_at', { ascending: false }) // o timestamp
+        .limit(5);
 
-			// Agrupar proveedores
-			const conteo = {};
+    const contenedor = document.getElementById('recentItems');
 
-				data.forEach(item => 
-				{
-					if (!item.proveedor) return;
-					conteo[item.proveedor] = (conteo[item.proveedor] || 0) + 1;
-				});
+    if (error || !data || data.length === 0) {
+        contenedor.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-inbox text-3xl mb-2"></i>
+                <p>No hay artículos recientes</p>
+            </div>
+        `;
+        return;
+    }
 
-			const labels = Object.keys(conteo);
-			const valores = Object.values(conteo);
+    contenedor.innerHTML = data.map(item => `
+        <div class="flex justify-between items-center border-b pb-2">
+            <div>
+                <p class="font-semibold">${item.descripcion}</p>
+                <p class="text-sm text-gray-500">${item.codigo}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm">${item.proveedor}</p>
+                <p class="text-xs text-gray-400">${item.fecha}</p>
+            </div>
+        </div>
+    `).join('');
+}
+async function cargarGraficoProveedores() {
 
-			renderPieChart(labels, valores);
-		}
-		
-        function renderPieChart(labels, data) 
-		{
-			const contenedor = document.getElementById('proveedorChart');
+    const { data, error } = await supabase
+        .from('inventarios_diarios')
+        .select('proveedor');
 
-			contenedor.innerHTML = `
-				<div class="w-full h-full relative">
-					<canvas id="pieChart"></canvas>
-				</div>
-			`;
+    const contenedor = document.getElementById('proveedorChart');
 
-			const ctx = document.getElementById('pieChart').getContext('2d');
+    if (error || !data || data.length === 0) {
+        contenedor.innerHTML = `
+            <div class="text-center text-gray-500">
+                <i class="fas fa-chart-pie text-3xl mb-2"></i>
+                <p>No hay datos disponibles</p>
+            </div>
+        `;
+        return;
+    }
 
-			new Chart(ctx, {
-				type: 'pie',
-				data: {
-					labels: labels,
-					datasets: [{
-					data: data
-					}]
-					},
-					options: {
-						responsive: true,
-						maintainAspectRatio: false,
-							plugins: {
-								legend: {
-									position: 'bottom'
-									}
-								}
-							}
-					});
-		}
-		
-        async function eliminarInventarioDelDia() 
-		{
-			const fecha = document.getElementById('fechaInventario').value;
+    // Agrupar proveedores
+    const conteo = {};
 
-				if (!fecha) 
-				{
-					showNotification('Error', 'No se encontró la fecha actual', 'error');
-					return;
-				}
+    data.forEach(item => {
+        if (!item.proveedor) return;
+        conteo[item.proveedor] = (conteo[item.proveedor] || 0) + 1;
+    });
 
-			const confirmar = confirm(
-					`⚠️ ¿Está seguro que desea eliminar TODO el inventario del día ${fecha}?\n\nEsta acción no se puede deshacer.`
-					);
+    const labels = Object.keys(conteo);
+    const valores = Object.values(conteo);
 
-				if (!confirmar) return;
+    renderPieChart(labels, valores);
+}
+        function renderPieChart(labels, data) {
 
-			const { error } = await supabase
-				.from('inventarios_diarios')
-				.delete()
-				.eq('fecha', fecha);
+    const contenedor = document.getElementById('proveedorChart');
 
-					if (error) 
-					{
-						console.error(error);
-						showNotification('Error', 'No se pudo eliminar el inventario', 'error');
-						return;
-					}
+    contenedor.innerHTML = `
+        <div class="w-full h-full relative">
+            <canvas id="pieChart"></canvas>
+        </div>
+    `;
 
-				showNotification('Éxito', 'Inventario del día eliminado correctamente', 'success');
+    const ctx = document.getElementById('pieChart').getContext('2d');
 
-			loadInventory();
-			loadDashboardData();
-		}
-		
-    async function crearUsuario(username, nombre_corto, email, password, rol) 
-	{
-		const { data, error } = await supabase
-			.from('usuarios')
-			.insert([{
-				usuario: username,
-				nombre_corto: nombre_corto, // 🔴 ESTA LÍNEA ES LA CLAVE
-				email: email,
-				contraseña: password,
-				rol: rol
-			}]);
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+        async function eliminarInventarioDelDia() {
 
-			if (error) 
-			{
-				return { success: false, error };
-			}
+    const fecha = document.getElementById('fechaInventario').value;
 
-			return { success: true, data };
-	}
-	
+    if (!fecha) {
+        showNotification('Error', 'No se encontró la fecha actual', 'error');
+        return;
+    }
+
+    const confirmar = confirm(
+        `⚠️ ¿Está seguro que desea eliminar TODO el inventario del día ${fecha}?\n\nEsta acción no se puede deshacer.`
+    );
+
+    if (!confirmar) return;
+
+    const { error } = await supabase
+        .from('inventarios_diarios')
+        .delete()
+        .eq('fecha', fecha);
+
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo eliminar el inventario', 'error');
+        return;
+    }
+
+    showNotification('Éxito', 'Inventario del día eliminado correctamente', 'success');
+
+    loadInventory();
+    loadDashboardData();
+}
+    async function crearUsuario(username, nombre_corto, email, password, rol) {
+    const { data, error } = await supabase
+        .from('usuarios')
+        .insert([{
+            usuario: username,
+            nombre_corto: nombre_corto, // 🔴 ESTA LÍNEA ES LA CLAVE
+            email: email,
+            contraseña: password,
+            rol: rol
+        }]);
+
+    if (error) {
+        return { success: false, error };
+    }
+
+    return { success: true, data };
+}
     inventario.js </script>
 </script>
+    
 </body>
 </html>
