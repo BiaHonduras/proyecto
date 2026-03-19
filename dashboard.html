@@ -1636,50 +1636,56 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
                 showNotification('Error', deleteError.message, 'error');
             return;
         }
+		
+		// PREPARAR METADATA
+				const usuario = currentUser.username;
+				const fecha_importacion = new Date();
+				const cantidad = registros.length;
 
-        // INSERTAR LOS REGISTROS
-                const usuario = currentUser.username;
-                const fecha_importacion = new Date();
-                const cantidad = registros.length;
+		// INSERTAR INVENTARIO (UNA SOLA VEZ)
+				const registrosConMeta = registros.map(r => ({
+    				...r,
+    				usuario,
+    				fecha_importacion
+				}));
+		const { error: insertError } = await supabase
+    		.from('inventario_reporteria')
+    		.insert(registrosConMeta);
 
-                const registrosConMeta = registros.map(r => ({
-                    ...r,
-                    usuario,
-                    fecha_importacion,
-                    cantidad
-                }));
+		if (insertError) {
+    		console.error(insertError);
+    		showNotification('Error', insertError.message, 'error');
+    		return;
+		}
 
 await supabase
     .from('inventario_reporteria')
-    .insert(registrosConMeta);
+    .insert([{
+        usuario,
+        fecha_importacion,
+        cantidad_registros: cantidad
+    }]);
 
-        if (insertError) {
-            console.error(insertError);
-            showNotification('Error', insertError.message, 'error');
-        return;
-    }
-        showNotification('Éxito', 'Inventario de reportería cargado correctamente', 'success');
+		// LIMPIAR HISTÓRICO (DEJAR SOLO 5)
+		await limpiarImportacionesAntiguas();
 
-        document.getElementById('inventoryPreview').classList.add('hidden');
-        document.getElementById('confirmImportInventory').disabled = true;
-        fileInput.value = '';
-    };
+		// REFRESCAR RESUMEN
+		cargarResumenInventario();
 
-    reader.readAsText(file);
-	cargarResumenInventario();
+		showNotification('Éxito', 'Inventario de reportería cargado correctamente', 'success');
 }
 
         async function cargarResumenInventario() {
 
     const { data, error } = await supabase
-        .from('inventario_reporteria')
-        .select('usuario, fecha_importacion, cantidad')
+        .from('inventario_importaciones')
+        .select('*')
         .order('fecha_importacion', { ascending: false })
         .limit(5);
 
     const tabla = document.getElementById('tablaResumenInventario');
 
-    if (error || !data) {
+    if (error || !data || data.length === 0) {
         tabla.innerHTML = `
         <tr>
             <td colspan="3" class="text-center py-6">No hay registros</td>
@@ -2249,6 +2255,24 @@ async function cargarGraficoProveedores() {
 
     return { success: true, data };
 }
+async function limpiarImportacionesAntiguas() {
+
+    const { data, error } = await supabase
+        .from('inventario_importaciones')
+        .select('id')
+        .order('fecha_importacion', { ascending: false });
+
+    if (error || !data) return;
+
+    if (data.length <= 5) return;
+
+    const idsEliminar = data.slice(5).map(r => r.id);
+
+    await supabase
+        .from('inventario_importaciones')
+        .delete()
+        .in('id', idsEliminar);
+}			
     inventario.js </script>
 </script>
     
