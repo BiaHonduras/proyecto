@@ -1652,10 +1652,6 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
 await supabase
     .from('inventario_reporteria')
     .insert(registrosConMeta);
-        
-        const { error: insertError } = await supabase
-            .from('inventario_reporteria')
-            .insert(registros);
 
         if (insertError) {
             console.error(insertError);
