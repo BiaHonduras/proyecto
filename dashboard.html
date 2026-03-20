@@ -2058,8 +2058,8 @@ async function cargarResumenCodigos() {
 
         const usuario = item.usuario || "Sin usuario";
 
-        const fecha = item.fecha_creacion
-            ? item.fecha_creacion.split('T')[0]
+        const fecha = item.fecha_importacion
+            ? item.fecha_importacion.split('T')[0]
             : "Sin fecha";
 
         const key = usuario + "_" + fecha;
@@ -2072,7 +2072,7 @@ async function cargarResumenCodigos() {
             };
         }
 
-        resumen[key].cantidad++;
+        resumen[key].cantidad += item.cantidad_registros || 0;
     });
 
     const tbody = document.getElementById('tablaResumenCodigos');
