@@ -1872,9 +1872,7 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
                     showNotification('Error', 'La contraseña debe tener al menos 6 caracteres', 'error');
                     return;
                 }
-                
-                let users = JSON.parse(localStorage.getItem('users') || '[]');
-                
+  
                 if (userId) {
                     // Editar usuario existente
                     const userIndex = users.findIndex(u => u.username === userId);
