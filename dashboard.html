@@ -1672,8 +1672,8 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
         async function cargarResumenInventario() {
 
     const { data, error } = await supabase
-        .from('inventario_reporteria')
-        .select('usuario, fecha_importacion, cantidad')
+        .from('inventario_importaciones')
+        .select('usuario, fecha_importacion, cantidad_registros')
         .order('fecha_importacion', { ascending: false })
         .limit(5);
 
@@ -1694,6 +1694,7 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
             <td class="text-center">${new Date(r.fecha_importacion).toLocaleDateString()}</td>
         </tr>
     `).join('');
+	cargarResumenInventario();	
 }
         async function eliminarInventarioReporteria() {
 
@@ -1713,7 +1714,7 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
     }
 
     showNotification('Éxito', 'Inventario de reportería eliminado completamente', 'success');
-
+	cargarResumenInventario();
 }
 
         function previewCodesFile(input) {
