@@ -1648,7 +1648,6 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
 					usuario,
 					fecha_importacion,
 					cantidad_registros: registros.length
-					tipo_importacion: 'inventario'
 				}])
         
         const { error: insertError } = await supabase
@@ -1695,6 +1694,7 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
             <td class="text-center">${new Date(r.fecha_importacion).toLocaleDateString()}</td>
         </tr>
     `).join('');
+	cargarResumenInventario();	
 }
         async function eliminarInventarioReporteria() {
 
@@ -1787,18 +1787,10 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
             fecha_importacion: new Date()
         });
     }
-		const usuario = currentUser.username;
-		const fecha_importacion = new Date();
-		const cantidad = registros.length;
-		
-        await supabase
-            .from('inventario_importaciones')
-            .insert([{
-				usuario,
-				fecha_importacion,
-				cantidad_registros: cantidad,
-				tipo_importacion: 'codigos'
-			}])
+
+        const { data, error } = await supabase
+            .from('codigos')
+            .insert(registros);
 
         if (error) {
             console.error(error);
@@ -2017,29 +2009,25 @@ if (error) {
 async function cargarResumenCodigos() {
 
     const { data, error } = await supabase
-        .from('inventario_importaciones')
-        .select('usuario, fecha_importacion, cantidad_registros')
+        .from('codigos')
+        .select('usuario, fecha_importacion')
         .order('fecha_importacion', { ascending: false})
         .limit(5);
     
     const tabla = document.getElementById('tablaResumenCodigos');
 
-    if (error || !data || data.length === 0) {
-        tabla.innerHTML = `
-        <tr>
-            <td colspan="3" class="text-center py-6">No hay registros</td>
-        </tr>`;
+    if (error) {
+        console.error("Error Supabase:", error.message);
+        showNotification('Error', 'No se pudo cargar el resumen', 'error');
         return;
     }
 
-    tabla.innerHTML = data.map(r => `
-        <tr class="border-b hover:bg-gray-50">
-            <td class="py-3">${r.usuario}</td>
-            <td class="text-center">${r.cantidad_registros}</td>
-            <td class="text-center">${new Date(r.fecha_importacion).toLocaleDateString()}</td>
-        </tr>
-    `).join('');
-	
+    if (!data || data.length === 0) {
+        document.getElementById('tablaResumenCodigos').innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-6">No hay registros</td>
+            </tr>`;
+        return;
     }
 
     const resumen = {};
