@@ -981,46 +981,50 @@
         // ===== NAVEGACIÓN =====
         function initNavigation() {
             // Toggle sidebar en mobile
-            document.getElementById('menuToggle').addEventListener('click', function() {
+           		document.getElementById('menuToggle').addEventListener('click', function() {
                 document.querySelector('.sidebar').classList.add('open');
                 document.getElementById('mobileOverlay').classList.add('open');
             });
             
-            document.getElementById('closeSidebar').addEventListener('click', function() {
+            	document.getElementById('closeSidebar').addEventListener('click', function() {
                 document.querySelector('.sidebar').classList.remove('open');
                 document.getElementById('mobileOverlay').classList.remove('open');
             });
             
-            document.getElementById('mobileOverlay').addEventListener('click', function() {
+            	document.getElementById('mobileOverlay').addEventListener('click', function() {
                 document.querySelector('.sidebar').classList.remove('open');
                 this.classList.remove('open');
             });
             
             // Navegación entre secciones
             document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', function (e) {
-        e.preventDefault();
+    			item.addEventListener('click', function (e) {
+        		e.preventDefault();
 
-        const section = this.dataset.section;
+        		const section = this.dataset.section;
 
-        // Active
-        document.querySelectorAll('.nav-item').forEach(i => {
-            i.classList.remove('active');
-        });
-        this.classList.add('active');
+        		// Active
+        		document.querySelectorAll('.nav-item').forEach(i => {
+           	 	i.classList.remove('active');
+        	});
+        	this.classList.add('active');
 
-        // Ocultar todas
-        document.querySelectorAll('.section-content').forEach(sec => {
+			// Cambiar título
+        	const title = this.textContent.trim();
+        	document.getElementById('currentSectionTitle').textContent = title;
+
+        	// Ocultar todas
+        	document.querySelectorAll('.section-content').forEach(sec => {
             sec.classList.add('hidden');
-        });
+       		 });
 
-        // Mostrar la correcta
-        const target = document.getElementById(section + '-section');
-        if (target) {
-            target.classList.remove('hidden');
-        }
-    });
-});
+        		// Mostrar la correcta
+       	 	const target = document.getElementById(section + '-section');
+        		if (target) {
+           			 target.classList.remove('hidden');
+        			}
+    		});
+		});
             
             // Logout
             document.getElementById('logoutBtn').addEventListener('click', function() {
