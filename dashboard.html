@@ -1654,7 +1654,7 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
         const { data, error } = await supabase
 			.from('inventario_importaciones')
 			.select('usuario, fecha_importacion, cantidad_registros')
-			.eq('tipo_importacion', 'codigos')
+			.eq('tipo_importacion', 'inventario')
 			.order('fecha_importacion', {ascending: false})
 			.limit(5);
 			
@@ -1682,6 +1682,7 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
     const { data, error } = await supabase
         .from('inventario_importaciones')
         .select('usuario, fecha_importacion, cantidad_registros')
+		.eq('tipo_importacion', 'inventario')
         .order('fecha_importacion', { ascending: false })
         .limit(5);
 
@@ -1811,8 +1812,14 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
             return;
         }
 
-        showNotification('Éxito', 'Códigos importados correctamente', 'success');
+		const { data, error } = await supabase
+		.from('inventario_importaciones')
+		.select('usuario, fecha_importacion, cantidad_registros')
+		.eq('tipo_importacion', 'codigos')
+		.order('fecha_importacion', { ascending: false })
+		.limit(5);
 
+        showNotification('Éxito', 'Códigos importados correctamente', 'success');
         cargarResumenCodigos();
     };
 
