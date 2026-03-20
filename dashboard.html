@@ -2036,7 +2036,7 @@ async function cargarResumenCodigos() {
         .order('fecha_importacion', { ascending: false})
         .limit(5);
     
-    const tabla = document.getElementById('tablaResumenCodigos');
+    const tbody = document.getElementById('tablaResumenCodigos');
 
     if (error) {
         console.error("Error Supabase:", error.message);
@@ -2051,40 +2051,26 @@ async function cargarResumenCodigos() {
             </tr>`;
         return;
     }
-
-    const resumen = {};
-
-    data.forEach(item => {
+tbody.innerHTML = data.map(item => {
 
         const usuario = item.usuario || "Sin usuario";
 
         const fecha = item.fecha_importacion
-            ? item.fecha_importacion.split('T')[0]
+            ? new Date(item.fecha_importacion).toLocaleDateString('es-ES')
             : "Sin fecha";
 
-        const key = usuario + "_" + fecha;
+        const cantidad = item.cantidad_registros || 0;
 
-        if (!resumen[key]) {
-            resumen[key] = {
-                usuario: usuario,
-                fecha: fecha,
-                cantidad: 0
-            };
-        }
-
-        resumen[key].cantidad += item.cantidad_registros || 0;
-    });
-
-    const tbody = document.getElementById('tablaResumenCodigos');
-
-    tbody.innerHTML = Object.values(resumen).map(r => `
-        <tr class="border-b hover:bg-gray-50">
-            <td class="py-3">${r.usuario}</td>
-            <td class="text-center">${r.cantidad}</td>
-            <td class="text-center">${r.fecha}</td>
-        </tr>
-    `).join('');
+        return `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="py-3">${usuario}</td>
+                <td class="text-center">${cantidad}</td>
+                <td class="text-center">${fecha}</td>
+            </tr>
+        `;
+    }).join('');
 }
+		
         async function eliminarImportacion(usuario, fecha) {
 
     if (!confirm("¿Eliminar este registro de importación?")) return;
