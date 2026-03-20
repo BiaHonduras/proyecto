@@ -2222,7 +2222,10 @@ async function cargarGraficoProveedores() {
     const { error } = await supabase
         .from('inventarios_diarios')
         .delete()
-        .eq('fecha', fecha);
+        .not('id', 'is', null)
+			
+			const confirmacion = prompt("Escribe ELIMINAR para continuar");
+			if (confirmacion !== "ELIMINAR") return;
 
     if (error) {
         console.error(error);
