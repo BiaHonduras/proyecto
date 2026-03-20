@@ -9,16 +9,14 @@
     <link rel="icon" href="https://raw.githubusercontent.com/BiaHonduras/proyecto/main/favicon.png" type="image/png">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
 
     <script type="module">
-        import { supabase, verificarConexion } from './supabase-config.js';
+        import { supabase } from './supabase-config.js';
     // Hacer supabase accesible globalmente
         window.supabase = supabase;
-        window.verificarConexion = verificarConexion;
     </script>
     
     <style>
@@ -888,7 +886,6 @@
         // ===== VARIABLES GLOBALES =====
         let currentUser = null;
         let scannerActive = false;
-        let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
 
 // ===== MODIFICAR: userForm submit =====
         document.getElementById('userForm').addEventListener('submit', async function(e) {
@@ -1695,7 +1692,6 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
             <td class="text-center">${new Date(r.fecha_importacion).toLocaleDateString()}</td>
         </tr>
     `).join('');
-	cargarResumenInventario();	
 }
         async function eliminarInventarioReporteria() {
 
