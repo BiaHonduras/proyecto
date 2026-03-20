@@ -1642,16 +1642,13 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
                 const fecha_importacion = new Date();
                 const cantidad = registros.length;
 
-                const registrosConMeta = registros.map(r => ({
-                    ...r,
-                    usuario,
-                    fecha_importacion,
-                    cantidad
-                }));
-
-await supabase
-    .from('inventario_reporteria')
-    .insert(registrosConMeta);
+			await supabase
+    			.from('inventario_importaciones')
+    			.insert([{
+					usuario,
+					fecha_importacion,
+					cantidad_registros: registros.length
+				}])
         
         const { error: insertError } = await supabase
             .from('inventario_reporteria')
@@ -1682,7 +1679,7 @@ await supabase
 
     const tabla = document.getElementById('tablaResumenInventario');
 
-    if (error || !data) {
+    if (error || !data || data.length === 0) {
         tabla.innerHTML = `
         <tr>
             <td colspan="3" class="text-center py-6">No hay registros</td>
@@ -1693,7 +1690,7 @@ await supabase
     tabla.innerHTML = data.map(r => `
         <tr class="border-b hover:bg-gray-50">
             <td class="py-3">${r.usuario}</td>
-            <td class="text-center">${r.cantidad || '-'}</td>
+            <td class="text-center">${r.cantidad_registros}</td>
             <td class="text-center">${new Date(r.fecha_importacion).toLocaleDateString()}</td>
         </tr>
     `).join('');
