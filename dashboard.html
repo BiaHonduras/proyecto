@@ -1990,22 +1990,18 @@ if (error) {
     `).join('');
 }
         
-        function editUser(username) {
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = users.find(u => u.username === username);
+        function editUser(username, nombre_corto, email, role) {
             
-            if (user) {
-                document.getElementById('userUsername').value = user.username;
-                document.getElementById('userNombre_corto').value = data.nombre_corto || '';
+                document.getElementById('userUsername').value = username;
+                document.getElementById('userNombre_corto').value = nombre_corto;
                 document.getElementById('userEmail').value = user.email;
-                document.getElementById('userPassword').value = user.password; // Pre-fill password for convenience (in real app, don't do this)
-                document.getElementById('userConfirmPassword').value = user.password; // Pre-fill password for convenience
-                document.getElementById('userRole').value = user.role;
-                document.getElementById('userId').value = user.username; // Store original username for lookup
+                document.getElementById('userPassword').value = '';
+                document.getElementById('userConfirmPassword').value = '';
+                document.getElementById('userRole').value = role;
+                document.getElementById('userId').value = username;
                 
                 document.getElementById('userFormTitle').textContent = 'Editar Usuario';
-                document.getElementById('userUsername').disabled = true; // Prevent changing username during edit
-            }
+                document.getElementById('userUsername').disabled = true;
         }
         
         async function deleteUser(username) {
