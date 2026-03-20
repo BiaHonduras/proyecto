@@ -2030,8 +2030,9 @@ if (error) {
 async function cargarResumenCodigos() {
 
     const { data, error } = await supabase
-        .from('codigos')
+        .from('inventario_importaciones')
         .select('usuario, fecha_importacion')
+		.eq('tipo_importacion', 'codigos')
         .order('fecha_importacion', { ascending: false})
         .limit(5);
     
