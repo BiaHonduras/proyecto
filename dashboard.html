@@ -1006,6 +1006,10 @@
 
         const section = this.dataset.section;
 
+		// Actualizar título
+        const titulo = this.textContent.trim();
+        document.getElementById('currentSectionTitle').textContent = titulo;
+
         // Active
         document.querySelectorAll('.nav-item').forEach(i => {
             i.classList.remove('active');
