@@ -1789,8 +1789,13 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
     }
 
         const { data, error } = await supabase
-            .from('codigos')
-            .insert(registros);
+            .from('inventario_importaciones')
+            .insert([{
+				usuario: currentUser.username,
+				fecha_importacion: new Date(),
+				cantidad_registros: registros.length,
+				tipo_importacion: 'codigos'
+			}])
 
         if (error) {
             console.error(error);
