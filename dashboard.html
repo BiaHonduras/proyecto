@@ -1648,16 +1648,8 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
 					usuario,
 					fecha_importacion,
 					cantidad_registros: registros.length
-					tipo_importacion: 'inventario'
 				}])
-			
-        const { data, error } = await supabase
-			.from('inventario_importaciones')
-			.select('usuario, fecha_importacion, cantidad_registros')
-			.eq('tipo_importacion', 'inventario')
-			.order('fecha_importacion', {ascending: false})
-			.limit(5);
-			
+        
         const { error: insertError } = await supabase
             .from('inventario_reporteria')
             .insert(registros);
@@ -1682,7 +1674,6 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
     const { data, error } = await supabase
         .from('inventario_importaciones')
         .select('usuario, fecha_importacion, cantidad_registros')
-		.eq('tipo_importacion', 'inventario')
         .order('fecha_importacion', { ascending: false })
         .limit(5);
 
@@ -1798,13 +1789,8 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
     }
 
         const { data, error } = await supabase
-            .from('inventario_importaciones')
-            .insert([{
-				usuario: currentUser.username,
-				fecha_importacion: new Date(),
-				cantidad_registros: registros.length,
-				tipo_importacion: 'codigos'
-			}])
+            .from('codigos')
+            .insert(registros);
 
         if (error) {
             console.error(error);
@@ -1812,14 +1798,8 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
             return;
         }
 
-		const { data, error } = await supabase
-		.from('inventario_importaciones')
-		.select('usuario, fecha_importacion, cantidad_registros')
-		.eq('tipo_importacion', 'codigos')
-		.order('fecha_importacion', { ascending: false })
-		.limit(5);
-
         showNotification('Éxito', 'Códigos importados correctamente', 'success');
+
         cargarResumenCodigos();
     };
 
