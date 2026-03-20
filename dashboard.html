@@ -781,7 +781,7 @@
                                 <thead>
                                     <tr class="border-b border-gray-200">
                                         <th class="pb-3 text-left text-sm font-medium text-gray-600">Usuario</th>
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Email</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Nombre Corto</th>
                                         <th class="pb-3 text-left text-sm font-medium text-gray-600">Rol</th>
                                         <th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
                                     </tr>
@@ -1967,7 +1967,7 @@ if (error) {
     tbody.innerHTML = users.map(user => `
         <tr class="border-b border-gray-200 hover:bg-gray-50">
             <td class="py-3 px-4 font-medium">${user.usuario}</td>
-            <td class="py-3 px-4">${user.correo}</td>
+            <td class="py-3 px-4">${user.nombre_corto}</td>
             <td class="py-3 px-4">
                 <span class="px-2 py-1 rounded-full text-xs ${
                     user.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
