@@ -1278,23 +1278,24 @@
             Quagga.start();
         });
         
-        Quagga.onDetected(function(result) {
-            const codigo = result.codeResult.code;
+        let detected = false;
 
-            document.getElementById('codigoArticulo').value = codigo;
-            cargarDatosArticulo(codigo);
+Quagga.onDetected(function(result) {
+    if (detected) return;
+    detected = true;
 
-            // 🔊 sonido
-           beep();
+    const codigo = result.codeResult.code;
 
-            // 🛑 detener escáner automáticamente
-            stopScanner();
-        });
-        
-    } catch (error) {
-        console.error('Error al acceder a la cámara:', error);
-        showNotification('Error', 'No se pudo acceder a la cámara', 'error');
-    }
+    document.getElementById('codigoArticulo').value = codigo;
+    cargarDatosArticulo(codigo);
+
+    beep();
+    stopScanner();
+});
+
+function beep() {
+    const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+    audio.play();
 }
 
 function stopScanner() {
