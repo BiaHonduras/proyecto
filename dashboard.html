@@ -1795,7 +1795,7 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
 		
 		// 1. Insertar códigos
         const { error: errorCodigos } = await supabase
-            .from('inventario_codigos') // ajusta este nombre a tu tabla real
+            .from('codigos') // ajusta este nombre a tu tabla real
             .insert(registros);
 
         if (errorCodigos) {
