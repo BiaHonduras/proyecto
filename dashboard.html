@@ -78,18 +78,47 @@
             background: #f7fafc;
         }
         
-        .scanner-container {
-            background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative; /* Added for scanner video */
-        }
+        .scanner-overlay {
+    		position: absolute;
+    		top: 0;
+    		left: 0;
+    		right: 0;
+    		bottom: 0;
+    		pointer-events: none;
+		}
+
+		.scanner-box {
+    		position: absolute;
+    		top: 50%;
+    		left: 50%;
+    		width: 80%;
+    		height: 120px;
+    		transform: translate(-50%, -50%);
+    		border: 2px solid rgba(0,255,0,0.7);
+    		border-radius: 10px;
+		}
+
+		.scanner-line {
+    		position: absolute;
+    		top: 50%;
+    		left: 10%;
+    		width: 80%;
+    		height: 2px;
+    		background: red;
+    		animation: scanLine 1.5s infinite;
+		}
 
         .scanner-container video {
             width: 100%;
             height: auto;
             object-fit: cover;
         }
+
+		@keyframes scanLine {
+    		0% { top: 40%; }
+    		50% { top: 60%; }
+    		100% { top: 40%; }
+		}
         
         /* Responsive */
         @media (max-width: 768px) {
@@ -1238,77 +1267,103 @@
 }
 
         // Barcode Scanner Functions
-        async function startScanner() {
-    document.getElementById('scanner-area').classList.remove('hidden');
-    
+        let lastScanned = null;
+let scanning = false;
+
+async function startScanner() {
+    const area = document.getElementById('scanner-area');
+    const scannerDiv = document.getElementById('scanner');
+
+    area.classList.remove('hidden');
+
+    scannerDiv.innerHTML = `
+        <div class="scanner-overlay">
+            <div class="scanner-box"></div>
+            <div class="scanner-line"></div>
+        </div>
+    `;
+
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } 
-        });
-        
-        const video = document.querySelector('#scanner video');
-        if (!video) {
-            const videoEl = document.createElement('video');
-            videoEl.id = 'scannerVideo';
-            videoEl.setAttribute('autoplay', true);
-            videoEl.setAttribute('playsinline', true);
-            document.getElementById('scanner').innerHTML = '';
-            document.getElementById('scanner').appendChild(videoEl);
-        }
-        
-        const video_element = document.getElementById('scannerVideo') || document.querySelector('#scanner video');
-        video_element.srcObject = stream;
-        scannerActive = true;
-        
-        // Inicializar Quagga
         Quagga.init({
             inputStream: {
-                name: "Live",
                 type: "LiveStream",
-                target: document.querySelector('#scanner'),
+                target: scannerDiv,
                 constraints: {
-                    facingMode: "environment"
+                    facingMode: "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
                 }
             },
+            locator: {
+                patchSize: "medium",
+                halfSample: true
+            },
             decoder: {
-                readers: ["code_128_reader", "ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader"]
-            }
+                readers: [
+                    "code_128_reader",
+                    "ean_reader",
+                    "ean_8_reader",
+                    "upc_reader",
+                    "upc_e_reader"
+                ]
+            },
+            locate: true
         }, function(err) {
             if (err) {
-                console.log(err);
-                showNotification('Error', 'No se pudo inicializar el escáner', 'error');
+                console.error(err);
+                alert("Error iniciando cámara");
                 return;
             }
+
             Quagga.start();
+            scanning = true;
         });
-        
-        Quagga.onDetected(function(result) {
-            const codigo = result.codeResult.code;
 
-            document.getElementById('codigoArticulo').value = codigo;
-            cargarDatosArticulo(codigo);
+        Quagga.onDetected(handleDetection);
 
-            // 🔊 sonido
-           beep();
-
-            // 🛑 detener escáner automáticamente
-            stopScanner();
-        });
-        
-    } catch (error) {
-        console.error('Error al acceder a la cámara:', error);
-        showNotification('Error', 'No se pudo acceder a la cámara', 'error');
+    } catch (err) {
+        console.error(err);
+        alert("No se pudo acceder a la cámara");
     }
 }
 
+function handleDetection(result) {
+    if (!scanning) return;
+
+    const code = result.codeResult.code;
+
+    if (!code) return;
+
+    // Evitar doble lectura
+    if (code === lastScanned) return;
+
+    lastScanned = code;
+    scanning = false;
+
+    document.getElementById('codigoArticulo').value = code;
+    document.getElementById('codigoBarra').value = code;
+
+    beep();
+    stopScanner();
+
+    // opcional: cargar datos automáticamente
+    cargarDatosArticulo(code);
+}
+
+function beep() {
+    const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+    audio.play();
+}
+
 function stopScanner() {
-    if (scannerActive) {
+    try {
         Quagga.stop();
-        const stream = document.getElementById('scannerVideo').srcObject;
-        stream.getTracks().forEach(track => track.stop());
-        document.getElementById('scanner-area').classList.add('hidden');
-        scannerActive = false;
-    }
+        Quagga.offDetected(handleDetection);
+    } catch(e) {}
+
+    document.getElementById('scanner-area').classList.add('hidden');
+    scanning = false;
+    lastScanned = null;
 }
 
         function importarReporteria() {
