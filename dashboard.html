@@ -1309,64 +1309,70 @@
 let scanning = false;
 
 async function startScanner() {
+
     const area = document.getElementById('scanner-area');
     const scannerDiv = document.getElementById('scanner');
 
-    // limpiar primero
-		scannerDiv.innerHTML = "";
+    area.classList.remove('hidden');
 
-	// crear overlay correctamente
-		const overlay = document.createElement('div');
-		overlay.className = 'scanner-overlay';
-		overlay.innerHTML = `
-    		<div class="scanner-box"></div>
-    		<div class="scanner-line"></div>
-		`;
+    // limpiar completamente
+    scannerDiv.innerHTML = "";
 
-scannerDiv.appendChild(overlay);
-
-    try {
-        Quagga.init({
-            inputStream: {
-                type: "LiveStream",
-                target: scannerDiv,
-                constraints: {
-                    facingMode: "environment",
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                }
-            },
-            locator: {
-                patchSize: "medium",
-                halfSample: true
-            },
-            decoder: {
-                readers: [
-                    "code_128_reader",
-                    "ean_reader",
-                    "ean_8_reader",
-                    "upc_reader",
-                    "upc_e_reader"
-                ]
-            },
-            locate: true
-        }, function(err) {
-            if (err) {
-                console.error(err);
-                alert("Error iniciando cámara");
-                return;
-            }
-
-            Quagga.start();
-            scanning = true;
-        });
-
-        Quagga.onDetected(handleDetection);
-
-    } catch (err) {
-        console.error(err);
-        alert("No se pudo acceder a la cámara");
+    // VALIDACIÓN REAL
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Este dispositivo no soporta cámara");
+        return;
     }
+
+    Quagga.init({
+        inputStream: {
+            type: "LiveStream",
+            target: scannerDiv,
+            constraints: {
+                facingMode: "environment"
+            }
+        },
+        locator: {
+            patchSize: "medium",
+            halfSample: true
+        },
+        decoder: {
+            readers: [
+                "code_128_reader",
+                "ean_reader",
+                "ean_8_reader",
+                "upc_reader",
+                "upc_e_reader"
+            ]
+        },
+        locate: true
+    }, function(err) {
+
+        if (err) {
+            console.error("QUAGGA ERROR:", err);
+            alert("Error iniciando cámara");
+            return;
+        }
+
+        Quagga.start();
+        scanning = true;
+
+        // 🔥 CREAR OVERLAY DESPUÉS de iniciar cámara
+        const overlay = document.createElement('div');
+        overlay.className = 'scanner-overlay';
+        overlay.innerHTML = `
+            <div class="scanner-box"></div>
+            <div class="scanner-line"></div>
+        `;
+
+        scannerDiv.appendChild(overlay);
+    });
+
+    // evitar múltiples listeners
+
+	console.log(navigator.userAgent);
+    Quagga.offDetected(handleDetection);
+    Quagga.onDetected(handleDetection);
 }
 
 function handleDetection(result) {
