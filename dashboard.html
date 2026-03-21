@@ -393,7 +393,7 @@
                                    class="input-field w-full px-4 py-3 rounded-lg" 
                                    placeholder="Ingrese el código o escanee"
                                    required
-                                   oninput="buscarDatosArticulo(this.value)">
+                                   oninput="buscarArticulo(this.value)">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Código de Barra Artículo *</label>
@@ -1023,6 +1023,42 @@
             document.getElementById('deleteCodesDatabase').addEventListener('click', eliminarBaseCodigos);            
             document.getElementById('deleteInventoryReporteria').addEventListener('click',eliminarInventarioReporteria);
             document.getElementById('deleteTodayInventory').addEventListener('click', eliminarInventarioDelDia);
+
+			const codigoInput = document.getElementById('codigoArticulo');
+			const barraInput = document.getElementById('codigoBarra');
+
+			codigoInput.addEventListener('input', function () {
+    			this.value = this.value.replace(/\D/g, ''); // solo números
+
+    				if (this.value.length >= 6) {
+        				this.setCustomValidity('');
+    				} else {
+        				this.setCustomValidity('Debe tener al menos 6 dígitos');
+    				}
+			});
+			
+			barraInput.addEventListener('input', function () {
+    			this.value = this.value.replace(/\D/g, '');
+
+    				if (this.value.length >= 13) {
+        				this.setCustomValidity('');
+   					} else {
+        				this.setCustomValidity('Código de barra inválido');
+    				}
+				});
+
+			let timeoutBusqueda;
+
+				function debounceBuscar(e) {
+    				clearTimeout(timeoutBusqueda);
+
+    				timeoutBusqueda = setTimeout(() => {
+        				const valor = e.target.value.trim();
+        				if (!valor) return;
+
+        				buscarArticulo(valor);
+    					}, 400);
+					}
         });
 
         // ===== NAVEGACIÓN =====
@@ -1375,6 +1411,10 @@ async function startScanner() {
     Quagga.onDetected(handleDetection);
 }
 
+let lastScans = [];
+const MIN_LENGTH = 13; // ajusta si usas otros formatos
+const REQUIRED_MATCHES = 3;
+
 function handleDetection(result) {
     if (!scanning) return;
 
@@ -1382,23 +1422,31 @@ function handleDetection(result) {
 
     if (!code) return;
 
-    // Evitar doble lectura
-    if (code === lastScanned) return;
+    // ❌ descartar códigos cortos
+    if (code.length < MIN_LENGTH) return;
 
-    lastScanned = code;
+    // guardar últimas lecturas
+    lastScans.push(code);
+
+    if (lastScans.length > REQUIRED_MATCHES) {
+        lastScans.shift();
+    }
+
+    // validar que las últimas lecturas sean iguales
+    const allEqual = lastScans.every(c => c === code);
+
+    if (!allEqual) return;
+
     scanning = false;
+    lastScans = [];
 
     document.getElementById('codigoBarra').value = code;
 
     beep();
-		if (navigator.vibrate) {
-    		navigator.vibrate(100);
-			}
-	
-    stopScanner();
+    if (navigator.vibrate) navigator.vibrate(100);
 
-    // opcional: cargar datos automáticamente
-    cargarDatosArticulo(code);
+    stopScanner();
+    buscarArticulo(code);
 }
 
 function beep() {
