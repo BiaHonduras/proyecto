@@ -393,7 +393,7 @@
                                    class="input-field w-full px-4 py-3 rounded-lg" 
                                    placeholder="Ingrese el código o escanee"
                                    required
-                                   oninput="cargarDatosArticulo(this.value)">
+                                   oninput="buscarDatosArticulo(this.value)">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Código de Barra Artículo *</label>
@@ -1135,50 +1135,73 @@
         }
         
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
-        async function cargarDatosArticulo(codigo) {
+        async function buscarArticulo(valor) {
 
-    if (!codigo) return;
+    if (!valor) return;
 
-    const { data, error } = await supabase
-        .from('inventario_reporteria')
-        .select('*')
-        .eq('codigo', codigo)
-        .single();
+    let data = null;
+    let error = null;
+
+    // 🔍 Regla simple:
+    // si es largo (ej: 12-13 dígitos) → código de barras
+    // si es corto → código interno
+
+    if (valor.length >= 10) {
+        // Buscar por código de barras
+        const res = await supabase
+            .from('inventario_reporteria')
+            .select('*')
+            .eq('codigo_barra', valor)
+            .single();
+
+        data = res.data;
+        error = res.error;
+
+    } else {
+        // Buscar por código interno
+        const res = await supabase
+            .from('inventario_reporteria')
+            .select('*')
+            .eq('codigo', valor)
+            .single();
+
+        data = res.data;
+        error = res.error;
+    }
 
     if (error || !data) {
-        showNotification('Advertencia', 'Artículo no encontrado en inventario de reportería', 'warning');
-
-        document.getElementById('proveedor').value = '';
-        document.getElementById('descripcion').value = '';
-        document.getElementById('inventarioReporteria').value = 0;
-        document.getElementById('masterpack').value = 1;
+        showNotification('Advertencia', 'Artículo no encontrado', 'warning');
+        limpiarCamposArticulo();
         return;
     }
 
-    // ✅ AQUÍ ya existe data
+    // ✅ llenar datos
+    document.getElementById('codigoArticulo').value = data.codigo || '';
+    document.getElementById('codigoBarra').value = data.codigo_barra || '';
     document.getElementById('proveedor').value = data.proveedor || '';
     document.getElementById('descripcion').value = data.descripcion || '';
     document.getElementById('inventarioReporteria').value = data.inventario_reporteria || 0;
     document.getElementById('masterpack').value = data.masterpack || 1;
 
-    // Cálculo automático
+    // cálculo automático
     const inv = data.inventario_reporteria || 0;
     const master = data.masterpack || 1;
-    const cajas = Math.floor(inv / master);
-    const unidades = inv % master;
 
-    // 👉 NUEVOS CAMPOS (Reportería)
-    document.getElementById('cajasFardosReporteria').value = cajas;
-    document.getElementById('unidadesReporteria').value = unidades;
-
-    // 👉 DEJAR VACÍOS LOS CAMPOS MANUALES
-    document.getElementById('cajasFardos').value = '';
-    document.getElementById('unidades').value = '';
+    document.getElementById('cajasFardosReporteria').value = Math.floor(inv / master);
+    document.getElementById('unidadesReporteria').value = inv % master;
 
     calcularTotalUnidades();
 
-    showNotification('Éxito', 'Datos cargados desde reportería', 'success');
+    showNotification('Éxito', 'Artículo cargado', 'success');
 }
+		function limpiarCamposArticulo() {
+    		document.getElementById('proveedor').value = '';
+   			document.getElementById('descripcion').value = '';
+    		document.getElementById('inventarioReporteria').value = 0;
+    		document.getElementById('masterpack').value = 1;
+    		document.getElementById('cajasFardosReporteria').value = '';
+    		document.getElementById('unidadesReporteria').value = '';
+		}
 
         function calcularTotalUnidades() {
             const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
