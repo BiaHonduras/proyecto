@@ -1187,7 +1187,7 @@
         const res = await supabase
             .from('inventario_reporteria')
             .select('*')
-            .eq('codigo_barra', valor)
+            .eq('codigo_barra', normalizarCodigo(valor))
             .single();
 
         data = res.data;
@@ -2415,6 +2415,9 @@ async function cargarGraficoProveedores() {
 
     return { success: true, data };
 }
+	function normalizarCodigo(codigo) {
+   		return codigo.trim();
+		}
     inventario.js </script>
 </script>
     
