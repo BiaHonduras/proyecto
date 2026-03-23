@@ -37,15 +37,17 @@
         }
         
         .sidebar {
-            width: var(--sidebar-width);
+            width: 250px;
             background: linear-gradient(180deg, #3b221f 0%, #1f1412 100%);
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
+			position: relative;
+			height: 100vh;
+			flex-shrink: 0;
         }
         
         .main-content {
-            margin-left: var(--sidebar-width);
-            width: calc(100% - var(--sidebar-width));
+            width: 100%;
             padding-top: 0;
             overflow-x: hidden;
         }
