@@ -586,6 +586,7 @@
 							<table class="min-w-full">
 								<thead>
 									<tr class="border-b border-gray-200">
+										<th class="pb-3 text-left text-sm font-medium text-gray-600">Bodega</th>
 										<th class="pb-3 text-left text-sm font-medium text-gray-600">Fecha</th>
 										<th class="pb-3 text-left text-sm font-medium text-gray-600">Código</th>
 										<th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
@@ -1597,6 +1598,7 @@ async function loadInventory() {
 
         return `
             <tr class="border-b border-gray-200 hover:bg-gray-50">
+				<td class="py-4 px-4 text-sm">${item.idBodega}</td>
                 <td class="py-4 px-4 text-sm">${item.fecha}</td>
                 <td class="py-4 px-4 font-mono text-sm">${item.codigo}</td>
                 <td class="py-4 px-4">${item.descripcion}</td>
