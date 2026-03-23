@@ -1707,8 +1707,11 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
         .map(checkbox => checkbox.value);
 
     const headersMap = {
-        fecha: 'Fecha',
-        codigo: 'Codigo',
+        bodega: 'Bodega',
+		fecha: 'Fecha Actual',
+		fecha_vencimiento: 'Fecha Vencimiento',
+        codigo: 'Codigo Articulo',
+		codigo_barra: 'Codigo Barra',
         descripcion: 'Descripcion',
         proveedor: 'Proveedor',
         inventarioReporteria: 'Inventario Reporteria',
@@ -1718,6 +1721,7 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
         total: 'Total',
         diferencia: 'Diferencia',
         validacion: 'Validacion'
+		dias_vida: 'Dias de Vida'
     };
 
     const headers = selectedFields.map(field => headersMap[field]);
@@ -1732,9 +1736,21 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
         else if (diferencia < 0) validacion = 'VAL+';
         else validacion = 'VAL-';
 
+		// 🔥 cálculo días de vida
+        let diasVida = '';
+        if (item.fecha_vencimiento) {
+            const hoy = new Date(item.fecha);
+            const venc = new Date(item.fecha_vencimiento);
+            const diffTime = venc - hoy;
+            diasVida = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
         const rowData = {
+			bodega: item.idBodega || '',
             fecha: item.fecha,
+			fecha_vencimiento: item.fecha_vencimiento || '',
             codigo: item.codigo,
+			codigo_barra: item.codigo_barra || '',
             descripcion: item.descripcion,
             proveedor: item.proveedor,
             inventarioReporteria: item.inventario_reporteria,
@@ -1743,7 +1759,8 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
             unidades: item.unidades,
             total: total.toFixed(2),
             diferencia: diferencia.toFixed(2),
-            validacion: validacion
+            validacion: validacion,
+			dias_vida: diasvida
         };
 
         return selectedFields.map(field => `"${rowData[field]}"`).join(',');
