@@ -379,10 +379,13 @@
                        <!-- Inventario Diario Section (Unified Agregar Artículo and Escanear Códigos) -->
             <section id="inventario-diario-section" class="section-content hidden">
                 <div class="card p-6">
-                    <h3 class="text-lg font-semibold mb-6">Registro de Inventario Diario</h3>
+                    <div class="flex items-center gap-3 mb-6">
+    					<h3 class="text-lg font-semibold">Registro de Inventarios Diarios</h3>
+    						<input type="checkbox" id="checkBodega" class="w-4 h-4">
+					</div>
                     <form id="articuloForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Actual*</label>
                             <input type="date" id="fechaInventario" 
                                    class="input-field w-full px-4 py-3 rounded-lg" 
                                    required>
