@@ -419,7 +419,7 @@
 						<div>
     						<label class="block text-sm font-medium text-gray-700 mb-2">Fecha Vencimiento</label>
     						<input type="date" id="fechaVencimiento"
-           						class="input-field input-disabled w-full px-4 py-3 rounded-lg"
+           						class="input-field w-full px-4 py-3 rounded-lg bg-gray-100"
            						disabled>
 						</div>
                         <div>
@@ -1103,7 +1103,8 @@
     			if (activo) {
         			fechaVencimiento.classList.remove('input-disabled');
     			} else {
-        			fechaVencimiento.classList.add('input-disabled');
+        			fechaVencimiento.setAttribute('readonly', true);
+        			fechaVencimiento.classList.add('bg-gray-100');
         			fechaVencimiento.value = '';
     			}
 			});
