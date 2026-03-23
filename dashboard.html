@@ -23,19 +23,22 @@
     
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-            --sidebar-width: 230px;
+    		--primary: #4b2e2b;        /* café oscuro */
+    		--secondary: #a67c52;      /* café con leche */
+    		--accent: #6b8e23;         /* verde café/planta */
+    		--background: #f5f1eb;     /* crema */
+    		--card: #ffffff;
         }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f1f5f9;
+            background: var(--background);
             min-height: 100vh;
         }
         
         .sidebar {
             width: var(--sidebar-width);
-            background: #111827; /* gris oscuro moderno */
+            background: linear-gradient(180deg, #3b221f 0%, #1f1412 100%);
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
@@ -48,30 +51,47 @@
         }
         
         .card {
-            background: white;
-            border-radius: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            border: none;
+    		background: var(--card);
+    		border-radius: 16px;
+    		box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    		border: 1px solid #e8e2d9;
         }
+		
+		.card h3 {
+    		color: var(--primary);
+		}
         
         .btn-primary {
-            background: var(--primary-gradient);
-            transition: all 0.3s ease;
+            background: var(--primary);
+    		color: white;
+    		font-weight: 600;
+    		letter-spacing: 0.3px;
         }
         
         .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    		background: #3b221f;
+    		transform: translateY(-1px);
         }
+		
+		.btn-secondary {
+    		background: transparent;
+    		border: 1px solid var(--primary);
+    		color: var(--primary);
+		}
+
+		.btn-secondary:hover {
+    		background: var(--primary);
+    		color: white;
+		}
         
         .input-field {
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
+    		border: 1px solid #d6ccc2;
+    		background: #fff;
         }
         
         .input-field:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    		border-color: var(--secondary);
+    		box-shadow: 0 0 0 2px rgba(166,124,82,0.2);
         }
         
         .table-row:hover {
@@ -147,6 +167,16 @@
             .sidebar.open {
                 transform: translateX(0);
             }
+			
+			.sidebar::after {
+    			content: '';
+    			position: absolute;
+    			bottom: 0;
+    			left: 0;
+    			width: 100%;
+    			height: 3px;
+    			background: var(--secondary);
+			}
             
             .main-content {
                 margin-left: 0;
@@ -195,24 +225,24 @@
         .nav-item {
             display: flex;
             align-items: center;
-            padding: 10px 12px;
-            border-radius: 8px;
+            padding: 12px 14px;
+            border-radius: 10px;
             margin-bottom: 6px;
             transition: all 0.3s ease;
             color: rgba(255, 255, 255, 0.85);
             text-decoration: none;
             font-size: 14px;
+			font-weight: 500;
         }
         
         .nav-item:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: white;
+            background: rgba(255,255,255,0.06);
+            transform: translateX(4px);
         }
         
         .nav-item.active {
-            background: #2563eb;
-            color: white;
-            font-weight: 600;
+            background: var(--secondary);
+            color: #fff;
         }
         
         .nav-item i {
