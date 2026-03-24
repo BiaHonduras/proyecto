@@ -24,65 +24,65 @@
     </script>
 
 <style>
-body {
-    margin: 0;
-    font-family: 'Inter', sans-serif;
-    background: #f5f1eb;
-    color: #2b2b2b;
-}
+    body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background: #f5f1eb;
+        color: #2b2b2b;
+    }
 
-.container {
-    display: grid;
-    grid-template-columns: 250px 1fr 350px;
-    height: 100vh;
-}
+    .container {
+        display: grid;
+        grid-template-columns: 250px 1fr 350px;
+        min-height: 100vh;
+    }
 
-/* SIDEBAR */
-.sidebar {
-    background: #3b2f2f;
-    color: #f5f1eb;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
+    /* SIDEBAR */
+    .sidebar {
+        background: #3b2f2f;
+        color: #f5f1eb;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
 
-.sidebar h3 {
-    margin-top: 20px;
-    font-size: 13px;
-}
+    .sidebar h3 {
+        margin-top: 20px;
+        font-size: 13px;
+    }
 
-.select {
-    width: 100%;
-    padding: 8px;
-    border-radius: 6px;
-    border: none;
-    margin-bottom: 10px;
-    font-size: 13px;
-    background: #6f4e37;
-    color: #f5f1eb;
-}
+    .select {
+        width: 100%;
+        padding: 8px;
+        border-radius: 6px;
+        border: none;
+        margin-bottom: 10px;
+        font-size: 13px;
+        background: #6f4e37;
+        color: #f5f1eb;
+    }
 
-.btn-filter {
-    background: #6f4e37;
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 6px;
-    cursor: pointer;
-    user-select: none;
-}
+    .btn-filter {
+        background: #6f4e37;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 6px;
+        cursor: pointer;
+        user-select: none;
+    }
 
-.btn-filter.active {
-    background: #c8a97e;
-    color: #2b2b2b;
-}
+    .btn-filter.active {
+        background: #c8a97e;
+        color: #2b2b2b;
+    }
 
-.user-btn {
-    background: #c8a97e;
-    padding: 10px;
-    text-align: center;
-    border-radius: 6px;
-}
+    .user-btn {
+        background: #c8a97e;
+        padding: 10px;
+        text-align: center;
+        border-radius: 6px;
+    }
 
 /* MAIN */
 .main {
@@ -100,13 +100,11 @@ body {
     gap: 20px;
 }
 
-.card {
-    background: white;
-    padding: 15px;
-    flex: 1;
-    border-radius: 10px;
-}
-
+    .card,
+    .right {
+        background: transparent;
+    }
+    
 /* CHARTS */
 .chart-large {
     margin-top: 20px;
