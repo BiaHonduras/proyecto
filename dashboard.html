@@ -1186,12 +1186,10 @@
             // Navegación entre secciones
             document.querySelectorAll('.nav-item').forEach(item => {
     			item.addEventListener('click', function (e) {
-						const section = this.dataset.section;
+					const section = this.dataset.section;
 					if(!section) return;
 					
         		e.preventDefault();
-
-        	const section = this.dataset.section;
 
 				if (section === 'transitos') {
     				loadTransitos();
