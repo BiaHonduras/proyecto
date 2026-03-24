@@ -2600,9 +2600,9 @@ async function guardarJustificacion(id, texto) {
 
     showNotification('Éxito', 'Justificación guardada', 'success');
 }
-	const userNameBottom = document.getElementById('currentUserNameBottom');
-		if (userNameBottom) {
-    			userNameBottom.textContent = currentUser.nombre_corto;
+	const userNameFooter = document.getElementById('userShortNameFooter');
+		if (userShortNameFooter && currentUser) {
+    			userShortNameFooter.textContent = currentUser.nombre_corto;
 			}
 
 	const logoutBtnBottom = document.getElementById('logoutBtnBottom');
@@ -2630,7 +2630,7 @@ async function guardarJustificacion(id, texto) {
     <div class="flex items-center gap-3">
     <i class="fas fa-user text-gray-600 text-sm"></i>
 
-    <span id="currentUserNameBottom" class="text-[11px] text-gray-700"></span>
+    <span id="userShortNameFooter" class="text-[11px] text-gray-700"></span>
 
     <i class="fas fa-sign-out-alt text-gray-600 cursor-pointer"
        onclick="logout()"></i>
