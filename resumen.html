@@ -42,7 +42,7 @@ body {
 /* LAYOUT */
 .container {
     display: grid;
-    grid-template-columns: 250px 1fr 320px;
+    grid-template-columns: 250px 1fr 300px;
     width: 100%;
     min-height: 100vh;
 }
@@ -121,7 +121,8 @@ body {
 
 /* CARDS */
 .cards {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
 }
 
@@ -148,11 +149,17 @@ body {
 /* PANEL DERECHO */
 .right {
     background: var(--bg-main);
+	width: 100%;
     padding: 15px;
     border-left: 2px solid #e5ddd5;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+}
+
+.right canvas {
+    width: 100% !important;
+    height: auto !important;
 }
 
 /* TABLA */
