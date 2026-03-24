@@ -255,29 +255,37 @@
             </div>
             
             <nav class="space-y-1">
-                <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                <a href="#dashboard" class="nav-item active" data-section="resumen">
                     <i class="fas fa-chart-pie"></i>
-                    Dashboard
+                    Resumen
                 </a>
                 <a href="#inventario-diario" class="nav-item" data-section="inventario-diario">
                     <i class="fas fa-clipboard-check"></i>
-                    Inventario Diario
+                    Inventarios Diarios
                 </a>
                 <a href="#inventario" class="nav-item" data-section="inventario">
                     <i class="fas fa-clipboard-list"></i>
                     Ver Inventario
                 </a>
+				<a href="#transitos" class="nav-item" data-section="transitos">
+    				<i class="fas fa-exclamation-triangle"></i>
+    				Tránsitos / Pendientes
+				</a>
                 <a href="#exportar" class="nav-item" data-section="exportar">
                     <i class="fas fa-file-export"></i>
                     Exportar CSV
                 </a>
                 <a href="#importar-inventario" class="nav-item" data-section="importar-inventario">
                     <i class="fas fa-file-import"></i>
-                    Importar Inventario
+                    Importar Inventarios
                 </a>
                 <a href="#importar-codigos" class="nav-item" data-section="importar-codigos">
                     <i class="fas fa-database"></i>
                     Importar Códigos
+                </a>
+				<a href="#importar-codigos" class="nav-item" data-section="dashboard">
+                    <i class="fas fa-database"></i>
+                    Dashboard
                 </a>
                 <a href="#usuarios" class="nav-item" data-section="usuarios">
                     <i class="fas fa-users-cog"></i>
@@ -313,13 +321,13 @@
             <button id="menuToggle" class="lg:hidden text-gray-600 hover:text-gray-800">
                 <i class="fas fa-bars text-xl"></i>
             </button>
-            <h2 class="text-xl font-semibold text-gray-800" id="currentSectionTitle">Dashboard</h2>
+            <h2 class="text-xl font-semibold text-gray-800" id="currentSectionTitle">Resumen</h2>
         </header>
 
         <!-- Content Sections -->
         <main class="p-6 space-y-6">
             <!-- Dashboard Section -->
-            <section id="dashboard-section" class="section-content">
+            <section id="resumen-section" class="section-content">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
@@ -613,6 +621,33 @@
 					</div>
 				</div>
 			</section>
+			
+			<section id="transitos-section" class="section-content hidden">
+    <div class="card p-6">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Tránsitos / Pendientes</h3>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead>
+                    <tr class="border-b border-gray-200">
+                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Bodega</th>
+                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Código</th>
+                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
+                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Diferencia</th>
+                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Justificación</th>
+                    </tr>
+                </thead>
+                <tbody id="transitosTableBody">
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-gray-500">
+                            Sin datos
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
 
             <!-- Exportar CSV Section -->
             <section id="exportar-section" class="section-content hidden">
@@ -1144,36 +1179,41 @@
                 document.querySelector('.sidebar').classList.remove('open');
                 this.classList.remove('open');
             });
-            
+
+			           
             // Navegación entre secciones
             document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', function (e) {
-        e.preventDefault();
+    			item.addEventListener('click', function (e) {
+        		e.preventDefault();
 
-        const section = this.dataset.section;
+        	const section = this.dataset.section;
 
-		// Actualizar título
-        const titulo = this.textContent.trim();
-        document.getElementById('currentSectionTitle').textContent = titulo;
+				if (section === 'transitos') {
+    				loadTransitos();
+				}
 
-        // Active
-        document.querySelectorAll('.nav-item').forEach(i => {
-            i.classList.remove('active');
-        });
-        this.classList.add('active');
+			// Actualizar título
+        	const titulo = this.textContent.trim();
+        	document.getElementById('currentSectionTitle').textContent = titulo;
 
-        // Ocultar todas
-        document.querySelectorAll('.section-content').forEach(sec => {
-            sec.classList.add('hidden');
-        });
+        	// Active
+        	document.querySelectorAll('.nav-item').forEach(i => {
+            	i.classList.remove('active');
+        	});
+        		this.classList.add('active');
 
-        // Mostrar la correcta
-        const target = document.getElementById(section + '-section');
-        if (target) {
-            target.classList.remove('hidden');
-        }
-    });
-});
+        	// Ocultar todas
+        	document.querySelectorAll('.section-content').forEach(sec => {
+           	 sec.classList.add('hidden');
+        	});
+
+        	// Mostrar la correcta
+        	const target = document.getElementById(section + '-section');
+        		if (target) {
+            		target.classList.remove('hidden');
+        		}
+   			 });
+		});
             
             // Logout
             document.getElementById('logoutBtn').addEventListener('click', function() {
@@ -2509,6 +2549,50 @@ async function cargarGraficoProveedores() {
 	function normalizarCodigo(codigo) {
    		return codigo.trim();
 		}
+	async function loadTransitos() {
+
+    const { data, error } = await supabase
+        .from('inventarios_diarios')
+        .select('*');
+
+    const tbody = document.getElementById('transitosTableBody');
+
+    if (error || !data) {
+        tbody.innerHTML = `<tr><td colspan="5">Error cargando datos</td></tr>`;
+        return;
+    }
+
+    const filtrados = data.filter(item => {
+        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
+        const diferencia = item.inventario_reporteria - total;
+        return diferencia !== 0;
+    });
+
+    if (filtrados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6">Sin diferencias</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = filtrados.map(item => {
+
+        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
+        const diferencia = item.inventario_reporteria - total;
+
+        return `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="py-3">${item.idBodega}</td>
+                <td class="py-3">${item.codigo}</td>
+                <td class="py-3">${item.descripcion}</td>
+                <td class="py-3 font-bold">${diferencia.toFixed(2)}</td>
+                <td class="py-3">
+                    <input type="text" 
+                        class="input-field px-2 py-1 w-full"
+                        placeholder="Escriba justificación">
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
     inventario.js </script>
 </script>
     
