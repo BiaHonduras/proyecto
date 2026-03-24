@@ -1024,7 +1024,13 @@
 
 // ===== MODIFICAR: userForm submit =====
         document.getElementById('userForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+            
+			if (section === 'dashboard') {
+    			window.location.href = 'resumen.html';
+   				return;
+			}
+			
+			e.preventDefault();
     
             const username = document.getElementById('userUsername').value;
             const nombre_corto = document.getElementById('userNombre_corto').value;
