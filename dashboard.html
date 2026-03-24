@@ -40,6 +40,7 @@
             background: var(--coffee-cream);
             min-height: 100vh;
             color: #2d2d2d;
+			padding-bottom: 50px;
         }
         
         .sidebar {
@@ -292,22 +293,6 @@
                     Gestión de Usuarios
                 </a>
             </nav>
-            
-            <div class="absolute bottom-6 left-6 right-6">
-                <div class="border-t border-white/20 pt-4">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                                <i class="fas fa-user text-sm"></i>
-                            </div>
-                            <span id="currentUserName" class="text-sm">Usuario</span>
-                        </div>
-                        <button id="logoutBtn" class="text-white/70 hover:text-white">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -1063,6 +1048,7 @@
             
             currentUser = JSON.parse(userData);           
             document.getElementById('currentUserName').textContent = currentUser.nombre_corto;
+			document.getElementById('currentUserNameBottom').textContent = currentUser.nombre_corto;
             
             console.log("USER:", currentUser);
 
@@ -1073,6 +1059,11 @@
             if(currentUser.role !== 'admin'){
                 document.getElementById('usuarios-section').remove();
             }
+
+			document.getElementById('logoutBtnBottom').addEventListener('click', function() {
+    			sessionStorage.removeItem('currentUser');
+    			window.location.href = 'index.html';
+			});
             
             // Inicializar navegación
             initNavigation();
@@ -2613,6 +2604,28 @@ async function guardarJustificacion(id, texto) {
 		
     inventario.js </script>
 </script>
+
+<div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-2 flex items-center justify-between z-50">
     
+    <!-- Lema -->
+    <div class="text-xs text-gray-500">
+        Elaborado por Hernán Manuel Pérez Banegas®
+    </div>
+
+    <!-- Usuario -->
+    <div class="flex items-center gap-3">
+        <div class="flex items-center">
+            <div class="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center mr-2">
+                <i class="fas fa-user text-xs text-gray-600"></i>
+            </div>
+            <span id="currentUserNameBottom" class="text-sm text-gray-700"></span>
+        </div>
+
+        <button id="logoutBtnBottom" class="text-gray-600 hover:text-red-600">
+            <i class="fas fa-sign-out-alt"></i>
+        </button>
+    </div>
+</div>
+	
 </body>
 </html>
