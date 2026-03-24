@@ -329,7 +329,24 @@ new Chart(document.getElementById('topHigh'), {
             data: [48350,42758,29444,24557,17280]
         }]
     },
-    options: { indexAxis: 'y' }
+	
+    options: {
+    plugins: {
+        legend: {
+            labels: { color: '#2b2b2b' }
+        }
+    },
+    scales: {
+        x: {
+            ticks: { color: '#2b2b2b' },
+            grid: { color: 'rgba(0,0,0,0.05)' }
+        },
+        y: {
+            ticks: { color: '#2b2b2b' },
+            grid: { color: 'rgba(0,0,0,0.05)' }
+        }
+    }
+}
 });
 
 new Chart(document.getElementById('topLow'), {
