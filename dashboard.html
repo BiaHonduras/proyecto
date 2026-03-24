@@ -48,8 +48,17 @@
             background: linear-gradient(180deg, #3e2723 0%, #2b1b17 100%);
             box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
+			padding-bottom: 60px;
         }
-        
+
+		.sidebar nav {
+    		margin-top: 10px;
+		}
+
+		.sidebar .p-6 {
+    		padding: 16px; /* antes 24px */
+		}
+		
         .main-content {
             margin-left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
@@ -212,13 +221,13 @@
         .nav-item {
             display: flex;
             align-items: center;
-            padding: 10px 12px;
+            padding: 8px 10px;
             border-radius: 8px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             transition: all 0.3s ease;
             color: rgba(255, 255, 255, 0.75);
             text-decoration: none;
-            font-size: 14px;
+            font-size: 13px;
         }
         
         .nav-item:hover {
@@ -2605,22 +2614,19 @@ async function guardarJustificacion(id, texto) {
     inventario.js </script>
 </script>
 
-<div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-2 flex items-center justify-between z-50">
+<div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
     
     <!-- Lema -->
-    <div class="text-xs text-gray-500">
+    <div class="text-[11px] text-gray-500">
         Elaborado por Hernán Manuel Pérez Banegas®
     </div>
 
     <!-- Usuario -->
     <div class="flex items-center gap-3">
-        <div class="flex items-center">
-            <div class="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center mr-2">
-                <i class="fas fa-user text-xs text-gray-600"></i>
-            </div>
-            <span id="currentUserNameBottom" class="text-sm text-gray-700"></span>
-        </div>
-
+        <div class="flex items-center gap-2">
+    		<i class="fas fa-user text-gray-600 text-sm"></i>
+    		<span id="currentUserNameBottom" class="text-sm text-gray-700"></span>
+		</div>
         <button id="logoutBtnBottom" class="text-gray-600 hover:text-red-600">
             <i class="fas fa-sign-out-alt"></i>
         </button>
