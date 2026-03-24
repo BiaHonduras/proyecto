@@ -44,11 +44,15 @@
         }
         
         .sidebar {
-            width: var(--sidebar-width);
-            background: linear-gradient(180deg, #3e2723 0%, #2b1b17 100%);
-            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-			padding-bottom: 60px;
+    		width: var(--sidebar-width);
+    		background: linear-gradient(180deg, #3e2723 0%, #2b1b17 100%);
+    		box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
+    		transition: all 0.3s ease;
+    		padding-bottom: 0;
+
+    		display: flex;
+    		flex-direction: column;
+    		justify-content: space-between;
         }
 
 		.sidebar nav {
@@ -241,6 +245,13 @@
             width: 18px;
             margin-right: 10px;
         }
+		
+		#nombreCorto {
+    		max-width: 100px;
+    		overflow: hidden;
+    		text-overflow: ellipsis;
+    		white-space: nowrap;
+		}
     </style>
 </head>
 	
@@ -299,6 +310,22 @@
                 </a>
             </nav>
         </div>
+		<!-- PARTE INFERIOR -->
+    	<div class="p-4 border-t border-white/10">
+        	<div class="flex items-center justify-between">
+
+            	<!-- Usuario -->
+            	<div class="flex items-center gap-2 text-white/80">
+                	<i class="fas fa-user"></i>
+                	<span id="nombreCorto"></span>
+            	</div>
+
+            	<!-- Logout -->
+            	<button id="logoutBtn" class="text-white/80 hover:text-red-400">
+                	<i class="fas fa-sign-out-alt"></i>
+            	</button>
+        	</div>
+    	</div>
     </div>
 
     <!-- Mobile Overlay -->
@@ -1051,7 +1078,8 @@
                 return;
             }
             
-            currentUser = JSON.parse(userData);           
+            currentUser = JSON.parse(userData);
+			document.getElementById('nombreCorto').textContent = currentUser.nombre_corto || '';
             console.log("USER:", currentUser);
 
             if(currentUser.role !== 'admin'){
