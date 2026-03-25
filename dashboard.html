@@ -1117,7 +1117,7 @@
             
             // Cargar datos iniciales
             loadDashboardData();
-            loadInventory();
+            ();
             cargarResumenInventario();
             initUsers(); // Initialize user management
             
@@ -1679,12 +1679,12 @@ async function loadInventory() {
     tbody.innerHTML = inventario.map(item => {
 
         const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-        const diferencia = item.inventario_reporteria - total;
+        const diferencia = total - item.inventario_reporteria;
 
         let validacion = '';
         if (diferencia === 0) validacion = 'OK';
-        else if (diferencia < 0) validacion = 'VAL+';
-        else validacion = 'VAL-';
+        else if (diferencia < 0) validacion = 'VAL-';
+        else validacion = 'VAL+';
 
         return `
             <tr class="border-b border-gray-200 hover:bg-gray-50">
@@ -2600,7 +2600,7 @@ async function cargarGraficoProveedores() {
 
     const filtrados = data.filter(item => {
         const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-        const diferencia = item.inventario_reporteria - total;
+        const diferencia = total - item.inventario_reporteria;
         return diferencia !== 0 || item.justificacion;
     });
 
