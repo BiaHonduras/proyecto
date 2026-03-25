@@ -437,7 +437,6 @@
                                    class="input-field w-full px-4 py-3 rounded-lg" 
                                    placeholder="Ingrese el código o escanee"
                                    required
-                                   oninput="buscarArticulo(this.value)">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Código de Barra Artículo *</label>
@@ -1712,9 +1711,7 @@ async function loadInventory() {
                     }
 
                 document.getElementById('fechaInventario').value = data.fecha;
-                document.getElementById('codigoArticulo').value = data.codigo;
-                await cargarDatosArticulo(data.codigo);
-            
+                document.getElementById('codigoArticulo').value = data.codigo;            
                 document.getElementById('proveedor').value = data.proveedor;
                 document.getElementById('descripcion').value = data.descripcion;
                 document.getElementById('inventarioReporteria').value = data.inventario_reporteria;
@@ -1728,7 +1725,7 @@ async function loadInventory() {
     window.editandoId = id;
 
     // Cambiar vista
-    document.querySelector('[data-section="inventario-diario"]').click();
+    document.querySelector('[data-section="inventario"]').click();
 
     // Cambiar texto del botón
 document.getElementById('btnGuardarArticulo').innerHTML = `
