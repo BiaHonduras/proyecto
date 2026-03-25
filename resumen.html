@@ -261,7 +261,7 @@
 		<div class="header">Dashboard Resumen Inventarios Diarios</div>
 
 		<div class="cards">
-			<div class="card"><p>SKU´s</p><h2>0</h2></div>
+			<div class="card"><p>SKU´s</p><h2 id="total-skus">0</h2></div>
 			<div class="card"><p>Valor Inventario</p><h2>0</h2></div>
 			<div class="card"><p>Promedio</p><h2>0</h2></div>
 		</div>
@@ -315,12 +315,19 @@
 		</div>
 
 	</div>
-
 	</div>
 
 	<script>
-
+		async function cargarTotalSKUs() 
+		{
+    		const { data, error } = await supabase.rpc('contar_skus_unicos');
+    			if (error) 
+				{
+        			console.error(error);
+        			return;
+    			}
+    		document.getElementById('total-skus').textContent = data;
+		}
 	</script>
-
 </body>
 </html>
