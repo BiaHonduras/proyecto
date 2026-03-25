@@ -1733,6 +1733,8 @@ async function loadInventory() {
 
                 document.getElementById('fechaInventario').value = data.fecha;
                 document.getElementById('codigoArticulo').value = data.codigo;
+				document.getElementById('codigoBarra').value = data.codigo_barra || '';
+			
                 await buscarArticulo(data.codigo);
             
                 document.getElementById('proveedor').value = data.proveedor;
