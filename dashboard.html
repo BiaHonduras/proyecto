@@ -1117,7 +1117,7 @@
             
             // Cargar datos iniciales
             loadDashboardData();
-            ();
+            loadInventory();
             cargarResumenInventario();
             initUsers(); // Initialize user management
             
@@ -2612,7 +2612,7 @@ async function cargarGraficoProveedores() {
     tbody.innerHTML = filtrados.map(item => {
 
         const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-        const diferencia = item.inventario_reporteria - total;
+        const diferencia = total - item.inventario_reporteria;
 
         return `
             <tr class="border-b hover:bg-gray-50">
