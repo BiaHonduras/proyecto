@@ -437,7 +437,6 @@
                                    class="input-field w-full px-4 py-3 rounded-lg" 
                                    placeholder="Ingrese el código o escanee"
                                    required
-                                   oninput="buscarArticulo(this.value)">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Código de Barra Artículo *</label>
@@ -626,7 +625,17 @@
 			<section id="transitos-section" class="section-content hidden">
     <div class="card p-6">
         <h3 class="text-xl font-semibold text-gray-800 mb-4">Tránsitos / Pendientes</h3>
+			<div class="flex gap-4 mb-4">
+    			<button id="btnEditarRegistros"
+        			class="btn-primary px-6 py-3 rounded-lg text-white">
+        			Editar Registros
+    			</button>
 
+    			<button id="btnGuardarRegistros"
+        			class="btn-primary px-6 py-3 rounded-lg text-white">
+        			Guardar Registros
+    			</button>
+			</div>
         <div class="overflow-x-auto">
             <table class="min-w-full">
                 <thead>
@@ -1021,8 +1030,9 @@
         let currentUser = null;
         let scannerActive = false;
         let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
+		let modoEdicionJustificaciones = false;
 
-// ===== MODIFICAR: userForm submit =====
+		// ===== MODIFICAR: userForm submit =====
         document.getElementById('userForm').addEventListener('submit', async function(e) {		
 			e.preventDefault();
     
@@ -1055,7 +1065,8 @@
         
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', function() {
-            // Verificar autenticación
+            
+			// Verificar autenticación
             const userData = sessionStorage.getItem('currentUser');
             if (!userData) {
                 window.location.href = 'index.html';
@@ -1064,6 +1075,9 @@
             
             currentUser = JSON.parse(userData);
 			document.getElementById('nombreCorto').textContent = currentUser.nombre_corto || '';
+			document.getElementById('btnEditarRegistros').addEventListener('click', () => { modoEdicionJustificaciones = true;
+    			loadTransitos();
+			});
             console.log("USER:", currentUser);
 
             if(currentUser.role !== 'admin'){
@@ -1081,6 +1095,14 @@
             // Cargar datos iniciales
             loadDashboardData();
             loadInventory();
+
+			function editarJustificacion(id) {
+    			const input = document.getElementById(`just_${id}`);
+    			input.disabled = false;
+    			input.classList.remove('input-disabled');
+    			input.focus();
+				}
+			
             cargarResumenInventario();
             initUsers(); // Initialize user management
             
@@ -1113,6 +1135,9 @@
 
 			const codigoInput = document.getElementById('codigoArticulo');
 			const barraInput = document.getElementById('codigoBarra');
+
+			codigoInput.addEventListener('input', debounceBuscar);
+			barraInput.addEventListener('input', debounceBuscar);
 
 			codigoInput.addEventListener('input', function () {
     			this.value = this.value.replace(/\D/g, ''); // solo números
@@ -1162,6 +1187,36 @@
         			fechaVencimiento.value = '';
     			}
 			});
+			document.getElementById('btnGuardarRegistros').addEventListener('click', async () => {
+
+    const filas = document.querySelectorAll('[id^="just_"]');
+
+    let registros = [];
+
+    filas.forEach(input => {
+        const id = input.id.replace('just_', '');
+        registros.push({
+            id: id,
+            justificacion: input.value,
+            usuario: currentUser?.username || 'sistema',
+            fecha_modificacion: new Date()
+        });
+    });
+
+    for (const reg of registros) {
+        await supabase
+            .from('inventario_justificaciones')
+            .upsert({
+                id: reg.id,
+                usuario: reg.usuario,
+                justificacion: reg.justificacion,
+                fecha_modificacion: reg.fecha_modificacion
+            });
+    }
+
+    modoEdicionJustificaciones = false;
+    loadTransitos();
+});
         });
 
         // ===== NAVEGACIÓN =====
@@ -1452,10 +1507,6 @@
     limpiarFormulario();
     loadInventory();
 
-    // 🔥 REDIRECCIÓN AUTOMÁTICA
-        document.querySelector('[data-section="inventario"]').click();
-}
-
         // Barcode Scanner Functions
         let lastScanned = null;
 let scanning = false;
@@ -1702,7 +1753,7 @@ async function loadInventory() {
 
                 document.getElementById('fechaInventario').value = data.fecha;
                 document.getElementById('codigoArticulo').value = data.codigo;
-                await cargarDatosArticulo(data.codigo);
+                await buscarArticulo(data.codigo);
             
                 document.getElementById('proveedor').value = data.proveedor;
                 document.getElementById('descripcion').value = data.descripcion;
@@ -2591,11 +2642,19 @@ async function cargarGraficoProveedores() {
                 <td class="py-3 font-bold">${diferencia.toFixed(2)}</td>
                 <td class="py-3">
                     <input type="text" 
-                        class="input-field px-2 py-1 w-full"
-                        placeholder="Escriba justificación"
-                        value="${item.justificacion || ''}"
-                        onblur="guardarJustificacion('${item.id}', this.value)">
+    					value="${item.justificacion || ''}" 
+    					id="just_${item.id}"
+    					class="input-field ${!modoEdicionJustificaciones ? 'input-disabled' : ''}"
+    					${!modoEdicionJustificaciones ? 'disabled' : ''}
+					/>
                 </td>
+				<td>
+    				${modoEdicionJustificaciones ? `
+        				<button onclick="editarJustificacion('${item.id}')">
+            				<i class="fas fa-edit"></i>
+        				</button>
+    				` : ''}
+				</td>
             </tr>
         `;
     }).join('');
@@ -2612,8 +2671,6 @@ async function guardarJustificacion(id, texto) {
         showNotification('Error', 'No se pudo guardar la justificación', 'error');
         return;
     }
-
-    showNotification('Éxito', 'Justificación guardada', 'success');
 }
 	const userNameFooter = document.getElementById('userShortNameFooter');
 		if (userShortNameFooter && currentUser) {
