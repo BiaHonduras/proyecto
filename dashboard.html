@@ -2568,42 +2568,93 @@ async function cargarGraficoProveedores() {
         .from('inventarios_diarios')
         .select('*');
 
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo cargar transitos', 'error');
+        return;
+    }
+
     const tbody = document.getElementById('transitosTableBody');
 
-    if (error || !data) {
-        tbody.innerHTML = `<tr><td colspan="5">Error cargando datos</td></tr>`;
+    if (!data || data.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center py-6 text-gray-500">
+                    Sin datos
+                </td>
+            </tr>
+        `;
         return;
     }
 
-    const filtrados = data.filter(item => {
-        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-        const diferencia = item.inventario_reporteria - total;
-        return diferencia !== 0 || item.justificacion;
-    });
+    // 🔥 FILTRAR SOLO LOS QUE TIENEN DIFERENCIA
+    registrosJustificacion = data
+        .map(item => {
 
-    if (filtrados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6">Sin diferencias</td></tr>`;
+            const total = (item.cajas_fardos * item.masterpack) + item.unidades;
+            const diferencia = item.inventario_reporteria - total;
+
+            return {
+                ...item,
+                total,
+                diferencia
+            };
+
+        })
+        .filter(item => item.diferencia !== 0);
+
+    if (registrosJustificacion.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center py-6 text-gray-500">
+                    No hay diferencias
+                </td>
+            </tr>
+        `;
         return;
     }
 
-    tbody.innerHTML = filtrados.map(item => {
+    renderizarTransitos(registrosJustificacion);
+}
 
-        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-        const diferencia = item.inventario_reporteria - total;
+function renderizarTransitos(data) {
+
+    const tbody = document.getElementById('transitosTableBody');
+
+    tbody.innerHTML = data.map(item => {
 
         return `
-            <tr class="border-b hover:bg-gray-50">
-                <td class="py-3">${item.idBodega}</td>
-                <td class="py-3">${item.codigo}</td>
-                <td class="py-3">${item.descripcion}</td>
-                <td class="py-3 font-bold">${diferencia.toFixed(2)}</td>
-                <td class="py-3">
-                    <input type="text" 
-                        class="input-field px-2 py-1 w-full"
-                        placeholder="Escriba justificación"
-                        value="${item.justificacion || ''}"
-                        onblur="guardarJustificacion('${item.id}', this.value)">
+            <tr class="border-b border-gray-200 hover:bg-gray-50">
+
+                <td class="py-3 px-2">${item.idBodega}</td>
+                <td class="py-3 px-2 font-mono">${item.codigo}</td>
+                <td class="py-3 px-2">${item.descripcion}</td>
+                <td class="py-3 px-2 text-center font-bold ${item.diferencia < 0 ? 'text-red-600' : 'text-green-600'}">
+                    ${item.diferencia}
                 </td>
+
+                <td class="py-3 px-2">
+                    <input 
+                        type="text"
+                        value="${item.justificacion || ''}"
+                        data-id="${item.id}"
+                        data-codigo="${item.codigo}"
+                        data-descripcion="${item.descripcion}"
+                        data-diferencia="${item.diferencia}"
+                        class="input-field input-justificacion w-full px-2 py-1 rounded-lg ${!modoEdicionJustificaciones ? 'input-disabled' : ''}"
+                        ${!modoEdicionJustificaciones ? 'disabled' : ''}
+                    >
+                </td>
+
+                <td class="py-3 px-2 text-center">
+                    ${modoEdicionJustificaciones ? `
+                        <button onclick="habilitarEdicionFila('${item.id}')"
+                            class="text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    ` : ''}
+                </td>
+
             </tr>
         `;
     }).join('');
@@ -2637,6 +2688,50 @@ async function guardarJustificacion(id, texto) {
     sessionStorage.removeItem('currentUser');
     window.location.href = 'index.html';
 	}
+
+	document.getElementById('btnGuardarRegistros').addEventListener('click', async () => {
+
+    const inputs = document.querySelectorAll('.input-justificacion');
+
+    let registros = [];
+
+    inputs.forEach(input => {
+
+        if (!input.value.trim()) return;
+
+        registros.push({
+            usuario: currentUser?.username || 'sistema',
+            codigo: input.dataset.codigo,
+            descripcion: input.dataset.descripcion,
+            diferencia: parseFloat(input.dataset.diferencia),
+            justificacion: input.value.trim(),
+            fecha_registro: new Date(),
+            fecha_modificacion: new Date()
+        });
+    });
+
+    if (registros.length === 0) {
+        showNotification('Advertencia', 'No hay datos para guardar', 'warning');
+        return;
+    }
+
+    const { error } = await supabase
+        .from('inventario_justificaciones')
+        .insert(registros);
+
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'No se pudo guardar', 'error');
+        return;
+    }
+
+    modoEdicionJustificaciones = false;
+
+    showNotification('Éxito', 'Registros guardados', 'success');
+
+    loadTransitos();
+});
+		
     inventario.js </script>
 </script>
 
@@ -2655,6 +2750,5 @@ async function guardarJustificacion(id, texto) {
     	</button>
 	</div>
 </div>
-	
 </body>
 </html>
