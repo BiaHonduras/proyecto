@@ -323,7 +323,10 @@
     		const { data, error } = await supabase.rpc('contar_skus_unicos');
     			if (error) 
 				{
-        			console.error("Error al obtener SKUs: ", error);
+        			console.error("Error completo:", error);
+					console.log("message:", error.message);
+					console.log("details:", error.details);
+					console.log("hint:", error.hint);
         			return;
     			}
     		document.getElementById('total-skus').textContent = data;
