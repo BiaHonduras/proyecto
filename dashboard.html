@@ -1733,7 +1733,7 @@ async function loadInventory() {
 
                 document.getElementById('fechaInventario').value = data.fecha;
                 document.getElementById('codigoArticulo').value = data.codigo;
-                await cargarDatosArticulo(data.codigo);
+                await buscarArticulo(data.codigo);
             
                 document.getElementById('proveedor').value = data.proveedor;
                 document.getElementById('descripcion').value = data.descripcion;
