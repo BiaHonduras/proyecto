@@ -316,6 +316,9 @@ canvas {
     	document.getElementById('totalSkus').textContent = unicos.size;
 	}
 
+	// Ejecutar al cargar
+		document.addEventListener('DOMContentLoaded', contarSkus);
+
 function toggle(el) {
     el.classList.toggle('active');
 }
@@ -415,8 +418,7 @@ new Chart(document.getElementById('faltantesChart'), {
     },
     options: { indexAxis: 'y' }
 });
-	contarSkus();
-</script>
 
+</script>
 </body>
 </html>
