@@ -1940,6 +1940,7 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
 					usuario,
 					fecha_importacion,
 					cantidad_registros: registros.length
+					tipo_importacion: 'inventario'
 				}])
         
         const { error: insertError } = await supabase
