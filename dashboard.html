@@ -2592,8 +2592,9 @@ async function cargarGraficoProveedores() {
                 <td class="py-3">
                     <input type="text" 
                         class="input-field px-2 py-1 w-full"
-                        placeholder="Escriba justificación">
-						onblur="guardarJustificacion('${item.id}', this.value)">
+                        placeholder="Escriba justificación"
+                        value="${item.justificacion || ''}"
+                        onblur="guardarJustificacion('${item.id}', this.value)">
                 </td>
             </tr>
         `;
