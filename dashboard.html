@@ -2114,6 +2114,7 @@ document.getElementById('btnGuardarArticulo').innerHTML = `
                 				proveedor: values[2]?.replace(/"/g, '').trim() || '',
                 				masterpack: parseFloat(values[3]?.replace(/"/g, '').trim()) || 1,
                 				codigo_barra: values[4]?.replace(/"/g, '').trim() || '',
+								costo: parseFloat(values[5]) || 0,
                 				usuario: currentUser.username,
                 				fecha_importacion: new Date()
         					});
