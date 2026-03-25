@@ -650,6 +650,7 @@
                         <th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
                         <th class="pb-3 text-left text-sm font-medium text-gray-600">Diferencia</th>
                         <th class="pb-3 text-left text-sm font-medium text-gray-600">Justificación</th>
+						<th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="transitosTableBody">
@@ -1069,7 +1070,8 @@
         
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', function() {
-            // Verificar autenticación
+            
+			// Verificar autenticación
             const userData = sessionStorage.getItem('currentUser');
             if (!userData) {
                 window.location.href = 'index.html';
@@ -1099,6 +1101,19 @@
 			document.getElementById('btnGuardarRegistros').addEventListener('click', () => {
     			guardarCambiosMasivos();
 			});
+
+			document.addEventListener('click', function(e) {
+    			if (e.target.closest('.btnEditarFila')) {
+        			const btn = e.target.closest('.btnEditarFila');
+        			const id = btn.dataset.id;
+
+        			const input = document.querySelector(`input[data-id="${id}"]`);
+
+        			input.disabled = false;
+        			input.classList.remove('input-disabled');
+        			input.focus();
+    				}
+				});
             
             // Cargar datos iniciales
             loadDashboardData();
@@ -2615,6 +2630,34 @@ async function cargarGraficoProveedores() {
             </tr>
         `;
     }).join('');
+	tbody.innerHTML = data.map(item => `
+<tr class="border-b border-gray-200">
+    <td class="py-3">${item.idBodega}</td>
+    <td class="py-3">${item.codigo}</td>
+    <td class="py-3">${item.descripcion}</td>
+    <td class="py-3 text-center">${item.diferencia}</td>
+
+    <td class="py-3">
+        <input 
+            type="text" 
+            value="${item.justificacion || ''}" 
+            data-id="${item.id}"
+            class="input-field w-full px-2 py-1 input-disabled"
+            disabled
+        >
+    </td>
+
+    <td class="py-3 text-center">
+        <button 
+            class="btnEditarFila text-blue-600 opacity-50 cursor-not-allowed"
+            data-id="${item.id}"
+            disabled>
+            <i class="fas fa-pen"></i>
+        </button>
+    </td>
+</tr>
+`).join('');
+		
 }
 
 async function guardarJustificacion(id, texto) {
@@ -2645,15 +2688,34 @@ async function guardarJustificacion(id, texto) {
     sessionStorage.removeItem('currentUser');
     window.location.href = 'index.html';
 	}
+		
 	function activarModoEdicion() {
-    document.querySelectorAll('#inventoryTableBody input').forEach(input => {
-        input.removeAttribute('readonly');
-        input.classList.remove('bg-gray-100');
-    });
-}
+    	const botones = document.querySelectorAll('.btnEditarFila');
+
+    	botones.forEach(btn => {
+        	btn.disabled = false;
+        	btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    	});
+	}
 
 async function guardarCambiosMasivos() {
-    // Aquí decides cómo guardar todo junto
+    const inputs = document.querySelectorAll('#transitosTableBody input');
+
+    for (const input of inputs) {
+        if (input.disabled) continue;
+
+        const id = input.dataset.id;
+        const justificacion = input.value;
+
+        await supabase
+            .from('transitos') // ajusta tabla
+            .update({ justificacion })
+            .eq('id', id);
+
+        input.disabled = true;
+        input.classList.add('input-disabled');
+    }
+
     showNotification('Éxito', 'Cambios guardados', 'success');
 }
 		
