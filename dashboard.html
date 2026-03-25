@@ -2611,34 +2611,40 @@ async function cargarGraficoProveedores() {
 
     tbody.innerHTML = filtrados.map(item => {
 
-        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-        const diferencia = total - item.inventario_reporteria;
+    const total = (item.cajas_fardos * item.masterpack) + item.unidades;
+    const diferencia = total - item.inventario_reporteria;
 
-        return `
-            <tr class="border-b hover:bg-gray-50">
-                <td class="py-3">${item.idBodega}</td>
-                <td class="py-3">${item.codigo}</td>
-                <td class="py-3">${item.descripcion}</td>
-                <td class="py-3 font-bold">${diferencia.toFixed(2)}</td>
-				
-                <td class="py-3">
-        			<input type="text"
-            			data-id="${item.id}"
-            			disabled
-            			class="input-field input-disabled px-2 py-1 w-full"
-            			value="${item.justificacion || ''}">
-    			</td>
+    return `
+        <tr class="border-b hover:bg-gray-50">
+            <td class="py-3">${item.idBodega}</td>
 
-    			<td class="py-3 text-center">
-        			<button 
-            			class="btnEditarFila opacity-50 cursor-not-allowed"
-            			data-id="${item.id}">
-            			<i class="fas fa-edit"></i>
-        			</button>
-    			</td>
-            </tr>
-        `;
-    }).join('');
+            <td class="py-3 codigo">${item.codigo}</td>
+
+            <td class="py-3 descripcion">${item.descripcion}</td>
+
+            <td class="py-3 font-bold diferencia">
+                ${diferencia.toFixed(2)}
+            </td>
+			
+            <td class="py-3">
+                <input type="text"
+                    data-id="${item.id}"
+                    disabled
+                    class="input-field input-disabled justificacion px-2 py-1 w-full"
+                    value="${item.justificacion || ''}">
+            </td>
+
+            <td class="py-3 text-center">
+                <button 
+                    class="btnEditarFila opacity-50 cursor-not-allowed"
+                    data-id="${item.id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+}).join('');
+		
 }
 
 async function guardarJustificacion(id, texto) {
@@ -2680,24 +2686,47 @@ async function guardarJustificacion(id, texto) {
 	}
 
 async function guardarCambiosMasivos() {
-    const inputs = document.querySelectorAll('#transitosTableBody input');
 
-    for (const input of inputs) {
-        if (input.disabled) continue;
+    const filas = document.querySelectorAll('#transitosTableBody tr');
+    let registros = [];
 
-        const id = input.dataset.id;
-        const justificacion = input.value;
+    for (let fila of filas) {
 
-        await supabase
-            .from('transitos') // ajusta tabla
-            .update({ justificacion })
-            .eq('id', id);
+        const codigo = fila.querySelector('.codigo')?.textContent.trim();
+        const descripcion = fila.querySelector('.descripcion')?.textContent.trim();
+        const diferencia = parseFloat(fila.querySelector('.diferencia')?.textContent.trim()) || 0;
 
-        input.disabled = true;
-        input.classList.add('input-disabled');
+        const input = fila.querySelector('.justificacion');
+        const justificacion = input?.value.trim();
+
+        if (!justificacion) {
+            showNotification('Error', 'No puedes guardar con justificaciones vacías', 'error');
+            input.focus();
+            return;
+        }
+
+        registros.push({
+            usuario: currentUser?.nombre_corto || currentUser?.username,
+            codigo,
+            descripcion,
+            diferencia,
+            justificacion,
+            fecha_registro: new Date().toISOString(),
+            fecha_modificacion: new Date().toISOString()
+        });
     }
 
-    showNotification('Éxito', 'Cambios guardados', 'success');
+    const { error } = await supabase
+        .from('inventario_justificaciones')
+        .insert(registros);
+
+    if (error) {
+        console.error(error);
+        showNotification('Error', 'Falló el guardado', 'error');
+        return;
+    }
+
+    showNotification('Éxito', 'Todo guardado correctamente', 'success');
 }
 		
     inventario.js </script>
