@@ -1336,12 +1336,6 @@
         error = res.error;
     }
 
-    if (error || !data) {
-        showNotification('Advertencia', 'Artículo no encontrado', 'warning');
-        limpiarCamposArticulo();
-        return;
-    }
-
     // ✅ llenar datos
     document.getElementById('codigoArticulo').value = data.codigo || '';
     document.getElementById('codigoBarra').value = data.codigo_barra || '';
