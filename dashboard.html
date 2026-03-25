@@ -2620,13 +2620,22 @@ async function cargarGraficoProveedores() {
                 <td class="py-3">${item.codigo}</td>
                 <td class="py-3">${item.descripcion}</td>
                 <td class="py-3 font-bold">${diferencia.toFixed(2)}</td>
+				
                 <td class="py-3">
-                    <input type="text" 
-                        class="input-field px-2 py-1 w-full"
-                        placeholder="Escriba justificación"
-                        value="${item.justificacion || ''}"
-                        onblur="guardarJustificacion('${item.id}', this.value)">
-                </td>
+        			<input type="text"
+            			data-id="${item.id}"
+            			disabled
+            			class="input-field input-disabled px-2 py-1 w-full"
+            			value="${item.justificacion || ''}">
+    			</td>
+
+    			<td class="py-3 text-center">
+        			<button 
+            			class="btnEditarFila opacity-50 cursor-not-allowed"
+            			data-id="${item.id}">
+            			<i class="fas fa-edit"></i>
+        			</button>
+    			</td>
             </tr>
         `;
     }).join('');
