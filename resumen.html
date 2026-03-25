@@ -327,6 +327,8 @@
         			return;
     			}
     		document.getElementById('total-skus').textContent = data;
+			console.log("Data: ", data);
+			console.log("Error: ", error);
 		}
 		document.addEventListener("DOMContentLoaded", () => {cargarTotalSKUs();});
 	</script>
