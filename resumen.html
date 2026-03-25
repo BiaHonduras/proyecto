@@ -240,7 +240,10 @@ canvas {
     <div class="header">Dashboard Resumen Inventarios Diarios</div>
 
     <div class="cards">
-        <div class="card"><p>SKU´s</p><h2>0</h2></div>
+        <div class="card">
+    		<p>SKU´s</p>
+    		<h2 id="totalSkus">0</h2>
+		</div>
         <div class="card"><p>Valor Inventario</p><h2>0</h2></div>
         <div class="card"><p>Promedio</p><h2>0</h2></div>
     </div>
@@ -298,6 +301,20 @@ canvas {
 </div>
 
 <script>
+
+	async function contarSkusUnicos() {
+    	const { data, error } = await supabase
+        	.from('inventarios_diarios')
+        	.select('sku');
+
+    		if (error) {
+        		console.error('Error:', error);
+        		return;
+    			}
+
+    	const unicos = new Set(data.map(item => item.sku));
+    	document.getElementById('totalSkus').textContent = unicos.size;
+	}
 
 function toggle(el) {
     el.classList.toggle('active');
@@ -398,7 +415,7 @@ new Chart(document.getElementById('faltantesChart'), {
     },
     options: { indexAxis: 'y' }
 });
-
+	contarSkus();
 </script>
 
 </body>
