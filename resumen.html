@@ -262,7 +262,7 @@
 
 		<div class="cards">
 			<div class="card"><p>SKU´s</p><h2 id="total-skus">0</h2></div>
-			<div class="card"><p>Valor Inventario</p><h2>0</h2></div>
+			<div class="card"><p>Valor Inventario</p><h2 id="valor-inventario">0</h2></div>
 			<div class="card"><p>Promedio</p><h2>0</h2></div>
 		</div>
 
@@ -333,7 +333,27 @@
 			console.log("Data: ", data);
 			console.log("Error: ", error);
 		}
-		document.addEventListener("DOMContentLoaded", () => {cargarTotalSKUs();});
+		async function cargarValorInventario() 
+		{
+    		const { data, error } = await supabase.rpc('sumar_valor_inventario');
+
+    		if (error) 
+    		{
+        		console.error("Error completo:", error);
+				console.log("message:", error.message);
+				console.log("details:", error.details);
+				console.log("hint:", error.hint);
+        		return;
+    		}
+    	document.getElementById('valor-inventario').textContent = data;
+		}
+		
+		document.addEventListener("DOMContentLoaded", () => 
+			{
+			cargarTotalSKUs();
+			cargarValorInventario();
+			});
+		
 	</script>
 </body>
 </html>
