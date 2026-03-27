@@ -425,9 +425,9 @@
     						<label class="block text-sm font-medium text-gray-700 mb-2">Identificador Bodega *</label>
    							<select id="idBodega" class="input-field w-full px-4 py-3 rounded-lg" required>
         						<option value="">Seleccione</option>
-        						<option value="030">Bodega 030</option>
-        						<option value="033">Bodega 033</option>
-        						<option value="095">Bodega 095</option>
+        						<option value="030">Bodega Principal</option>
+        						<option value="033">Bodega PPV</option>
+        						<option value="095">Bodega PFN</option>
     						</select>
 						</div>
                         <div>
@@ -1068,6 +1068,34 @@
         let scannerActive = false;
         let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
 
+		const bodegasPorSede = {
+			    "Amarateca": [
+			        { value: "010", label: "Bodega Principal" },
+			        { value: "013", label: "Bodega PPV" },
+			        { value: "015", label: "Bodega PFN" }
+			    ],
+			    "La Ceiba": [
+			        { value: "040", label: "Bodega Principal" },
+			        { value: "043", label: "Bodega PPV" },
+			        { value: "045", label: "Bodega PFN" }
+			    ],
+			    "San Pedro Sula": [
+			        { value: "030", label: "Bodega Principal" },
+			        { value: "033", label: "Bodega PPV" },
+			        { value: "095", label: "Bodega PFN" }
+			    ],
+			    "Santa Rosa de Copan": [
+			        { value: "050", label: "Bodega Principal" },
+			        { value: "053", label: "Bodega PPV" },
+			        { value: "096", label: "Bodega PFN" }
+			    ],
+			    "Tegucigalpa": [
+			        { value: "060", label: "Bodega Principal" },
+			        { value: "063", label: "Bodega PPV" },
+			        { value: "099", label: "Bodega PFN" }
+			    ]
+			};
+
 // ===== MODIFICAR: userForm submit =====
         document.getElementById('userForm').addEventListener('submit', async function(e) {		
 			e.preventDefault();
@@ -1131,6 +1159,8 @@
 
 			document.getElementById('btnGuardarRegistros').addEventListener('click', () => {
     			guardarCambiosMasivos();
+
+			document.getElementById('sede').addEventListener('change', actualizarBodegasPorSede);
 			});
 
 			document.addEventListener('click', function(e) {
@@ -1779,7 +1809,10 @@ async function loadInventory() {
                             showNotification('Error', 'No se pudo cargar el registro', 'error');
                         return;
                     }
-
+				document.getElementById('sede').value = data.sede || '';
+				actualizarBodegasPorSede();
+				document.getElementById('idBodega').value = data.idBodega || '';
+			
                 document.getElementById('fechaInventario').value = data.fecha;
                 document.getElementById('codigoArticulo').value = data.codigo;
 				document.getElementById('codigoBarra').value = data.codigo_barra || '';
@@ -1793,20 +1826,20 @@ async function loadInventory() {
                 document.getElementById('cajasFardos').value = data.cajas_fardos;
                 document.getElementById('unidades').value = data.unidades;
 
-    calcularTotalUnidades();
-
-    // Guardar ID temporal
-    window.editandoId = id;
-
-    // Cambiar vista
-    document.querySelector('[data-section="inventario-diario"]').click();
-
-    // Cambiar texto del botón
-document.getElementById('btnGuardarArticulo').innerHTML = `
-    <i class="fas fa-save mr-2"></i>
-    Guardar Modificaciones
-`;
-}
+			    calcularTotalUnidades();
+			
+			    // Guardar ID temporal
+			    window.editandoId = id;
+			
+			    // Cambiar vista
+			    document.querySelector('[data-section="inventario-diario"]').click();
+			
+			    // Cambiar texto del botón
+				document.getElementById('btnGuardarArticulo').innerHTML = `
+				    <i class="fas fa-save mr-2"></i>
+				    Guardar Modificaciones
+				`;
+				}
 
         async function eliminarArticulo(id) {
 
@@ -2803,6 +2836,29 @@ async function guardarCambiosMasivos() {
     	document.getElementById('costoTotal').value = formatearMoneda(costoTotal);
     	window.costoTotalActual = costoTotal;
 		}
+
+		function actualizarBodegasPorSede() {
+			    const sede = document.getElementById('sede').value;
+			    const selectBodega = document.getElementById('idBodega');
+			
+			    selectBodega.innerHTML = '';
+			
+			    if (!sede || !bodegasPorSede[sede]) {
+			        selectBodega.innerHTML = '<option value="">Seleccione una sede primero</option>';
+			        selectBodega.disabled = true;
+			        return;
+			    }
+			
+			    selectBodega.disabled = false;
+			    selectBodega.innerHTML = '<option value="">Seleccione</option>';
+			
+			    bodegasPorSede[sede].forEach(bodega => {
+			        const option = document.createElement('option');
+			        option.value = bodega.value;
+			        option.textContent = bodega.label;
+			        selectBodega.appendChild(option);
+			    });
+			}
 		
     inventario.js </script>
 </script>
