@@ -350,7 +350,78 @@
 			{
 			cargarTotalSKUs();
 			cargarValorInventario();
+			cargarUnidadesPorProveedor();
 			});
+
+		async function cargarUnidadesPorProveedor() 
+			{
+    			const { data, error } = await supabase
+        			.from('inventarios_diarios')
+        			.select('proveedor, total');
+
+    				if (error) 
+    				{
+        				console.error("Error completo:", error);
+						console.log("message:", error.message);
+						console.log("details:", error.details);
+						console.log("hint:", error.hint);
+        				return;
+    				}
+
+    			// Agrupar por proveedor
+    		const agrupado = {};
+
+    			data.forEach(item => 
+    				{
+        				if (!agrupado[item.proveedor]) 
+        					{
+            					agrupado[item.proveedor] = 0;
+        					}
+        					agrupado[item.proveedor] += Number(item.total);
+    				});
+
+    		const labels = Object.keys(agrupado);
+    		const valores = Object.values(agrupado);
+
+    		renderChartProveedores(labels, valores);
+			}
+
+		function renderChartProveedores(labels, data) 
+			{
+    			const ctx = document.getElementById('proveedoresChart').getContext('2d');
+
+    			new Chart(ctx, 
+    				{
+        				type: 'bar',
+        				data: 
+        					{
+            					labels: labels,
+            					datasets: [{
+                					label: 'Unidades por Proveedor',
+                					data: data,
+                					borderWidth: 1
+            						}]
+        					},
+        					options: 
+        					{
+            					responsive: true,
+            					plugins: 
+            					{
+                					legend: 
+                					{
+                    					display: true
+                					}
+            					},
+            					scales: 
+            					{
+                					y: 
+                					{
+                    					beginAtZero: true
+                					}
+            					}
+        					}
+    				});
+			}
 		
 	</script>
 	<div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
