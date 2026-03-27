@@ -2853,19 +2853,19 @@ async function guardarCambiosMasivos() {
 	    return (esNegativo ? '-L. ' : 'L. ') + valorAbsoluto;
 	}
 
-	const OPCIONES_JUSTIFICACION = [
-		    'Asignado en GP - La Colonia',
-		    'Asignado en GP - Walmart',
-		    'Asignado en GP - Ruta de Detalle',
-		    'Factura pendiente de ingreso',
-		    'En tránsito',
-		    'Faltante',
-		    'Sobrante'
-		];
-
 	function calcularCostoTotalJustificacion(diferencia, costoUnitario) {
 	    return Number(diferencia || 0) * Number(costoUnitario || 0);
 	}
+
+	const OPCIONES_JUSTIFICACION = [
+		'Asignado en GP - La Colonia',
+		'Asignado en GP - Walmart',
+		'Asignado en GP - Ruta de Detalle',
+		'Factura pendiente de ingreso',
+		'En tránsito',
+		'Faltante',
+		'Sobrante'
+	];
 	
 	function construirOpcionesJustificacion(valorActual = '') {
 	    const placeholder = '<option value="">Seleccione una justificación</option>';
