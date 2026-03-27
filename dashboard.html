@@ -1523,12 +1523,12 @@
 		        return;
 		    }
 		
-		    const totalUnidades = (cajas * masterpack) + unidades;
-		    const diferencia = totalUnidades - inventarioReporteria;
-		
-		    const costoUnitario = Number(window.costoUnitarioActual || 0);
-			const costoTotal = diferencia * costoUnitario;
-		
+			const totalUnidades = (cajas * masterpack) + unidades;
+			const diferencia = totalUnidades - inventarioReporteria;
+			
+			const costoUnitario = Number(window.costoUnitarioActual || 0);
+			const costoTotal = inventarioReporteria * costoUnitario;
+					
 		    window.costoTotalActual = costoTotal;
 		
 		    const payload = {
@@ -2721,34 +2721,37 @@ async function cargarGraficoProveedores() {
 	    }
 	
 	    tbody.innerHTML = filtrados.map(item => {
-	        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-	        const diferencia = total - Number(item.inventario_reporteria || 0);
-	        const costoUnitario = Number(item.costo_unitario || 0);
-	        const costoTotal = diferencia * costoUnitario;
-	
-	        return `
-	            <tr class="border-b hover:bg-gray-50">
-	                <td class="py-3">${item.idBodega}</td>
-	                <td class="py-3 codigo">${item.codigo}</td>
-	                <td class="py-3 descripcion">${item.descripcion}</td>
-	                <td class="py-3 font-bold diferencia">${diferencia.toFixed(2)}</td>
-	                <td>${formatearMoneda(item.costo_unitario)}</td>
-					<td>${formatearMoneda(costoTotal)}</td>
-	                <td class="py-3">
-	                    <input type="text"
-	                        data-id="${item.id}"
-	                        disabled
-	                        class="input-field input-disabled justificacion px-2 py-1 w-full"
-	                        value="${item.justificacion || ''}">
-	                </td>
-	                <td class="py-3 text-center">
-	                    <button class="btnEditarFila opacity-50 cursor-not-allowed" data-id="${item.id}">
-	                        <i class="fas fa-edit"></i>
-	                    </button>
-	                </td>
-	            </tr>
-	        `;
-	    }).join('');
+		    const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
+		    const diferencia = total - Number(item.inventario_reporteria || 0);
+		    const costoUnitario = Number(item.costo_unitario || 0);
+		    const costoTotal = calcularCostoTotalJustificacion(diferencia, costoUnitario);
+		
+		    return `
+		        <tr class="border-b hover:bg-gray-50">
+		            <td class="py-3">${item.idBodega}</td>
+		            <td class="py-3 codigo">${item.codigo}</td>
+		            <td class="py-3 descripcion">${item.descripcion}</td>
+		            <td class="py-3 font-bold diferencia">${diferencia.toFixed(2)}</td>
+		            <td class="py-3">${formatearMoneda(costoUnitario)}</td>
+		            <td class="py-3 costo-total" data-valor="${costoTotal}">
+		                ${formatearMoneda(costoTotal)}
+		            </td>
+		            <td class="py-3">
+		                <select
+		                    data-id="${item.id}"
+		                    disabled
+		                    class="input-field input-disabled justificacion px-2 py-1 w-full">
+		                    ${construirOpcionesJustificacion(item.justificacion || '')}
+		                </select>
+		            </td>
+		            <td class="py-3 text-center">
+		                <button class="btnEditarFila opacity-50 cursor-not-allowed" data-id="${item.id}">
+		                    <i class="fas fa-edit"></i>
+		                </button>
+		            </td>
+		        </tr>
+		    `;
+		}).join('');
 	}
 
 async function guardarJustificacion(id, texto) {
@@ -2801,7 +2804,7 @@ async function guardarCambiosMasivos() {
         const diferencia = parseFloat(fila.querySelector('.diferencia')?.textContent.trim()) || 0;
 
         const input = fila.querySelector('.justificacion');
-        const justificacion = input?.value.trim();
+		const justificacion = input?.value || '';
 
         if (!justificacion) {
             showNotification('Error', 'No puedes guardar con justificaciones vacías', 'error');
@@ -2809,18 +2812,19 @@ async function guardarCambiosMasivos() {
             return;
         }
 
-        const costoTexto = fila.children[4]?.textContent.trim() || 'L. 0.00';
-
-			registros.push({
-			    usuario: currentUser?.usuario || currentUser?.username,
-			    codigo,
-			    descripcion,
-			    diferencia,
-			    costo_total: costoTexto,
-			    justificacion,
-			    fecha_registro: new Date().toISOString(),
-			    fecha_modificacion: new Date().toISOString()
-			});
+        const costoTotalCell = fila.querySelector('.costo-total');
+		const costoTotal = Number(costoTotalCell?.dataset?.valor || 0);
+		
+		registros.push({
+		    usuario: currentUser?.nombre_corto || currentUser?.username,
+		    codigo,
+		    descripcion,
+		    diferencia,
+		    costo_total: costoTotal,
+		    justificacion,
+		    fecha_registro: new Date().toISOString(),
+		    fecha_modificacion: new Date().toISOString()
+		});
     }
 
     const { error } = await supabase
@@ -2848,22 +2852,48 @@ async function guardarCambiosMasivos() {
 	    return (esNegativo ? '-L. ' : 'L. ') + valorAbsoluto;
 	}
 
+	const OPCIONES_JUSTIFICACION = [
+		    'Asignado en GP - La Colonia',
+		    'Asignado en GP - Walmart',
+		    'Asignado en GP - Ruta de Detalle',
+		    'Factura pendiente de ingreso',
+		    'En tránsito',
+		    'Faltante',
+		    'Sobrante'
+		];
+
+	function calcularCostoTotalJustificacion(diferencia, costoUnitario) {
+	    return Number(diferencia || 0) * Number(costoUnitario || 0);
+	}
+	
+	function construirOpcionesJustificacion(valorActual = '') {
+	    const placeholder = '<option value="">Seleccione una justificación</option>';
+	
+	    const opciones = OPCIONES_JUSTIFICACION.map(opcion => `
+	        <option value="${opcion}" ${valorActual === opcion ? 'selected' : ''}>
+	            ${opcion}
+	        </option>
+	    `).join('');
+	
+	    return placeholder + opciones;
+	}
+
 	function calcularTotalUnidades() {
 	    const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
 	    const unidades = parseFloat(document.getElementById('unidades').value) || 0;
 	    const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
-	    const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
 	
 	    const totalUnidades = (cajas * masterpack) + unidades;
-	    document.getElementById('totalUnidadesCalculo').textContent = totalUnidades;
+	    document.getElementById('totalUnidadesCalculo').textContent = totalUnidades.toFixed(2);
 	
-	    const diferencia = totalUnidades - inventarioReporteria;
+	    const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
 	    const costoUnitario = Number(window.costoUnitarioActual) || 0;
-	    const costoTotal = diferencia * costoUnitario;
 	
-	    window.costoTotalActual = costoTotal;
-	    document.getElementById('costoTotal').value = formatearMoneda(costoTotal);
-}
+	    const costoTotalInventario = inventarioReporteria * costoUnitario;
+	
+	    window.costoTotalActual = costoTotalInventario;
+	    document.getElementById('costoTotal').value = formatearMoneda(costoTotalInventario);
+	}
 
 	function calcularCostoTotal(diferencia) {
 	    const costo = window.costoUnitarioActual || 0;
