@@ -1525,8 +1525,11 @@
 		    const totalUnidades = (cajas * masterpack) + unidades;
 		    const diferencia = totalUnidades - inventarioReporteria;
 		
-		    const costoUnitario = Number(window.costoUnitarioActual) || 0;
-		    const costoTotal = diferencia * costoUnitario;
+		    const costoUnitario = Number(item.costo_unitario);
+			if (isNaN(costoUnitario)) {
+				    console.warn('Sin costo_unitario para', item.codigo);
+				}
+		    const costoTotal = (isNaN(costoUnitario) ? 0 : diferencia * costoUnitario);
 		
 		    window.costoTotalActual = costoTotal;
 		
@@ -2835,10 +2838,15 @@ async function guardarCambiosMasivos() {
 }
 
 	function formatearMoneda(valor) {
-    	return 'L. ' + Number(valor).toLocaleString('es-HN', {
-        	minimumFractionDigits: 2,
-        	maximumFractionDigits: 2
-    	});
+	    const numero = Number(valor) || 0;
+	    const esNegativo = numero < 0;
+	
+	    const valorAbsoluto = Math.abs(numero).toLocaleString('es-HN', {
+	        minimumFractionDigits: 2,
+	        maximumFractionDigits: 2
+	    });
+	
+	    return (esNegativo ? '-L. ' : 'L. ') + valorAbsoluto;
 	}
 
 	function calcularTotalUnidades() {
