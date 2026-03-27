@@ -1284,49 +1284,45 @@
 
         // ===== DASHBOARD =====
         async function loadDashboardData() {         
+    		const { data: inventario, error } = await supabase
+        		.from('inventarios_diarios')
+        		.select('*');
 
-    const { data: inventario, error } = await supabase
-        .from('inventarios_diarios')
-        .select('*');
+    			if (error) {
+        			console.error(error);
+        			showNotification('Error', 'No se pudo cargar el dashboard', 'error');
+        			return;
+    				}
 
-    if (error) {
-        console.error(error);
-        showNotification('Error', 'No se pudo cargar el dashboard', 'error');
-        return;
-    }
-    		if (!inventario || inventario.length === 0) {
-        		document.getElementById('totalArticulos').textContent = 0;
-        		document.getElementById('totalUnidadesDashboard').textContent = 0;
-        		document.getElementById('totalProveedores').textContent = 0;
-        		document.getElementById('ultimaActualizacion').textContent = '-';
-        		return;
-    		}
+    			if (!inventario || inventario.length === 0) {
+        			document.getElementById('totalArticulos').textContent = 0;
+        			document.getElementById('totalUnidadesDashboard').textContent = 0;
+        			document.getElementById('totalProveedores').textContent = 0;
+        			document.getElementById('ultimaActualizacion').textContent = '-';
+        			return;
+    				}
 
-    // Total artículos
-    	document.getElementById('totalArticulos').textContent = inventario.length;
+    		document.getElementById('totalArticulos').textContent = inventario.length;
 
-    // Total unidades
-    	const totalUnidades = inventario.reduce((sum, item) => {
-        	return sum + ((item.cajas_fardos * item.masterpack) + item.unidades);
-    	}, 0);
+    		const totalUnidades = inventario.reduce((sum, item) => {
+        		return sum + ((item.cajas_fardos * item.masterpack) + item.unidades);
+    			}, 0);
 
-    	document.getElementById('totalUnidadesDashboard').textContent =
-       		totalUnidades.toLocaleString();
+    		document.getElementById('totalUnidadesDashboard').textContent =
+        		totalUnidades.toLocaleString();
 
-    // Proveedores únicos
-    	const proveedores = new Set(inventario.map(i => i.proveedor));
-    	document.getElementById('totalProveedores').textContent = proveedores.size;
+    		const proveedores = new Set(inventario.map(i => i.proveedor));
+    			document.getElementById('totalProveedores').textContent = proveedores.size;
 
-    // Última actualización
-    	const last = inventario.reduce((max, item) => {
-        	return new Date(item.fecha) > new Date(max.fecha) ? item : max;
-    	});
+    		const last = inventario.reduce((max, item) => {
+        		return new Date(item.fecha) > new Date(max.fecha) ? item : max;
+    			});
 
-    	document.getElementById('ultimaActualizacion').textContent =
-        	new Date(last.fecha).toLocaleDateString();
+    		document.getElementById('ultimaActualizacion').textContent =
+        		new Date(last.fecha).toLocaleDateString();
 
-                cargarArticulosRecientes();
-                cargarGraficoProveedores();
+    	cargarArticulosRecientes();
+    	cargarGraficoProveedores();
 }
 
         // === FORMATO DE FECHA ====
@@ -1337,40 +1333,41 @@
         
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
         async function buscarArticulo(valor) {
+    		if (!valor) return;
 
-    if (!valor) return;
+    		let data = null;
+    		let error = null;
 
-    let data = null;
-    let error = null;
+    		if (valor.length >= 10) {
+        		const res = await supabase
+            		.from('inventario_reporteria')
+            		.select('*')
+            		.eq('codigo_barra', normalizarCodigo(valor))
+            		.single();
 
-    // 🔍 Regla simple:
-    // si es largo (ej: 12-13 dígitos) → código de barras
-    // si es corto → código interno
+        	data = res.data;
+        	error = res.error;
+    		} else {
+        		const res = await supabase
+            	.from('inventario_reporteria')
+            	.select('*')
+            	.eq('codigo', valor)
+            	.single();
 
-    if (valor.length >= 10) {
-        // Buscar por código de barras
-        const res = await supabase
-            .from('inventario_reporteria')
-            .select('*')
-            .eq('codigo_barra', normalizarCodigo(valor))
-            .single();
+        	data = res.data;
+        	error = res.error;
+    		}
 
-        data = res.data;
-        error = res.error;
-
-    } else {
-        // Buscar por código interno
-        const res = await supabase
-            .from('inventario_reporteria')
-            .select('*')
-            .eq('codigo', valor)
-            .single();
-
-        data = res.data;
-        error = res.error;
+    if (error || !data) {
+        limpiarCamposArticulo();
+        document.getElementById('codigoBarra').value = '';
+        document.getElementById('costoUnitario').value = '';
+        document.getElementById('costoTotal').value = '';
+        window.costoUnitarioActual = 0;
+        window.costoTotalActual = 0;
+        return;
     }
 
-    // ✅ llenar datos
     document.getElementById('codigoArticulo').value = data.codigo || '';
     document.getElementById('codigoBarra').value = data.codigo_barra || '';
     document.getElementById('proveedor').value = data.proveedor || '';
@@ -1378,20 +1375,21 @@
     document.getElementById('inventarioReporteria').value = data.inventario_reporteria || 0;
     document.getElementById('masterpack').value = data.masterpack || 1;
 
-    // cálculo automático
     const inv = data.inventario_reporteria || 0;
     const master = data.masterpack || 1;
 
     document.getElementById('cajasFardosReporteria').value = Math.floor(inv / master);
     document.getElementById('unidadesReporteria').value = inv % master;
 
-	 const { data: dataCosto, error: errorCosto } = await supabase
+    const { data: dataCosto, error: errorCosto } = await supabase
         .from('codigos')
         .select('costo')
         .eq('codigo', data.codigo)
         .single();
 
-    const costo = (!errorCosto && dataCosto?.costo) ? Number(dataCosto.costo) : 0;
+    const costo = (!errorCosto && dataCosto?.costo != null)
+        ? Number(dataCosto.costo)
+        : 0;
 
     window.costoUnitarioActual = costo;
     document.getElementById('costoUnitario').value = formatearMoneda(costo);
@@ -1400,13 +1398,18 @@
 
     showNotification('Éxito', 'Artículo cargado', 'success');
 }
+
 		function limpiarCamposArticulo() {
     		document.getElementById('proveedor').value = '';
-   			document.getElementById('descripcion').value = '';
+    		document.getElementById('descripcion').value = '';
     		document.getElementById('inventarioReporteria').value = 0;
     		document.getElementById('masterpack').value = 1;
     		document.getElementById('cajasFardosReporteria').value = '';
     		document.getElementById('unidadesReporteria').value = '';
+    		document.getElementById('costoUnitario').value = '';
+    		document.getElementById('costoTotal').value = '';
+    		window.costoUnitarioActual = 0;
+    		window.costoTotalActual = 0;
 		}
 
         function limpiarFormulario() {
@@ -2771,8 +2774,7 @@ async function guardarCambiosMasivos() {
 
     	document.getElementById('totalUnidadesCalculo').textContent = total.toFixed(2);
 
-    	// 🔹 cálculo costo total
-    	const costo = window.costoUnitarioActual || 0;
+    	const costo = Number(window.costoUnitarioActual) || 0;
     	const costoTotal = total * costo;
 
     	document.getElementById('costoTotal').value = formatearMoneda(costoTotal);
