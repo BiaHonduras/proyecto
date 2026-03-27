@@ -327,23 +327,24 @@
 			console.log("Error: ", error);
 		}
 		async function cargarValorInventario() 
-{
-    const { data, error } = await supabase.rpc('sumar_valor_inventario');
+		{
+    		const { data, error } = await supabase.rpc('sumar_valor_inventario');
+    			if (error) 
+    			{
+        			console.error("Error completo:", error);
+					console.log("message:", error.message);
+					console.log("details:", error.details);
+					console.log("hint:", error.hint);
+        			return;
+   	 			}
 
-    if (error) 
-    {
-        console.error("Error completo:", error);
-        return;
-    }
-
-    // FORMATO MONEDA
-    const valorFormateado = "L. " + Number(data).toLocaleString('es-HN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-
-    document.getElementById('valor-inventario').textContent = valorFormateado;
-}
+    		// FORMATO MONEDA
+    		const valorFormateado = "L. " + Number(data).toLocaleString('es-HN', {
+        		minimumFractionDigits: 2,
+        		maximumFractionDigits: 2
+   		 });
+    		document.getElementById('valor-inventario').textContent = valorFormateado;
+		}
 		
 		document.addEventListener("DOMContentLoaded", () => 
 			{
