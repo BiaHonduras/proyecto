@@ -271,32 +271,33 @@
 	<div class="sidebar">
 		<div>
 			<h3>SEDE</h3>
-			<select class="select">
-				<option>Amarateca</option>
-				<option>La Ceiba</option>
-				<option>San Pedro Sula</option>
-				<option>Santa Rosa de Copán</option>
-				<option>Tegucigalpa</option>
-			</select>
-
-			<h3>BODEGAS</h3>
-			<div class="filter-group" id="bodegas-filtro">
-				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Bodega Principal</button>
-				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Bodega PPV</button>
-				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Bodega PFN</button>
-			</div>
-
-			<h3>PROVEEDORES</h3>
-			<div class="filter-group" id="proveedores-filtro">
-				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Best</button>
-				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Farahon</button>
-				<button type="button" class="filter-btn" onclick="toggleFilter(this)">GKSA</button>
-				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Guandy</button>
-				<button type="button" class="filter-btn" onclick="toggleFilter(this)">MCM</button>
-				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Molsa</button>
-				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Nutresa</button>
-				<button type="button" class="filter-btn" onclick="toggleFilter(this)">San Marcos</button>
-			</div>
+				<select class="select" id="sede-filtro">
+				    <option value="">Todas</option>
+				    <option value="Amarateca">Amarateca</option>
+				    <option value="La Ceiba">La Ceiba</option>
+				    <option value="San Pedro Sula">San Pedro Sula</option>
+				    <option value="Santa Rosa de Copán">Santa Rosa de Copán</option>
+				    <option value="Tegucigalpa">Tegucigalpa</option>
+				</select>
+				
+				<h3>BODEGAS</h3>
+				<div class="filter-group" id="bodegas-filtro">
+				    <button type="button" class="filter-btn" data-value="Bodega Principal">Bodega Principal</button>
+				    <button type="button" class="filter-btn" data-value="Bodega PPV">Bodega PPV</button>
+				    <button type="button" class="filter-btn" data-value="Bodega PFN">Bodega PFN</button>
+				</div>
+				
+				<h3>PROVEEDORES</h3>
+				<div class="filter-group" id="proveedores-filtro">
+				    <button type="button" class="filter-btn" data-value="Best">Best</button>
+				    <button type="button" class="filter-btn" data-value="Farahon">Farahon</button>
+				    <button type="button" class="filter-btn" data-value="GKSA">GKSA</button>
+				    <button type="button" class="filter-btn" data-value="Guandy">Guandy</button>
+				    <button type="button" class="filter-btn" data-value="MCM">MCM</button>
+				    <button type="button" class="filter-btn" data-value="Molsa">Molsa</button>
+				    <button type="button" class="filter-btn" data-value="Nutresa">Nutresa</button>
+				    <button type="button" class="filter-btn" data-value="San Marcos">San Marcos</button>
+				</div>
 		</div>
 	</div>
 
@@ -391,10 +392,228 @@
     		document.getElementById('valor-inventario').textContent = valorFormateado;
 		}
 		
-		function toggleFilter(button)
-			{
-				button.classList.toggle('active');
-			}
+		let proveedoresChartInstance = null;
+
+    	function obtenerFiltrosActivos() {
+	        const sede = document.getElementById('sede-filtro')?.value || '';
+	
+	        const bodegas = Array.from(
+	            document.querySelectorAll('#bodegas-filtro .filter-btn.active')
+	        ).map(btn => btn.dataset.value);
+	
+	        const proveedores = Array.from(
+	            document.querySelectorAll('#proveedores-filtro .filter-btn.active')
+	        ).map(btn => btn.dataset.value);
+	
+	        return { sede, bodegas, proveedores };
+	    }
+
+		async function aplicarFiltrosDashboard() {
+	        await Promise.all([
+	            cargarTotalSKUs(),
+	            cargarValorInventario(),
+	            cargarUnidadesPorProveedor()
+	        ]);
+	    }
+
+		function configurarEventosFiltros() {
+		        const sedeSelect = document.getElementById('sede-filtro');
+		        const botonesFiltro = document.querySelectorAll('.filter-group .filter-btn');
+		
+		        if (sedeSelect) {
+		            sedeSelect.addEventListener('change', aplicarFiltrosDashboard);
+		        }
+		
+		        botonesFiltro.forEach(btn => {
+		            btn.addEventListener('click', async function () {
+		                this.classList.toggle('active');
+		                await aplicarFiltrosDashboard();
+		            });
+		        });
+		    }
+		
+		    async function cargarTotalSKUs() {
+		        const { sede, bodegas, proveedores } = obtenerFiltrosActivos();
+		
+		        let query = supabase
+		            .from('inventarios_diarios')
+		            .select('codigo');
+		
+		        if (sede) {
+		            query = query.eq('sede', sede);
+		        }
+		
+		        if (bodegas.length > 0) {
+		            query = query.in('idBodega', bodegas);
+		        }
+		
+		        if (proveedores.length > 0) {
+		            query = query.in('proveedor', proveedores);
+		        }
+		
+		        const { data, error } = await query;
+		
+		        if (error) {
+		            console.error('Error cargando SKU:', error);
+		            return;
+		        }
+		
+		        const unicos = new Set((data || []).map(item => item.codigo).filter(Boolean));
+		        document.getElementById('total-skus').textContent = unicos.size;
+		    }
+		
+		    async function cargarValorInventario() {
+		        const { sede, bodegas, proveedores } = obtenerFiltrosActivos();
+		
+		        let query = supabase
+		            .from('inventarios_diarios')
+		            .select('costoTotal');
+		
+		        if (sede) {
+		            query = query.eq('sede', sede);
+		        }
+		
+		        if (bodegas.length > 0) {
+		            query = query.in('idBodega', bodegas);
+		        }
+		
+		        if (proveedores.length > 0) {
+		            query = query.in('proveedor', proveedores);
+		        }
+		
+		        const { data, error } = await query;
+		
+		        if (error) {
+		            console.error('Error cargando valor inventario:', error);
+		            return;
+		        }
+		
+		        const total = (data || []).reduce((acc, item) => {
+		            return acc + Number(item.costoTotal || 0);
+		        }, 0);
+		
+		        const valorFormateado = "L. " + total.toLocaleString('es-HN', {
+		            minimumFractionDigits: 2,
+		            maximumFractionDigits: 2
+		        });
+		
+		        document.getElementById('valor-inventario').textContent = valorFormateado;
+		    }
+		
+		    async function cargarUnidadesPorProveedor() {
+		        const { sede, bodegas, proveedores } = obtenerFiltrosActivos();
+		
+		        let query = supabase
+		            .from('inventarios_diarios')
+		            .select('proveedor, total, cajas_fardos, masterpack, unidades, sede, idBodega');
+		
+		        if (sede) {
+		            query = query.eq('sede', sede);
+		        }
+		
+		        if (bodegas.length > 0) {
+		            query = query.in('idBodega', bodegas);
+		        }
+		
+		        if (proveedores.length > 0) {
+		            query = query.in('proveedor', proveedores);
+		        }
+		
+		        const { data, error } = await query;
+		
+		        if (error) {
+		            console.error("Error completo:", error);
+		            return;
+		        }
+		
+		        const agrupado = {};
+		
+		        (data || []).forEach(item => {
+		            const proveedor = item.proveedor || 'Sin proveedor';
+		
+		            let totalUnidades = 0;
+		
+		            if (item.total != null) {
+		                totalUnidades = Number(item.total);
+		            } else {
+		                totalUnidades =
+		                    (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) +
+		                    Number(item.unidades || 0);
+		            }
+		
+		            if (!agrupado[proveedor]) {
+		                agrupado[proveedor] = 0;
+		            }
+		
+		            agrupado[proveedor] += totalUnidades;
+		        });
+		
+		        const labels = Object.keys(agrupado);
+		        const valores = Object.values(agrupado);
+		
+		        renderChartProveedores(labels, valores);
+		    }
+		
+		    function renderChartProveedores(labels, data) {
+		        const ctx = document.getElementById('proveedoresChart').getContext('2d');
+		
+		        if (proveedoresChartInstance) {
+		            proveedoresChartInstance.destroy();
+		        }
+		
+		        proveedoresChartInstance = new Chart(ctx, {
+		            type: 'bar',
+		            data: {
+		                labels,
+		                datasets: [{
+		                    label: 'Unidades por Proveedor',
+		                    data,
+		                    backgroundColor: [
+		                        '#3e2723',
+		                        '#6f4e37',
+		                        '#8b5e3c',
+		                        '#a67c52',
+		                        '#c7a17a'
+		                    ],
+		                    borderColor: '#3e2723',
+		                    borderWidth: 1,
+		                    borderRadius: 6
+		                }]
+		            },
+		            options: {
+		                responsive: true,
+		                plugins: {
+		                    legend: {
+		                        display: true
+		                    }
+		                },
+		                scales: {
+		                    y: {
+		                        beginAtZero: true,
+		                        ticks: {
+		                            color: '#3e2723'
+		                        },
+		                        grid: {
+		                            color: 'rgba(111, 78, 55, 0.1)'
+		                        }
+		                    },
+		                    x: {
+		                        ticks: {
+		                            color: '#3e2723'
+		                        },
+		                        grid: {
+		                            display: false
+		                        }
+		                    }
+		                }
+		            }
+		        });
+		    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        configurarEventosFiltros();
+        await aplicarFiltrosDashboard();
+    });
 
 		document.addEventListener("DOMContentLoaded", () => 
 			{
