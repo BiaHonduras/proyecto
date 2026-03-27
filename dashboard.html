@@ -1526,11 +1526,8 @@
 		    const totalUnidades = (cajas * masterpack) + unidades;
 		    const diferencia = totalUnidades - inventarioReporteria;
 		
-		    const costoUnitario = Number(item.costo_unitario);
-			if (isNaN(costoUnitario)) {
-				    console.warn('Sin costo_unitario para', item.codigo);
-				}
-		    const costoTotal = (isNaN(costoUnitario) ? 0 : diferencia * costoUnitario);
+		    const costoUnitario = Number(window.costoUnitarioActual || 0);
+			const costoTotal = item.diferencia * item.costo_unitario;
 		
 		    window.costoTotalActual = costoTotal;
 		
@@ -2735,7 +2732,8 @@ async function cargarGraficoProveedores() {
 	                <td class="py-3 codigo">${item.codigo}</td>
 	                <td class="py-3 descripcion">${item.descripcion}</td>
 	                <td class="py-3 font-bold diferencia">${diferencia.toFixed(2)}</td>
-	                <td class="py-3">${formatearMoneda(costoTotal)}</td>
+	                <td>${formatearMoneda(item.costo_unitario)}</td>
+					<td>${formatearMoneda(costoTotal)}</td>
 	                <td class="py-3">
 	                    <input type="text"
 	                        data-id="${item.id}"
