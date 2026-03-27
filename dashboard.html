@@ -1525,9 +1525,11 @@
 		    const totalUnidades = (cajas * masterpack) + unidades;
 		    const diferencia = totalUnidades - inventarioReporteria;
 		
-		    const diferencia = item.diferencia;
-			const costoUnitario = item.costo_unitario || 0;
-			const costoTotal = diferencia * costoUnitario;
+		    const costoUnitario = Number(item.costo_unitario);
+			if (isNaN(costoUnitario)) {
+				    console.warn('Sin costo_unitario para', item.codigo);
+				}
+		    const costoTotal = (isNaN(costoUnitario) ? 0 : diferencia * costoUnitario);
 		
 		    window.costoTotalActual = costoTotal;
 		
