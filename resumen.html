@@ -81,31 +81,64 @@
 			color: #fff;
 		}
 
-		/* NAV */
-		.nav-item 
+		/* FILTROS LATERALES */
+		.filter-group
 		{
 			display: flex;
-			align-items: center;
-			padding: 8px 10px;
-			border-radius: 8px;
-			margin-bottom: 4px;
-			transition: all 0.3s ease;
-			color: rgba(255, 255, 255, 0.75);
-			cursor: pointer;
-			font-size: 13px;
+			flex-direction: column;
+			gap: 8px;
+			margin-bottom: 16px;
 		}
 
-		.nav-item:hover 
+		.filter-btn
+		{
+			width: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 10px 12px;
+			border-radius: 10px;
+			border: 1px solid rgba(199, 161, 122, 0.18);
+			background: rgba(255, 255, 255, 0.08);
+			color: rgba(255, 255, 255, 0.85);
+			font-size: 13px;
+			font-weight: 500;
+			text-align: left;
+			cursor: pointer;
+			transition: all 0.25s ease;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+		}
+
+		.filter-btn:hover
 		{
 			background: rgba(199, 161, 122, 0.2);
 			color: #fff;
+			transform: translateY(-1px);
 		}
 
-		.nav-item.active 
+		.filter-btn.active
 		{
 			background: var(--coffee-accent);
 			color: #2b1b17;
 			font-weight: 600;
+			border-color: transparent;
+			box-shadow: 0 8px 18px rgba(199, 161, 122, 0.25);
+		}
+
+		.filter-btn::after
+		{
+			content: '';
+			width: 10px;
+			height: 10px;
+			border-radius: 999px;
+			background: rgba(255, 255, 255, 0.22);
+			transition: all 0.25s ease;
+			flex-shrink: 0;
+		}
+
+		.filter-btn.active::after
+		{
+			background: #2b1b17;
 		}
 
 		/* USER */
@@ -239,19 +272,23 @@
 			</select>
 
 			<h3>BODEGAS</h3>
-				<div class="nav-item" onclick="toggle(this)">Bodega Principal</div>
-				<div class="nav-item" onclick="toggle(this)">Bodega PPV</div>
-				<div class="nav-item" onclick="toggle(this)">Bodega PFN</div>
+			<div class="filter-group" id="bodegas-filtro">
+				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Bodega Principal</button>
+				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Bodega PPV</button>
+				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Bodega PFN</button>
+			</div>
 
 			<h3>PROVEEDORES</h3>
-				<div class="nav-item" onclick="toggle(this)">Best</div>
-				<div class="nav-item" onclick="toggle(this)">Farahon</div>
-				<div class="nav-item" onclick="toggle(this)">GKSA</div>
-				<div class="nav-item" onclick="toggle(this)">Guandy</div>
-				<div class="nav-item" onclick="toggle(this)">MCM</div>
-				<div class="nav-item" onclick="toggle(this)">Molsa</div>
-				<div class="nav-item" onclick="toggle(this)">Nutresa</div>
-				<div class="nav-item" onclick="toggle(this)">San Marcos</div>
+			<div class="filter-group" id="proveedores-filtro">
+				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Best</button>
+				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Farahon</button>
+				<button type="button" class="filter-btn" onclick="toggleFilter(this)">GKSA</button>
+				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Guandy</button>
+				<button type="button" class="filter-btn" onclick="toggleFilter(this)">MCM</button>
+				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Molsa</button>
+				<button type="button" class="filter-btn" onclick="toggleFilter(this)">Nutresa</button>
+				<button type="button" class="filter-btn" onclick="toggleFilter(this)">San Marcos</button>
+			</div>
 		</div>
 	</div>
 
@@ -346,6 +383,11 @@
     		document.getElementById('valor-inventario').textContent = valorFormateado;
 		}
 		
+		function toggleFilter(button)
+			{
+				button.classList.toggle('active');
+			}
+
 		document.addEventListener("DOMContentLoaded", () => 
 			{
 			cargarTotalSKUs();
