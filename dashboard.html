@@ -1527,7 +1527,7 @@
 		    const diferencia = totalUnidades - inventarioReporteria;
 		
 		    const costoUnitario = Number(window.costoUnitarioActual || 0);
-			const costoTotal = item.diferencia * item.costo_unitario;
+			const costoTotal = diferencia * costoUnitario;
 		
 		    window.costoTotalActual = costoTotal;
 		
