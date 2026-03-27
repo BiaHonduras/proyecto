@@ -2698,6 +2698,7 @@ async function cargarGraficoProveedores() {
 		}
 		
 	async function loadTransitos() {
+		console.log('loadTransitos ejecutada');
 	    const { data, error } = await supabase
 	        .from('inventarios_diarios')
 	        .select('*');
