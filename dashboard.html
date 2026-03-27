@@ -2833,7 +2833,7 @@ async function guardarCambiosMasivos() {
         }
 
         registros.push({
-            usuario: currentUser?.nombre_corto || currentUser?.username,
+            usuario: currentUser?.usuario || currentUser?.username,
             codigo,
             descripcion,
             diferencia,
