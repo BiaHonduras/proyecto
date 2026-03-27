@@ -411,6 +411,17 @@
 					</div>
                     <form id="articuloForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
 						<div>
+    						<label class="block text-sm font-medium text-gray-700 mb-2">Sede *</label>
+    						<select id="sede" class="input-field w-full px-4 py-3 rounded-lg" required>
+        						<option value="">Seleccione</option>
+						        <option value="Amarateca">Amarateca</option>
+						        <option value="La Ceiba">La Ceiba</option>
+						        <option value="San Pedro Sula">San Pedro Sula</option>
+						        <option value="Santa Rosa de Copan">Santa Rosa de Copan</option>
+						        <option value="Tegucigalpa">Tegucigalpa</option>
+    						</select>
+						</div>
+						<div>
     						<label class="block text-sm font-medium text-gray-700 mb-2">Identificador Bodega *</label>
    							<select id="idBodega" class="input-field w-full px-4 py-3 rounded-lg" required>
         						<option value="">Seleccione</option>
@@ -1450,11 +1461,12 @@
     const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
     const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
     const unidades = parseFloat(document.getElementById('unidades').value) || 0;
+	const sede = document.getElementById('sede').value;
 
-    if (!codigo || !fecha) {
-        showNotification('Error', 'El código y la fecha son requeridos', 'error');
-        return;
-    }
+    if (!codigo || !fecha || !sede) {
+    	showNotification('Error', 'Código, fecha y sede son requeridos', 'error');
+    	return;
+	}
 
     if (window.editandoId) {
         // ✅ UPDATE
@@ -1470,6 +1482,7 @@
                 cajas_fardos: cajas,
                 unidades,
 				idBodega: idBodega,
+				sede: sede,
 				fecha_vencimiento: checkActivo ? fechaVenc : null,
 				costoTotal: window.costoTotalActual || 0
             })
@@ -1497,6 +1510,7 @@
                 cajas_fardos: cajas,
                 unidades,
 				idBodega: idBodega,
+				sede: sede,
 				fecha_vencimiento: checkActivo ? fechaVenc : null,
 				costoTotal: window.costoTotalActual || 0
             }]);
