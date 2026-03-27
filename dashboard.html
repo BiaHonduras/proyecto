@@ -2697,76 +2697,57 @@ async function cargarGraficoProveedores() {
 		}
 		
 	async function loadTransitos() {
-
-    const { data, error } = await supabase
-        .from('inventarios_diarios')
-        .select('*');
-
-    const tbody = document.getElementById('transitosTableBody');
-
-    if (error || !data) {
-        tbody.innerHTML = `<tr><td colspan="5">Error cargando datos</td></tr>`;
-        return;
-    }
-
-    const filtrados = data.filter(item => {
-        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-        const diferencia = total - item.inventario_reporteria;
-		const costoTotal = costoUnitario * item.diferencia;
-        return diferencia !== 0 || item.justificacion;
-    });
-
-    if (filtrados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6">Sin diferencias</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = filtrados.map(item => {
-
-    const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-    const diferencia = total - item.inventario_reporteria;
-
-    return `
-        <tr class="border-b hover:bg-gray-50">
-            <td class="py-3">${item.idBodega}</td>
-
-            <td class="py-3 codigo">${item.codigo}</td>
-
-            <td class="py-3 descripcion">${item.descripcion}</td>
-
-            <td class="py-3 font-bold diferencia">
-                ${diferencia.toFixed(2)}
-            </td>
-			
-            <td class="py-3">
-			    <select
-			        data-id="${item.id}"
-			        disabled
-			        class="input-field input-disabled justificacion px-2 py-1 w-full">
-			        <option value="">Seleccionar...</option>
-			        <option value="Asignado en GP - Walmart" ${item.justificacion === 'Asignado en GP - Walmart' ? 'selected' : ''}>Asignado en GP - Walmart</option>
-			        <option value="Asignado en GP - La Colonia" ${item.justificacion === 'Asignado en GP - La Colonia' ? 'selected' : ''}>Asignado en GP - La Colonia</option>
-			        <option value="Asignado en GP (Otros)" ${item.justificacion === 'Asignado en GP (Otros)' ? 'selected' : ''}>Asignado en GP (Otros)</option>
-			        <option value="Faltante" ${item.justificacion === 'Faltante' ? 'selected' : ''}>Faltante</option>
-			        <option value="Sobrante" ${item.justificacion === 'Sobrante' ? 'selected' : ''}>Sobrante</option>
-			        <option value="En tránsito" ${item.justificacion === 'En tránsito' ? 'selected' : ''}>En tránsito</option>
-			        <option value="TRF pendiente de ingreso" ${item.justificacion === 'TRF pendiente de ingreso' ? 'selected' : ''}>TRF pendiente de ingreso</option>
-			        <option value="Factura pendiente de ingreso" ${item.justificacion === 'Factura pendiente de ingreso' ? 'selected' : ''}>Factura pendiente de ingreso</option>
-			    </select>
-			</td>
-
-            <td class="py-3 text-center">
-                <button 
-                    class="btnEditarFila opacity-50 cursor-not-allowed"
-                    data-id="${item.id}">
-                    <i class="fas fa-edit"></i>
-                </button>
-            </td>
-        </tr>
-    `;
-}).join('');
-		
-}
+	    const { data, error } = await supabase
+	        .from('inventarios_diarios')
+	        .select('*');
+	
+	    const tbody = document.getElementById('transitosTableBody');
+	
+	    if (error || !data) {
+	        tbody.innerHTML = `<tr><td colspan="7">Error cargando datos</td></tr>`;
+	        return;
+	    }
+	
+	    const filtrados = data.filter(item => {
+	        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
+	        const diferencia = total - item.inventario_reporteria;
+	        return diferencia !== 0 || item.justificacion;
+	    });
+	
+	    if (filtrados.length === 0) {
+	        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6">Sin diferencias</td></tr>`;
+	        return;
+	    }
+	
+	    tbody.innerHTML = filtrados.map(item => {
+	        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
+	        const diferencia = total - item.inventario_reporteria;
+	
+	        const costoTotal = item.costoTotal ?? ((item.costo_unitario || 0) * diferencia);
+	
+	        return `
+	            <tr class="border-b hover:bg-gray-50">
+	                <td class="py-3">${item.idBodega}</td>
+	                <td class="py-3 codigo">${item.codigo}</td>
+	                <td class="py-3 descripcion">${item.descripcion}</td>
+	                <td class="py-3 font-bold diferencia">${diferencia.toFixed(2)}</td>
+	                <td class="py-3">${formatearMoneda(costoTotal)}</td>
+	                <td class="py-3">
+	                    <input type="text"
+	                        data-id="${item.id}"
+	                        disabled
+	                        class="input-field input-disabled justificacion px-2 py-1 w-full"
+	                        value="${item.justificacion || ''}">
+	                </td>
+	                <td class="py-3 text-center">
+	                    <button class="btnEditarFila opacity-50 cursor-not-allowed" data-id="${item.id}">
+	                        <i class="fas fa-edit"></i>
+	                    </button>
+	                </td>
+	            </tr>
+	        `;
+	    }).join('');
+	}
 
 async function guardarJustificacion(id, texto) {
 
@@ -2826,15 +2807,18 @@ async function guardarCambiosMasivos() {
             return;
         }
 
-        registros.push({
-            usuario: currentUser?.usuario || currentUser?.username,
-            codigo,
-            descripcion,
-            diferencia,
-            justificacion,
-            fecha_registro: new Date().toISOString(),
-            fecha_modificacion: new Date().toISOString()
-        });
+        const costoTexto = fila.children[4]?.textContent.trim() || 'L. 0.00';
+
+			registros.push({
+			    usuario: currentUser?.usuario || currentUser?.username,
+			    codigo,
+			    descripcion,
+			    diferencia,
+			    costo_total: costoTexto,
+			    justificacion,
+			    fecha_registro: new Date().toISOString(),
+			    fecha_modificacion: new Date().toISOString()
+			});
     }
 
     const { error } = await supabase
