@@ -2697,6 +2697,26 @@ async function cargarGraficoProveedores() {
    		return codigo.trim();
 		}
 		
+	const OPCIONES_JUSTIFICACION = [
+		'Asignado en GP - La Colonia',
+		'Asignado en GP - Walmart',
+		'Asignado en GP - Ruta de Detalle',
+		'Factura pendiente de ingreso',
+		'En tránsito',
+		'Faltante',
+		'Sobrante'
+
+	function construirOpcionesJustificacion(valorActual = '') {
+	    return `
+	        <option value="">Seleccione</option>
+	        ${OPCIONES_JUSTIFICACION.map(opcion => `
+	            <option value="${opcion}" ${opcion === valorActual ? 'selected' : ''}>
+	                ${opcion}
+	            </option>
+	        `).join('')}
+	    `;
+	}
+		
 	async function loadTransitos() {
 		console.log('loadTransitos ejecutada');
 	    const { data, error } = await supabase
@@ -2855,28 +2875,6 @@ async function guardarCambiosMasivos() {
 
 	function calcularCostoTotalJustificacion(diferencia, costoUnitario) {
 	    return Number(diferencia || 0) * Number(costoUnitario || 0);
-	}
-
-	const OPCIONES_JUSTIFICACION = [
-		'Asignado en GP - La Colonia',
-		'Asignado en GP - Walmart',
-		'Asignado en GP - Ruta de Detalle',
-		'Factura pendiente de ingreso',
-		'En tránsito',
-		'Faltante',
-		'Sobrante'
-	];
-	
-	function construirOpcionesJustificacion(valorActual = '') {
-	    const placeholder = '<option value="">Seleccione una justificación</option>';
-	
-	    const opciones = OPCIONES_JUSTIFICACION.map(opcion => `
-	        <option value="${opcion}" ${valorActual === opcion ? 'selected' : ''}>
-	            ${opcion}
-	        </option>
-	    `).join('');
-	
-	    return placeholder + opciones;
 	}
 
 	function calcularTotalUnidades() {
