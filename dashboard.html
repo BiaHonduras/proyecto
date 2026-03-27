@@ -655,46 +655,46 @@
 				</div>
 			</section>
 			
-			<section id="transitos-section" class="section-content hidden">
-    <div class="card p-6">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">Tránsitos / Pendientes</h3>
-
-		<div class="flex gap-3 mb-4">
-    		<button id="btnEditarRegistros"
-        		class="btn-primary px-4 py-3 rounded-lg text-white flex items-center">
-        		<i class="fas fa-edit mr-2"></i>
-        		Editar Registros
-    		</button>
-
-    		<button id="btnGuardarRegistros"
-        		class="btn-primary px-4 py-3 rounded-lg text-white flex items-center">
-        		<i class="fas fa-save mr-2"></i>
-        		Guardar Registros
-    		</button>
-		</div>
-			
-        <div class="overflow-x-auto">
-            <table class="min-w-full">
-                <thead>
-                    <tr class="border-b border-gray-200">
-                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Bodega</th>
-                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Código</th>
-                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
-                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Diferencia</th>
-                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Justificación</th>
-						<th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="transitosTableBody">
-                    <tr>
-                        <td colspan="5" class="py-8 text-center text-gray-500">
-                            Sin datos
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+	<section id="transitos-section" class="section-content hidden">
+	    <div class="card p-6">
+	        <h3 class="text-xl font-semibold text-gray-800 mb-4">Tránsitos / Pendientes</h3>
+	
+			<div class="flex gap-3 mb-4">
+	    		<button id="btnEditarRegistros"
+	        		class="btn-primary px-4 py-3 rounded-lg text-white flex items-center">
+	        		<i class="fas fa-edit mr-2"></i>
+	        		Editar Registros
+	    		</button>
+	
+	    		<button id="btnGuardarRegistros"
+	        		class="btn-primary px-4 py-3 rounded-lg text-white flex items-center">
+	        		<i class="fas fa-save mr-2"></i>
+	        		Guardar Registros
+	    		</button>
+			</div>
+				
+	        <div class="overflow-x-auto">
+	            <table class="min-w-full">
+	                <thead>
+	                    <tr class="border-b border-gray-200">
+	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Bodega</th>
+	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Código</th>
+	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
+	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Diferencia</th>
+	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Justificación</th>
+							<th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
+	                    </tr>
+	                </thead>
+	                <tbody id="transitosTableBody">
+	                    <tr>
+	                        <td colspan="5" class="py-8 text-center text-gray-500">
+	                            Sin datos
+	                        </td>
+	                    </tr>
+	                </tbody>
+	            </table>
+	        </div>
+	    </div>
 </section>
 
             <!-- Exportar CSV Section -->
@@ -2743,12 +2743,21 @@ async function cargarGraficoProveedores() {
             </td>
 			
             <td class="py-3">
-                <input type="text"
-                    data-id="${item.id}"
-                    disabled
-                    class="input-field input-disabled justificacion px-2 py-1 w-full"
-                    value="${item.justificacion || ''}">
-            </td>
+			    <select
+			        data-id="${item.id}"
+			        disabled
+			        class="input-field input-disabled justificacion px-2 py-1 w-full">
+			        <option value="">Seleccionar...</option>
+			        <option value="Asignado en GP - Walmart" ${item.justificacion === 'Asignado en GP - Walmart' ? 'selected' : ''}>Asignado en GP - Walmart</option>
+			        <option value="Asignado en GP - La Colonia" ${item.justificacion === 'Asignado en GP - La Colonia' ? 'selected' : ''}>Asignado en GP - La Colonia</option>
+			        <option value="Asignado en GP (Otros)" ${item.justificacion === 'Asignado en GP (Otros)' ? 'selected' : ''}>Asignado en GP (Otros)</option>
+			        <option value="Faltante" ${item.justificacion === 'Faltante' ? 'selected' : ''}>Faltante</option>
+			        <option value="Sobrante" ${item.justificacion === 'Sobrante' ? 'selected' : ''}>Sobrante</option>
+			        <option value="En tránsito" ${item.justificacion === 'En tránsito' ? 'selected' : ''}>En tránsito</option>
+			        <option value="TRF pendiente de ingreso" ${item.justificacion === 'TRF pendiente de ingreso' ? 'selected' : ''}>TRF pendiente de ingreso</option>
+			        <option value="Factura pendiente de ingreso" ${item.justificacion === 'Factura pendiente de ingreso' ? 'selected' : ''}>Factura pendiente de ingreso</option>
+			    </select>
+			</td>
 
             <td class="py-3 text-center">
                 <button 
