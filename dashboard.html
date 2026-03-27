@@ -527,7 +527,7 @@
     						<label class="block text-sm font-medium text-gray-700 mb-2">Costo Unitario</label>
     						<input type="number" id="costoUnitario"
         						class="input-field w-full px-4 py-3 rounded-lg bg-gray-100"
-        						placeholder="0"
+        						placeholder="L. 0.00"
         						readonly>
 						</div>
 
@@ -535,7 +535,7 @@
     						<label class="block text-sm font-medium text-gray-700 mb-2">Costo Total</label>
     						<input type="number" id="costoTotal"
         						class="input-field w-full px-4 py-3 rounded-lg bg-gray-100"
-        						placeholder="0"
+        						placeholder="L. 0.00"
         						readonly>
 						</div>
                         
@@ -1295,36 +1295,51 @@
         return;
     }
 
-    if (!inventario || inventario.length === 0) {
-        document.getElementById('totalArticulos').textContent = 0;
-        document.getElementById('totalUnidadesDashboard').textContent = 0;
-        document.getElementById('totalProveedores').textContent = 0;
-        document.getElementById('ultimaActualizacion').textContent = '-';
-        return;
-    }
+	// 🔹 traer costo desde tabla codigos
+		const { data: dataCosto } = await supabase
+    		.from('codigos')
+    		.select('costo')
+    		.eq('codigo', data.codigo)
+    		.single();
+
+		const costo = dataCosto?.costo || 0;
+
+	// guardar en variable global temporal
+		window.costoUnitarioActual = costo;
+
+	// mostrar formateado
+		document.getElementById('costoUnitario').value = formatearMoneda(costo);
+
+    		if (!inventario || inventario.length === 0) {
+        		document.getElementById('totalArticulos').textContent = 0;
+        		document.getElementById('totalUnidadesDashboard').textContent = 0;
+        		document.getElementById('totalProveedores').textContent = 0;
+        		document.getElementById('ultimaActualizacion').textContent = '-';
+        		return;
+    		}
 
     // Total artículos
-    document.getElementById('totalArticulos').textContent = inventario.length;
+    	document.getElementById('totalArticulos').textContent = inventario.length;
 
     // Total unidades
-    const totalUnidades = inventario.reduce((sum, item) => {
-        return sum + ((item.cajas_fardos * item.masterpack) + item.unidades);
-    }, 0);
+    	const totalUnidades = inventario.reduce((sum, item) => {
+        	return sum + ((item.cajas_fardos * item.masterpack) + item.unidades);
+    	}, 0);
 
-    document.getElementById('totalUnidadesDashboard').textContent =
-        totalUnidades.toLocaleString();
+    	document.getElementById('totalUnidadesDashboard').textContent =
+       		totalUnidades.toLocaleString();
 
     // Proveedores únicos
-    const proveedores = new Set(inventario.map(i => i.proveedor));
-    document.getElementById('totalProveedores').textContent = proveedores.size;
+    	const proveedores = new Set(inventario.map(i => i.proveedor));
+    	document.getElementById('totalProveedores').textContent = proveedores.size;
 
     // Última actualización
-    const last = inventario.reduce((max, item) => {
-        return new Date(item.fecha) > new Date(max.fecha) ? item : max;
-    });
+    	const last = inventario.reduce((max, item) => {
+        	return new Date(item.fecha) > new Date(max.fecha) ? item : max;
+    	});
 
-    document.getElementById('ultimaActualizacion').textContent =
-        new Date(last.fecha).toLocaleDateString();
+    	document.getElementById('ultimaActualizacion').textContent =
+        	new Date(last.fecha).toLocaleDateString();
 
                 cargarArticulosRecientes();
                 cargarGraficoProveedores();
@@ -1457,7 +1472,8 @@
                 cajas_fardos: cajas,
                 unidades,
 				idBodega: idBodega,
-				fecha_vencimiento: checkActivo ? fechaVenc : null
+				fecha_vencimiento: checkActivo ? fechaVenc : null,
+				costoTotal: window.costoTotalActual || 0
             })
             .eq('id', window.editandoId);
 
@@ -1483,7 +1499,8 @@
                 cajas_fardos: cajas,
                 unidades,
 				idBodega: idBodega,
-				fecha_vencimiento: checkActivo ? fechaVenc : null
+				fecha_vencimiento: checkActivo ? fechaVenc : null,
+				costoTotal: window.costoTotalActual || 0
             }]);
 
         if (error) {
@@ -2751,6 +2768,32 @@ async function guardarCambiosMasivos() {
 
     showNotification('Éxito', 'Todo guardado correctamente', 'success');
 }
+
+	function formatearMoneda(valor) {
+    	return 'L. ' + Number(valor).toLocaleString('es-HN', {
+        	minimumFractionDigits: 2,
+        	maximumFractionDigits: 2
+    	});
+	}
+
+	function calcularTotalUnidades() {
+    const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
+    const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
+    const unidades = parseFloat(document.getElementById('unidades').value) || 0;
+
+    const total = (cajas * masterpack) + unidades;
+
+    document.getElementById('totalUnidadesCalculo').textContent = total.toFixed(2);
+
+    // 🔹 cálculo costo total
+    const costo = window.costoUnitarioActual || 0;
+    const costoTotal = total * costo;
+
+    document.getElementById('costoTotal').value = formatearMoneda(costoTotal);
+
+    // guardar temporal
+    window.costoTotalActual = costoTotal;
+	}
 		
     inventario.js </script>
 </script>
