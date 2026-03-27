@@ -2709,8 +2709,8 @@ async function cargarGraficoProveedores() {
 	    }
 	
 	    const filtrados = data.filter(item => {
-	        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-	        const diferencia = total - item.inventario_reporteria;
+	        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
+	        const diferencia = total - Number(item.inventario_reporteria || 0);
 	        return diferencia !== 0 || item.justificacion;
 	    });
 	
@@ -2720,10 +2720,10 @@ async function cargarGraficoProveedores() {
 	    }
 	
 	    tbody.innerHTML = filtrados.map(item => {
-	        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-	        const diferencia = total - item.inventario_reporteria;
-	
-	        const costoTotal = item.costoTotal ?? ((item.costo_unitario || 0) * diferencia);
+	        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
+	        const diferencia = total - Number(item.inventario_reporteria || 0);
+	        const costoUnitario = Number(item.costo_unitario || 0);
+	        const costoTotal = diferencia * costoUnitario;
 	
 	        return `
 	            <tr class="border-b hover:bg-gray-50">
@@ -2856,7 +2856,7 @@ async function guardarCambiosMasivos() {
 	
 	    window.costoTotalActual = costoTotal;
 	    document.getElementById('costoTotal').value = formatearMoneda(costoTotal);
-	}
+}
 
 	function calcularCostoTotal(diferencia) {
 	    const costo = window.costoUnitarioActual || 0;
