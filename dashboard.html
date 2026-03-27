@@ -2029,7 +2029,8 @@ async function loadInventory() {
                 codigo: values[3].replace(/"/g,'').trim(),
                 descripcion: values[4].replace(/"/g,'').trim(),
                 inventario_reporteria: parseFloat(values[5]) || 0,
-                masterpack: parseFloat(values[6]) || 1
+                masterpack: parseFloat(values[6]) || 1,
+				sede: values[7].replace(/"/g,'').trim()
             });
         }
         
