@@ -2739,7 +2739,7 @@ async function cargarGraficoProveedores() {
 		    const { data: justificaciones, error: errorJust } = await supabase
 		        .from('inventario_justificaciones')
 		        .select('*')
-		        .in('inventario_diario_id', ids);
+		        .in('id', ids);
 		
 		    if (errorJust) {
 			    console.error('Error cargando justificaciones completo:', JSON.stringify(errorJust, null, 2));
