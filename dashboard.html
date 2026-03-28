@@ -2864,8 +2864,7 @@ async function guardarJustificacion(id, texto) {
 	        const costoTotal = Number(costoTotalCell?.dataset?.valor || 0);
 	
 	        registros.push({
-	            id: id,
-	            usuario: currentUser?.nombre_corto || currentUser?.username,
+				usuario: currentUser?.usuario || currentUser?.username,
 	            codigo,
 	            descripcion,
 	            diferencia,
