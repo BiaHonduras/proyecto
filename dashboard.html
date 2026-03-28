@@ -1505,84 +1505,83 @@
 		}
 
         async function agregarArticulo() {
-		    const idBodega = document.getElementById('idBodega').value;
-		    const fecha = document.getElementById('fechaInventario').value;
-		    const checkActivo = document.getElementById('checkBodega').checked;
-		    const fechaVenc = document.getElementById('fechaVencimiento').value || null;
-		    const codigo = document.getElementById('codigoArticulo').value;
-		    const proveedor = document.getElementById('proveedor').value;
-		    const descripcion = document.getElementById('descripcion').value;
-		    const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
-		    const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
-		    const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
-		    const unidades = parseFloat(document.getElementById('unidades').value) || 0;
-		    const sede = document.getElementById('sede').value;
-		
-		    if (!codigo || !fecha || !sede) {
-		        showNotification('Error', 'Código, fecha y sede son requeridos', 'error');
-		        return;
-		    }
-		
-			const totalUnidades = (cajas * masterpack) + unidades;
-			const diferencia = totalUnidades - inventarioReporteria;
+			    const idBodega = document.getElementById('idBodega').value;
+			    const fecha = document.getElementById('fechaInventario').value;
+			    const checkActivo = document.getElementById('checkBodega').checked;
+			    const fechaVenc = document.getElementById('fechaVencimiento').value || null;
+			    const codigo = document.getElementById('codigoArticulo').value;
+			    const proveedor = document.getElementById('proveedor').value;
+			    const descripcion = document.getElementById('descripcion').value;
+			    const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
+			    const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
+			    const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
+			    const unidades = parseFloat(document.getElementById('unidades').value) || 0;
+			    const sede = document.getElementById('sede').value;
 			
-			const costoUnitario = Number(window.costoUnitarioActual || 0);
-			const costoTotal = totalUnidades * costoUnitario;
-					
-		    window.costoTotalActual = costoTotal;
-		
-		    const payload = {
-		        fecha,
-		        codigo,
-		        proveedor,
-		        descripcion,
-		        inventario_reporteria: inventarioReporteria,
-		        masterpack,
-		        cajas_fardos: cajas,
-		        unidades,
-		        idBodega,
-		        sede,
-		        fecha_vencimiento: checkActivo ? fechaVenc : null,
-		        costo_unitario: costoUnitario,
-		        costoTotal: costoTotal
-		    };
-		
-		    if (window.editandoId) {
-		        const { error } = await supabase
-		            .from('inventarios_diarios')
-		            .update(payload)
-		            .eq('id', window.editandoId);
-		
-		        if (error) {
-		            showNotification('Error', error.message, 'error');
-		            return;
-		        }
-		
-		        window.editandoId = null;
-		        showNotification('Éxito', 'Registro actualizado', 'success');
-		    } else {
-		        const { error } = await supabase
-		            .from('inventarios_diarios')
-		            .insert([payload]);
-		
-		        if (error) {
-		            showNotification('Error', error.message, 'error');
-		            return;
-		        }
-		
-		        showNotification('Éxito', 'Guardado correctamente', 'success');
-		    }
-		
-		    document.getElementById('btnGuardarArticulo').innerHTML = `
-		        <i class="fas fa-plus-circle mr-2"></i>
-		        Agregar Artículo
-		    `;
-		
-		    limpiarFormulario();
-		    loadInventory();
-		
-		    document.querySelector('[data-section="inventario-diario"]').click();
-		}
+			    if (!codigo || !fecha || !sede) {
+			        showNotification('Error', 'Código, fecha y sede son requeridos', 'error');
+			        return;
+			    }
+			
+			    const totalUnidades = (cajas * masterpack) + unidades;
+			    const costoUnitario = Number(window.costoUnitarioActual || 0);
+			
+			    // Aquí está el cambio importante
+			    const costoTotal = inventarioReporteria * costoUnitario;
+			
+			    window.costoTotalActual = costoTotal;
+			
+			    const payload = {
+			        fecha,
+			        codigo,
+			        proveedor,
+			        descripcion,
+			        inventario_reporteria: inventarioReporteria,
+			        masterpack,
+			        cajas_fardos: cajas,
+			        unidades,
+			        idBodega,
+			        sede,
+			        fecha_vencimiento: checkActivo ? fechaVenc : null,
+			        costo_unitario: costoUnitario,
+			        costoTotal: costoTotal
+			    };
+			
+			    if (window.editandoId) {
+			        const { error } = await supabase
+			            .from('inventarios_diarios')
+			            .update(payload)
+			            .eq('id', window.editandoId);
+			
+			        if (error) {
+			            showNotification('Error', error.message, 'error');
+			            return;
+			        }
+			
+			        window.editandoId = null;
+			        showNotification('Éxito', 'Registro actualizado', 'success');
+			    } else {
+			        const { error } = await supabase
+			            .from('inventarios_diarios')
+			            .insert([payload]);
+			
+			        if (error) {
+			            showNotification('Error', error.message, 'error');
+			            return;
+			        }
+			
+			        showNotification('Éxito', 'Guardado correctamente', 'success');
+			    }
+			
+			    document.getElementById('btnGuardarArticulo').innerHTML = `
+			        <i class="fas fa-plus-circle mr-2"></i>
+			        Agregar Artículo
+			    `;
+			
+			    limpiarFormulario();
+			    loadInventory();
+			    document.querySelector('[data-section="inventario-diario"]').click();
+			}
 
         // Barcode Scanner Functions
         let lastScanned = null;
