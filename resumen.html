@@ -247,6 +247,12 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+
+        #diferenciasChart 
+        {
+            height: 300px !important;
+        }
+        
     </style>
 </head>
 
@@ -586,9 +592,11 @@
             try {
                 const { data, error } = await supabase
                     .from('inventario_justificaciones')
-                    .select('codigo, diferencia, justificacion')
-                    .in('justificacion', ['Sobrantes', 'Faltantes'])
+                    .select('*')
                     .limit(10);
+        
+                console.log('Diferencias raw:', data);
+                console.log('Error diferencias:', error);
         
                 if (error) {
                     console.error('Error cargando diferencias:', error);
@@ -597,6 +605,7 @@
         
                 renderTablaDiferencias(data);
                 renderGraficoDiferencias(data);
+                console.log('Data para tabla y gráfico:', data);
         
             } catch (err) {
                 console.error('Error inesperado:', err);
