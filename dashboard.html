@@ -2730,6 +2730,11 @@ async function cargarGraficoProveedores() {
 		    }
 		
 		    const ids = inventario.map(item => item.id);
+
+				if (!ids.length) {
+				    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6">Sin diferencias</td></tr>`;
+				    return;
+				}
 		
 		    const { data: justificaciones, error: errorJust } = await supabase
 		        .from('inventario_justificaciones')
@@ -2737,9 +2742,10 @@ async function cargarGraficoProveedores() {
 		        .in('inventario_diario_id', ids);
 		
 		    if (errorJust) {
-		        tbody.innerHTML = `<tr><td colspan="8">Error cargando justificaciones</td></tr>`;
-		        return;
-		    }
+				    console.error('Error cargando justificaciones:', errorJust);
+				    tbody.innerHTML = `<tr><td colspan="8">Error cargando justificaciones</td></tr>`;
+				    return;
+				}
 		
 		    const mapaJustificaciones = {};
 		    (justificaciones || []).forEach(j => {
