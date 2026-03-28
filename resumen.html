@@ -507,6 +507,7 @@
             await Promise.all([
                 cargarTotalSKUs(),
                 cargarValorInventario(),
+                cargarValorDiferencias(),
                 cargarUnidadesPorProveedor()
             ]);
         }
@@ -525,6 +526,37 @@
                     await aplicarFiltrosDashboard();
                 });
             });
+        }
+
+        async function cargarValorDiferencias() {
+            const { data, error } = await supabase
+                .from('Inventario_justificaciones')
+                .select('costo_total');
+        
+            if (error) {
+                console.error('Error cargando valor diferencias:', error);
+                return;
+            }
+        
+            const total = (data || []).reduce((acc, item) => {
+                return acc + Number(item.costo_total || 0);
+            }, 0);
+        
+            let valorFormateado = "";
+        
+            if (total < 0) {
+                valorFormateado = "- L. " + Math.abs(total).toLocaleString('es-HN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            } else {
+                valorFormateado = "L. " + total.toLocaleString('es-HN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+        
+            document.getElementById('valor-diferencias').textContent = valorFormateado;
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
