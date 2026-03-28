@@ -2837,7 +2837,7 @@ async function guardarCambiosMasivos() {
 		const costoTotal = Number(costoTotalCell?.dataset?.valor || 0);
 		
 		registros.push({
-		    usuario: currentUser?.nombre_corto || currentUser?.username,
+		    usuario: currentUser?.usuario || currentUser?.username,
 		    codigo,
 		    descripcion,
 		    diferencia,
