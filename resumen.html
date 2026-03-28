@@ -591,9 +591,85 @@
                 }
             }
 
+        async function cargarTablaDiferencias() {
+            try {
+                const { data, error } = await supabase
+                    .from('inventario_justificaciones')
+                    .select('codigo, diferencia, justificacion')
+                    .in('justificacion', ['Sobrantes', 'Faltantes'])
+                    .limit(10);
+        
+                if (error) {
+                    console.error('Error cargando diferencias:', error);
+                    return;
+                }
+        
+                renderTablaDiferencias(data);
+                renderGraficoDiferencias(data);
+        
+            } catch (err) {
+                console.error('Error inesperado:', err);
+            }
+        }
+
+        function renderTablaDiferencias(data) {
+            const tbody = document.getElementById('tabla-diferencias');
+            tbody.innerHTML = '';
+        
+            data.forEach(item => {
+                const fila = `
+                    <tr>
+                        <td>${item.codigo}</td>
+                        <td>${item.diferencia}</td>
+                        <td>${item.justificacion}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += fila;
+            });
+        }
+
+        let diferenciasChartInstance = null;
+
+        function renderGraficoDiferencias(data) {
+            const ctx = document.getElementById('diferenciasChart').getContext('2d');
+        
+            const labels = data.map(item => item.codigo);
+            const valores = data.map(item => item.diferencia);
+        
+            if (diferenciasChartInstance) {
+                diferenciasChartInstance.destroy();
+            }
+        
+            diferenciasChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Diferencias',
+                        data: valores,
+                        backgroundColor: valores.map(v => v >= 0 ? '#6f4e37' : '#c0392b'),
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // ← esto lo hace horizontal
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             configurarEventosFiltros();
             await aplicarFiltrosDashboard();
+            await cargarTablaDiferencias();
 
             const nombreCorto = document.getElementById('nombreCorto');
             if (nombreCorto && typeof currentUser !== 'undefined' && currentUser?.nombre_corto) {
