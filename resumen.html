@@ -552,9 +552,9 @@
                     }
             
                     const { data, error } = await supabase
-                        .from('Inventario_justificaciones')
+                        .from('inventario_justificaciones')
                         .select('costo_total, codigo');
-                        console.log('Data Inventario_justificaciones:', data);
+                        console.log('Data Inventario Justificaciones:', data);
             
                     if (error) {
                         console.error('Error cargando justificaciones:', error);
