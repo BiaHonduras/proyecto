@@ -2718,62 +2718,80 @@ async function cargarGraficoProveedores() {
 	}
 		
 	async function loadTransitos() {
-		console.log('loadTransitos ejecutada');
-	    const { data, error } = await supabase
-	        .from('inventarios_diarios')
-	        .select('*');
-	
-	    const tbody = document.getElementById('transitosTableBody');
-	
-	    if (error || !data) {
-	        tbody.innerHTML = `<tr><td colspan="7">Error cargando datos</td></tr>`;
-	        return;
-	    }
-	
-	    const filtrados = data.filter(item => {
-	        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-	        const diferencia = total - Number(item.inventario_reporteria || 0);
-	        return diferencia !== 0 || item.justificacion;
-	    });
-	
-	    if (filtrados.length === 0) {
-	        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6">Sin diferencias</td></tr>`;
-	        return;
-	    }
-	
-	    tbody.innerHTML = filtrados.map(item => {
-		    const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-		    const diferencia = total - Number(item.inventario_reporteria || 0);
-		    const costoUnitario = Number(item.costo_unitario || 0);
-		    const costoTotal = calcularCostoTotalJustificacion(diferencia, costoUnitario);
+		    const { data: inventario, error: errorInventario } = await supabase
+		        .from('inventarios_diarios')
+		        .select('*');
 		
-		    return `
-		        <tr class="border-b hover:bg-gray-50">
-		            <td class="py-3">${item.idBodega}</td>
-		            <td class="py-3 codigo">${item.codigo}</td>
-		            <td class="py-3 descripcion">${item.descripcion}</td>
-		            <td class="py-3 font-bold diferencia">${diferencia.toFixed(2)}</td>
-		            <td class="py-3">${formatearMoneda(costoUnitario)}</td>
-		            <td class="py-3 costo-total" data-valor="${costoTotal}">
-		                ${formatearMoneda(costoTotal)}
-		            </td>
-		            <td class="py-3">
-		                <select
-		                    data-id="${item.id}"
-		                    disabled
-		                    class="input-field input-disabled justificacion px-2 py-1 w-full">
-		                    ${construirOpcionesJustificacion(item.justificacion || '')}
-		                </select>
-		            </td>
-		            <td class="py-3 text-center">
-		                <button class="btnEditarFila opacity-50 cursor-not-allowed" data-id="${item.id}">
-		                    <i class="fas fa-edit"></i>
-		                </button>
-		            </td>
-		        </tr>
-		    `;
-		}).join('');
-	}
+		    const tbody = document.getElementById('transitosTableBody');
+		
+		    if (errorInventario || !inventario) {
+		        tbody.innerHTML = `<tr><td colspan="8">Error cargando datos</td></tr>`;
+		        return;
+		    }
+		
+		    const ids = inventario.map(item => item.id);
+		
+		    const { data: justificaciones, error: errorJust } = await supabase
+		        .from('inventario_justificaciones')
+		        .select('*')
+		        .in('inventario_diario_id', ids);
+		
+		    if (errorJust) {
+		        tbody.innerHTML = `<tr><td colspan="8">Error cargando justificaciones</td></tr>`;
+		        return;
+		    }
+		
+		    const mapaJustificaciones = {};
+		    (justificaciones || []).forEach(j => {
+		        mapaJustificaciones[j.inventario_diario_id] = j;
+		    });
+		
+		    const filtrados = inventario.filter(item => {
+		        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
+		        const diferencia = total - Number(item.inventario_reporteria || 0);
+		        return diferencia !== 0 || mapaJustificaciones[item.id];
+		    });
+		
+		    if (filtrados.length === 0) {
+		        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6">Sin diferencias</td></tr>`;
+		        return;
+		    }
+		
+		    tbody.innerHTML = filtrados.map(item => {
+		        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
+		        const diferencia = total - Number(item.inventario_reporteria || 0);
+		        const costoUnitario = Number(item.costo_unitario || 0);
+		        const costoTotal = calcularCostoTotalJustificacion(diferencia, costoUnitario);
+		
+		        const justificacionGuardada = mapaJustificaciones[item.id]?.justificacion || '';
+		
+		        return `
+		            <tr class="border-b hover:bg-gray-50">
+		                <td class="py-3">${item.idBodega}</td>
+		                <td class="py-3 codigo">${item.codigo}</td>
+		                <td class="py-3 descripcion">${item.descripcion}</td>
+		                <td class="py-3 font-bold diferencia">${diferencia.toFixed(2)}</td>
+		                <td class="py-3">${formatearMoneda(costoUnitario)}</td>
+		                <td class="py-3 costo-total" data-valor="${costoTotal}">
+		                    ${formatearMoneda(costoTotal)}
+		                </td>
+		                <td class="py-3">
+		                    <select
+		                        data-id="${item.id}"
+		                        disabled
+		                        class="input-field input-disabled justificacion px-2 py-1 w-full">
+		                        ${construirOpcionesJustificacion(justificacionGuardada)}
+		                    </select>
+		                </td>
+		                <td class="py-3 text-center">
+		                    <button class="btnEditarFila opacity-50 cursor-not-allowed" data-id="${item.id}">
+		                        <i class="fas fa-edit"></i>
+		                    </button>
+		                </td>
+		            </tr>
+		        `;
+		    }).join('');
+		}
 
 async function guardarJustificacion(id, texto) {
 
@@ -2815,13 +2833,15 @@ async function guardarJustificacion(id, texto) {
 
 	async function guardarCambiosMasivos() {
 	    const filas = document.querySelectorAll('#transitosTableBody tr');
+	    let registros = [];
 	
 	    for (let fila of filas) {
+	        const inventarioDiarioId = fila.querySelector('.justificacion')?.dataset?.id;
+	        const codigo = fila.querySelector('.codigo')?.textContent.trim();
+	        const descripcion = fila.querySelector('.descripcion')?.textContent.trim();
+	        const diferencia = parseFloat(fila.querySelector('.diferencia')?.textContent.trim()) || 0;
 	        const input = fila.querySelector('.justificacion');
-	        const id = input?.dataset?.id;
 	        const justificacion = input?.value || '';
-	
-	        if (!id) continue;
 	
 	        if (!justificacion) {
 	            showNotification('Error', 'No puedes guardar con justificaciones vacías', 'error');
@@ -2829,28 +2849,40 @@ async function guardarJustificacion(id, texto) {
 	            return;
 	        }
 	
-	        const { error } = await supabase
-	            .from('inventarios_diarios')
-	            .update({
-	                justificacion: justificacion
-	            })
-	            .eq('id', id);
+	        const costoTotalCell = fila.querySelector('.costo-total');
+	        const costoTotal = Number(costoTotalCell?.dataset?.valor || 0);
 	
-	        if (error) {
-	            console.error(error);
-	            showNotification('Error', `Falló el guardado: ${error.message}`, 'error');
-	            return;
-	        }
+	        registros.push({
+	            inventario_diario_id: inventarioDiarioId,
+	            usuario: currentUser?.nombre_corto || currentUser?.username,
+	            codigo,
+	            descripcion,
+	            diferencia,
+	            costo_total: costoTotal,
+	            justificacion,
+	            fecha_modificacion: new Date().toISOString()
+	        });
+	    }
 	
+	    const { error } = await supabase
+	        .from('inventario_justificaciones')
+	        .upsert(registros, { onConflict: 'inventario_diario_id' });
+	
+	    if (error) {
+	        console.error(error);
+	        showNotification('Error', `Falló el guardado: ${error.message}`, 'error');
+	        return;
+	    }
+	
+	    document.querySelectorAll('.justificacion').forEach(input => {
 	        input.disabled = true;
 	        input.classList.add('input-disabled');
+	    });
 	
-	        const btnEditar = fila.querySelector('.btnEditarFila');
-	        if (btnEditar) {
-	            btnEditar.disabled = true;
-	            btnEditar.classList.add('opacity-50', 'cursor-not-allowed');
-	        }
-	    }
+	    document.querySelectorAll('.btnEditarFila').forEach(btn => {
+	        btn.disabled = true;
+	        btn.classList.add('opacity-50', 'cursor-not-allowed');
+	    });
 	
 	    showNotification('Éxito', 'Registros actualizados correctamente', 'success');
 	}
