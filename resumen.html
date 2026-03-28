@@ -252,6 +252,18 @@
         {
             height: 300px !important;
         }
+
+        .chart-block 
+        {
+            margin-top: 18px;
+        }
+
+        #sobrantesChart,
+        #faltantesChart 
+        {
+            width: 100% !important;
+            height: 220px !important;
+        }
         
     </style>
 </head>
@@ -317,22 +329,32 @@
         </div>
 
         <div class="right">
-            <div>
-                <h3>Diferencias</h3>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Cantidad</th>
-                                <th>Tipo</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-diferencias"></tbody>
-                    </table>
-                <canvas id="diferenciasChart"></canvas>
+    <div>
+            <h3>Diferencias</h3>
+    
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Cantidad</th>
+                        <th>Tipo</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-diferencias"></tbody>
+            </table>
+    
+            <div class="chart-block">
+                <h4>Sobrantes</h4>
+                <canvas id="sobrantesChart"></canvas>
+            </div>
+    
+            <div class="chart-block">
+                <h4>Faltantes</h4>
+                <canvas id="faltantesChart"></canvas>
             </div>
         </div>
     </div>
+</div>
 
     <script>
         let proveedoresChartInstance = null;
@@ -588,43 +610,133 @@
                 }
             }
 
-        async function cargarTablaDiferencias() {
+        async function cargarDiferenciasSeparadas() {
             try {
-                const { data, error } = await supabase
+                const { data: sobrantes, error: errorSobrantes } = await supabase
                     .from('inventario_justificaciones')
-                    .select('*')
+                    .select('codigo, diferencia, justificacion')
+                    .ilike('justificacion', '%sobrante%')
                     .limit(10);
         
-                console.log('Diferencias raw:', data);
-                console.log('Error diferencias:', error);
+                const { data: faltantes, error: errorFaltantes } = await supabase
+                    .from('inventario_justificaciones')
+                    .select('codigo, diferencia, justificacion')
+                    .ilike('justificacion', '%faltante%')
+                    .limit(10);
         
-                if (error) {
-                    console.error('Error cargando diferencias:', error);
+                if (errorSobrantes) {
+                    console.error('Error cargando sobrantes:', errorSobrantes);
                     return;
                 }
         
-                renderTablaDiferencias(data);
-                renderGraficoDiferencias(data);
-                console.log('Data para tabla y gráfico:', data);
+                if (errorFaltantes) {
+                    console.error('Error cargando faltantes:', errorFaltantes);
+                    return;
+                }
+        
+                renderTablaDiferencias([
+                    ...(sobrantes || []).map(item => ({ ...item, tipo_grupo: 'Sobrante' })),
+                    ...(faltantes || []).map(item => ({ ...item, tipo_grupo: 'Faltante' }))
+                ]);
+        
+                renderGraficoSobrantes(sobrantes || []);
+                renderGraficoFaltantes(faltantes || []);
         
             } catch (err) {
-                console.error('Error inesperado:', err);
+                console.error('Error inesperado al cargar diferencias:', err);
             }
         }
 
-        function renderTablaDiferencias(data) {
-            const tbody = document.getElementById('tabla-diferencias');
-            tbody.innerHTML = '';
+        let sobrantesChartInstance = null;
+let faltantesChartInstance = null;
+
+function renderTablaDiferencias(data) {
+    const tbody = document.getElementById('tabla-diferencias');
+    tbody.innerHTML = '';
+
+    data.forEach(item => {
+        const fila = `
+            <tr>
+                <td>${item.codigo ?? ''}</td>
+                <td>${item.diferencia ?? 0}</td>
+                <td>${item.tipo_grupo ?? item.justificacion ?? ''}</td>
+            </tr>
+        `;
+        tbody.innerHTML += fila;
+    });
+}
+
+function renderGraficoSobrantes(data) {
+    const canvas = document.getElementById('sobrantesChart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const labels = data.map(item => item.codigo);
+    const valores = data.map(item => Number(item.diferencia || 0));
+
+    if (sobrantesChartInstance) {
+        sobrantesChartInstance.destroy();
+    }
+
+    sobrantesChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Sobrantes',
+                data: valores,
+                backgroundColor: '#6f4e37',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+        function renderGraficoFaltantes(data) {
+            const canvas = document.getElementById('faltantesChart');
+            if (!canvas) return;
         
-            data.forEach(item => {
-                const fila = `
-                    <tr>
-                        <td>${item.codigo}</td>
-                        <td>${item.diferencia}</td>
-                        <td>${item.justificacion}</td>
-                    </tr>
-                `;
-                tbody.innerHTML += fila;
+            const ctx = canvas.getContext('2d');
+            const labels = data.map(item => item.codigo);
+            const valores = data.map(item => Math.abs(Number(item.diferencia || 0)));
+        
+            if (faltantesChartInstance) {
+                faltantesChartInstance.destroy();
+            }
+        
+            faltantesChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Faltantes',
+                        data: valores,
+                        backgroundColor: '#c0392b',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { beginAtZero: true }
+                    }
+                }
             });
         }
 
@@ -669,7 +781,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             configurarEventosFiltros();
             await aplicarFiltrosDashboard();
-            await cargarTablaDiferencias();
+            await cargarDiferenciasSeparadas();
 
             const nombreCorto = document.getElementById('nombreCorto');
             if (nombreCorto && typeof currentUser !== 'undefined' && currentUser?.nombre_corto) {
