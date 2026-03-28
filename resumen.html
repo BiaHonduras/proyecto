@@ -290,8 +290,8 @@
 
             <div class="cards">
                 <div class="card"><p>SKU´s</p><h2 id="total-skus">0</h2></div>
-                <div class="card"><p>Valor Inventario</p><h2 id="valor-inventario">0</h2></div>
-                <div class="card"><p>Valor Diferencias</p><h2>0</h2></div>
+                <div class="card"><p>Valor Inventario</p><h2 id="valor-inventario">L. 0.00</h2></div>
+                <div class="card"><p>Valor Diferencias</p><h2 id="valor-diferencias">L. 0.00</h2></div>
             </div>
 
             <div class="chart-large">
@@ -529,35 +529,50 @@
         }
 
         async function cargarValorDiferencias() {
-            const { data, error } = await supabase
-                .from('Inventario_justificaciones')
-                .select('costo_total');
-        
-            if (error) {
-                console.error('Error cargando valor diferencias:', error);
-                return;
+                const { data: inventarioFiltrado, error: errorInventario } = await construirQueryBase('codigo');
+            
+                if (errorInventario) {
+                    console.error('Error obteniendo códigos filtrados para diferencias:', errorInventario);
+                    return;
+                }
+            
+                const codigos = [...new Set(
+                    (inventarioFiltrado || [])
+                        .map(item => item.codigo)
+                        .filter(Boolean)
+                )];
+            
+                if (codigos.length === 0) {
+                    document.getElementById('valor-diferencias').textContent = 'L. 0.00';
+                    return;
+                }
+            
+                const { data, error } = await supabase
+                    .from('Inventario_justificaciones')
+                    .select('costo_total, codigo')
+                    .in('codigo', codigos);
+            
+                if (error) {
+                    console.error('Error cargando valor diferencias:', error);
+                    return;
+                }
+            
+                const total = (data || []).reduce((acc, item) => {
+                    return acc + Number(item.costo_total || 0);
+                }, 0);
+            
+                const valorFormateado = total < 0
+                    ? `- L. ${Math.abs(total).toLocaleString('es-HN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}`
+                    : `L. ${total.toLocaleString('es-HN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}`;
+            
+                document.getElementById('valor-diferencias').textContent = valorFormateado;
             }
-        
-            const total = (data || []).reduce((acc, item) => {
-                return acc + Number(item.costo_total || 0);
-            }, 0);
-        
-            let valorFormateado = "";
-        
-            if (total < 0) {
-                valorFormateado = "- L. " + Math.abs(total).toLocaleString('es-HN', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-            } else {
-                valorFormateado = "L. " + total.toLocaleString('es-HN', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-            }
-        
-            document.getElementById('valor-diferencias').textContent = valorFormateado;
-        }
 
         document.addEventListener('DOMContentLoaded', async () => {
             configurarEventosFiltros();
