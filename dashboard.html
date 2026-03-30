@@ -1098,38 +1098,7 @@
 			        { value: "099", label: "Bodega PFN" }
 			    ]
 			};
-
-// ===== MODIFICAR: userForm submit =====
-        document.getElementById('userForm').addEventListener('submit', async function(e) {		
-			e.preventDefault();
-    
-            const username = document.getElementById('userUsername').value;
-            const nombre_corto = document.getElementById('userNombre_corto').value;
-            const email = document.getElementById('userEmail').value;
-            const password = document.getElementById('userPassword').value;
-            const confirmPassword = document.getElementById('userConfirmPassword').value;
-            const rol = document.getElementById('userRole').value;
-
-    if (password !== confirmPassword) {
-        showNotification('Error', 'Las contraseñas no coinciden', 'error');
-        return;
-    }
-
-    try {
-        const response = await crearUsuario(username, nombre_corto, email, password, rol);
-        if (response.success) {
-            showNotification('Éxito', 'Usuario creado correctamente', 'success');
-            document.getElementById('userForm').reset();
-            loadUsers();
-        } else {
-            throw response.error;
-        }
-    } catch (error) {
-        console.error('Error creando usuario:', error);
-        showNotification('Error', 'No se pudo crear el usuario', 'error');
-    }
-});
-        
+       
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', function() {
             
@@ -2288,92 +2257,78 @@ async function loadInventory() {
 
         // ===== GESTIÓN DE USUARIOS =====
         function initUsers() {
-            const form = document.getElementById('userForm');
-            const formTitle = document.getElementById('userFormTitle');
-            
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const username = document.getElementById('userUsername').value;
-                const email = document.getElementById('userEmail').value;
-                const password = document.getElementById('userPassword').value;
-                const confirmPassword = document.getElementById('userConfirmPassword').value;
-                const role = document.getElementById('userRole').value;
-                const userId = document.getElementById('userId').value; // This will be the original username for editing
-                
-                // Validaciones
-                if (password !== confirmPassword) {
-                    showNotification('Error', 'Las contraseñas no coinciden', 'error');
-                    return;
-                }
-                
-                if (password.length < 6) {
-                    showNotification('Error', 'La contraseña debe tener al menos 6 caracteres', 'error');
-                    return;
-                }
-                
-                let users = JSON.parse(localStorage.getItem('users') || '[]');
-                
-                if (userId) {
-                    // Editar usuario existente
-                    const userIndex = users.findIndex(u => u.username === userId);
-                    if (userIndex !== -1) {
-                        users[userIndex] = {
-                            username: username, // Username might be changed, but we use original for lookup
-                            email: email,
-                            password: password, // In a real app, hash this!
-                            role: role
-                        };
-                    }
-                } else {
-                    // Crear nuevo usuario
-                    if (users.some(u => u.username === username)) {
-                        showNotification('Error', 'El nombre de usuario ya existe', 'error');
-                        return;
-                    }
-                    
-        const { error } = await supabase
-        .from('usuarios')
-        .insert([
-            {
-                usuario: username,
-                nombre_corto: nombre_corto,
-                correo: email,
-                contraseña: password,
-                rol: role
-            }
-        ]);
-
-if (error) {
-    showNotification('Error', 'No se pudo crear el usuario', 'error');
-    return;
-};
-                }
-                
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                // Limpiar formulario
-                form.reset();
-                document.getElementById('userId').value = '';
-                formTitle.textContent = 'Crear Nuevo Usuario';
-                document.getElementById('userUsername').disabled = false; // Enable username field for new user
-                
-                // Recargar lista de usuarios
-                loadUsers();
-                
-                showNotification('Éxito', userId ? 'Usuario actualizado' : 'Usuario creado', 'success');
-            });
-            
-            // Cancelar edición
-            form.querySelector('button[type="reset"]').addEventListener('click', function() {
-                form.reset();
-                document.getElementById('userId').value = '';
-                formTitle.textContent = 'Crear Nuevo Usuario';
-                document.getElementById('userUsername').disabled = false; // Enable username field for new user
-            });
-
-            loadUsers(); // Initial load of users when the page loads
-        }
+		    const form = document.getElementById('userForm');
+		    const formTitle = document.getElementById('userFormTitle');
+		
+		    form.addEventListener('submit', async function (e) {
+		        e.preventDefault();
+		
+		        const username = document.getElementById('userUsername').value.trim();
+		        const nombre_corto = document.getElementById('userNombre_corto').value.trim();
+		        const correo = document.getElementById('userEmail').value.trim();
+		        const password = document.getElementById('userPassword').value;
+		        const confirmPassword = document.getElementById('userConfirmPassword').value;
+		        const rol = document.getElementById('userRole').value;
+		        const userId = document.getElementById('userId').value;
+		
+		        if (password !== confirmPassword) {
+		            showNotification('Error', 'Las contraseñas no coinciden', 'error');
+		            return;
+		        }
+		
+		        if (password.length < 6) {
+		            showNotification('Error', 'La contraseña debe tener al menos 6 caracteres', 'error');
+		            return;
+		        }
+		
+		        let error;
+		
+		        if (userId) {
+		            ({ error } = await supabase
+		                .from('usuarios')
+		                .update({
+		                    nombre_corto,
+		                    correo,
+		                    contraseña: password,
+		                    rol
+		                })
+		                .eq('usuario', userId));
+		        } else {
+		            ({ error } = await supabase
+		                .from('usuarios')
+		                .insert([{
+		                    usuario: username,
+		                    nombre_corto,
+		                    correo,
+		                    contraseña: password,
+		                    rol
+		                }]));
+		        }
+		
+		        if (error) {
+		            console.error(error);
+		            showNotification('Error', error.message || 'No se pudo guardar el usuario', 'error');
+		            return;
+		        }
+		
+		        form.reset();
+		        document.getElementById('userId').value = '';
+		        document.getElementById('userUsername').disabled = false;
+		        formTitle.textContent = 'Crear Nuevo Usuario';
+		
+		        await loadUsers();
+		        showNotification('Éxito', userId ? 'Usuario actualizado' : 'Usuario creado', 'success');
+		    });
+		
+		    form.querySelector('button[type="reset"]').addEventListener('click', function () {
+		        form.reset();
+		        document.getElementById('userId').value = '';
+		        document.getElementById('userUsername').disabled = false;
+		        formTitle.textContent = 'Crear Nuevo Usuario';
+		    });
+		
+		    loadUsers();
+		}
         
         async function loadUsers() {
             const { data: users, error } = await supabase
@@ -2425,19 +2380,18 @@ if (error) {
     `).join('');
 }
         
-        function editUser(username, nombre_corto, email, role) {
-            
-                document.getElementById('userUsername').value = username;
-                document.getElementById('userNombre_corto').value = nombre_corto;
-                document.getElementById('userEmail').value = email;
-                document.getElementById('userPassword').value = '';
-                document.getElementById('userConfirmPassword').value = '';
-                document.getElementById('userRole').value = role;
-                document.getElementById('userId').value = username;
-                
-                document.getElementById('userFormTitle').textContent = 'Editar Usuario';
-                document.getElementById('userUsername').disabled = true;
-        }
+        function editUser(username, nombre_corto, correo, rol) {
+		    document.getElementById('userUsername').value = username;
+		    document.getElementById('userNombre_corto').value = nombre_corto;
+		    document.getElementById('userEmail').value = correo;
+		    document.getElementById('userPassword').value = '';
+		    document.getElementById('userConfirmPassword').value = '';
+		    document.getElementById('userRole').value = rol;
+		    document.getElementById('userId').value = username;
+		
+		    document.getElementById('userFormTitle').textContent = 'Editar Usuario';
+		    document.getElementById('userUsername').disabled = true;
+		}
         
         async function deleteUser(username) {
 
