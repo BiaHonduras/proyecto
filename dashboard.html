@@ -1011,18 +1011,20 @@
                             
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
-                                <input type="password" id="userPassword" 
-                                       class="input-field w-full px-4 py-3 rounded-lg" 
-                                       placeholder="••••••••"
-                                       required>
+                                <input type="password" id="userPassword"
+							       class="input-field w-full px-4 py-3 rounded-lg"
+							       placeholder="••••••••"
+							       autocomplete="new-password"
+							       required>
                             </div>
                             
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña *</label>
-                                <input type="password" id="userConfirmPassword" 
-                                       class="input-field w-full px-4 py-3 rounded-lg" 
-                                       placeholder="••••••••"
-                                       required>
+                                <input type="password" id="userConfirmPassword"
+							       class="input-field w-full px-4 py-3 rounded-lg"
+							       placeholder="••••••••"
+							       autocomplete="new-password"
+							       required>
                             </div>
                             
                             <div>
@@ -2082,33 +2084,31 @@ async function loadInventory() {
 }
 
         async function cargarResumenInventario() {
-
-    const { data, error } = await supabase
-        .from('inventario_importaciones')
-        .select('usuario, fecha_importacion, cantidad_registros')
-		.eq('tipo_importacion', 'inventario')
-        .order('fecha_importacion', { ascending: false })
-        .limit(5);
-
-    const tabla = document.getElementById('tablaResumenInventario');
-
-    if (error || !data || data.length === 0) {
-        tabla.innerHTML = `
-        <tr>
-            <td colspan="3" class="text-center py-6">No hay registros</td>
-        </tr>`;
-        return;
-    }
-
-    tabla.innerHTML = data.map(r => `
-        <tr class="border-b hover:bg-gray-50">
-            <td class="py-3">${r.usuario}</td>
-            <td class="text-center">${r.cantidad_registros}</td>
-            <td class="text-center">${new Date(r.fecha_importacion).toLocaleDateString()}</td>
-        </tr>
-    `).join('');
-	cargarResumenInventario();	
-}
+		    const { data, error } = await supabase
+		        .from('inventario_importaciones')
+		        .select('usuario, fecha_importacion, cantidad_registros')
+		        .eq('tipo_importacion', 'inventario')
+		        .order('fecha_importacion', { ascending: false })
+		        .limit(5);
+		
+		    const tabla = document.getElementById('tablaResumenInventario');
+		
+		    if (error || !data || data.length === 0) {
+		        tabla.innerHTML = `
+		            <tr>
+		                <td colspan="3" class="text-center py-6">No hay registros</td>
+		            </tr>`;
+		        return;
+		    }
+		
+		    tabla.innerHTML = data.map(r => `
+		        <tr class="border-b hover:bg-gray-50">
+		            <td class="py-3">${r.usuario}</td>
+		            <td class="text-center">${r.cantidad_registros}</td>
+		            <td class="text-center">${new Date(r.fecha_importacion).toLocaleDateString()}</td>
+		        </tr>
+		    `).join('');
+		}
         async function eliminarInventarioReporteria() {
 
     if (!confirm("¿Está seguro de eliminar TODO el inventario de reportería?")) {
@@ -2646,39 +2646,35 @@ async function cargarGraficoProveedores() {
     });
 }
         async function eliminarInventarioDelDia() {
-
-    const fecha = document.getElementById('fechaInventario').value;
-
-    if (!fecha) {
-        showNotification('Error', 'No se encontró la fecha actual', 'error');
-        return;
-    }
-
-    const confirmar = confirm(
-        `⚠️ ¿Está seguro que desea eliminar TODO el inventario?`
-    );
-
-    if (!confirmar) return;
-
-    const { error } = await supabase
-        .from('inventarios_diarios')
-        .delete()
-        .not('id', 'is', null)
-			
-			const confirmacion = prompt("Escribe ELIMINAR para continuar");
-			if (confirmacion !== "ELIMINAR") return;
-
-    if (error) {
-        console.error(error);
-        showNotification('Error', 'No se pudo eliminar el inventario', 'error');
-        return;
-    }
-
-    showNotification('Éxito', 'Inventario del día eliminado correctamente', 'success');
-
-    loadInventory();
-    loadDashboardData();
-}
+		    const fecha = document.getElementById('fechaInventario').value;
+		
+		    if (!fecha) {
+		        showNotification('Error', 'No se encontró la fecha actual', 'error');
+		        return;
+		    }
+		
+		    const confirmar = confirm('¿Está seguro que desea eliminar TODO el inventario?');
+		    if (!confirmar) return;
+		
+		    const confirmacion = prompt('Escribe ELIMINAR para continuar');
+		    if (confirmacion !== 'ELIMINAR') return;
+		
+		    const { error } = await supabase
+		        .from('inventarios_diarios')
+		        .delete()
+		        .not('id', 'is', null);
+		
+		    if (error) {
+		        console.error(error);
+		        showNotification('Error', 'No se pudo eliminar el inventario', 'error');
+		        return;
+		    }
+		
+		    showNotification('Éxito', 'Inventario del día eliminado correctamente', 'success');
+		    loadInventory();
+		    loadDashboardData();
+		}
+		
     async function crearUsuario(username, nombre_corto, email, password, rol) {
     const { data, error } = await supabase
         .from('usuarios')
@@ -2821,10 +2817,11 @@ async function guardarJustificacion(id, texto) {
         return;
     }
 }
-	const userNameFooter = document.getElementById('userShortNameFooter');
+	const userShortNameFooter = document.getElementById('userShortNameFooter');
+
 		if (userShortNameFooter && currentUser) {
-    			userShortNameFooter.textContent = currentUser.nombre_corto;
-			}
+		    userShortNameFooter.textContent = currentUser.nombre_corto;
+		}
 
 	const logoutBtnBottom = document.getElementById('logoutBtnBottom');
 		if (logoutBtnBottom) {
@@ -2971,8 +2968,6 @@ async function guardarJustificacion(id, texto) {
 		        .replace(/\r?\n/g, '')
 		        .replace(/"/g, '');
 			}
-		
-    inventario.js </script>
 </script>
 
 <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
@@ -2994,6 +2989,5 @@ async function guardarJustificacion(id, texto) {
 		</button>
 	</div>
 </div>
-	
 </body>
 </html>
