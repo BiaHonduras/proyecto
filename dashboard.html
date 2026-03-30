@@ -2502,22 +2502,15 @@ async function loadInventory() {
 		
 		    document.getElementById('userFormTitle').textContent = 'Editar Usuario';
 		
-		    // Usuario bloqueado en edición
-		    document.getElementById('userUsername').disabled = true;
-		
-		    // Campos que sí deben poder editarse
+		    document.getElementById('userUsername').disabled = false;
 		    document.getElementById('userNombre_corto').disabled = false;
 		    document.getElementById('userNombre_corto').readOnly = false;
-		
 		    document.getElementById('userEmail').disabled = false;
 		    document.getElementById('userEmail').readOnly = false;
-		
 		    document.getElementById('userPassword').disabled = false;
 		    document.getElementById('userPassword').readOnly = false;
-		
 		    document.getElementById('userConfirmPassword').disabled = false;
 		    document.getElementById('userConfirmPassword').readOnly = false;
-		
 		    document.getElementById('userRole').disabled = false;
 		}
         
