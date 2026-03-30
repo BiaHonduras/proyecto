@@ -1041,10 +1041,10 @@
                                     <i class="fas fa-save mr-2"></i>
                                     Guardar Usuario
                                 </button>
-								<button type="save" class="btn-primary flex-1 py-3 rounded-lg text-white">
-                                    <i class="fas fa-save mr-2"></i>
-                                    Nuevo Usuario
-                                </button>
+								<button type="button" id="btnNuevoUsuario" class="btn-primary flex-1 py-3 rounded-lg text-white">
+								    <i class="fas fa-user-plus mr-2"></i>
+								    Nuevo Usuario
+								</button>
                             </div>
                         </form>
                     </div>
@@ -2314,6 +2314,13 @@ async function loadInventory() {
 		            showNotification('Error', error.message || 'No se pudo guardar el usuario', 'error');
 		            return;
 		        }
+
+				document.getElementById('btnNuevoUsuario').addEventListener('click', function () {
+				    form.reset();
+				    document.getElementById('userId').value = '';
+				    document.getElementById('userUsername').disabled = false;
+				    formTitle.textContent = 'Crear Nuevo Usuario';
+				});
 		
 		        form.reset();
 		        document.getElementById('userId').value = '';
@@ -2399,22 +2406,32 @@ async function loadInventory() {
 		}
         
         async function deleteUser(username) {
-
-    if (!confirm(`¿Eliminar usuario ${username}?`)) return;
-
-    const { error } = await supabase
-        .from('usuarios')
-        .delete()
-        .eq('usuario', username);
-
-    if (error) {
-        showNotification('Error', 'No se pudo eliminar el usuario', 'error');
-        return;
-    }
-
-    loadUsers();
-    showNotification('Éxito', 'Usuario eliminado', 'success');
-}
+			    if (!confirm(`¿Eliminar usuario ${username}?`)) return;
+			
+			    const { data, error, count } = await supabase
+			        .from('usuarios')
+			        .delete({ count: 'exact' })
+			        .eq('usuario', username)
+			        .select();
+			
+			    console.log('DELETE USER -> username:', username);
+			    console.log('DELETE USER -> data:', data);
+			    console.log('DELETE USER -> count:', count);
+			    console.log('DELETE USER -> error:', error);
+			
+			    if (error) {
+			        showNotification('Error', error.message || 'No se pudo eliminar el usuario', 'error');
+			        return;
+			    }
+			
+			    if (!count || count === 0) {
+			        showNotification('Advertencia', 'No se eliminó ningún registro. Revise el valor de usuario o políticas SQL.', 'warning');
+			        return;
+			    }
+			
+			    await loadUsers();
+			    showNotification('Éxito', 'Usuario eliminado', 'success');
+			}
 
         // ===== RESUMEN IMPORTACIONES =====
 async function cargarResumenCodigos() {
