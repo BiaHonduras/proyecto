@@ -1857,100 +1857,100 @@ async function loadInventory() {
         // ===== EXPORTAR CSV =====
         async function exportToCSV() {
 
-    const { data: inventario, error } = await supabase
-        .from('inventarios_diarios')
-        .select('*');
-
-    if (error) {
-        console.error(error);
-        showNotification('Error', 'No se pudo obtener datos de Supabase', 'error');
-        return;
-    }
-
-    if (!inventario || inventario.length === 0) {
-        showNotification('Advertencia', 'No hay datos para exportar', 'warning');
-        return;
-    }
-
-    const selectedFields = Array.from(document.querySelectorAll('input[name="exportFields"]:checked'))
-        .map(checkbox => checkbox.value);
-
-    const headersMap = {
-        bodega: 'Bodega',
-		fecha: 'Fecha Actual',
-		fecha_vencimiento: 'Fecha Vencimiento',
-        codigo: 'Codigo Articulo',
-		codigo_barra: 'Codigo Barra',
-        descripcion: 'Descripcion',
-        proveedor: 'Proveedor',
-        inventarioReporteria: 'Inventario Reporteria',
-        masterpack: 'Masterpack',
-        cajasFardos: 'Cajas/Fardos',
-        unidades: 'Unidades',
-        total: 'Total',
-        diferencia: 'Diferencia',
-        validacion: 'Validacion',
-		diasvida: 'Dias de Vida'
-    };
-
-    const headers = selectedFields.map(field => headersMap[field]);
-
-    const csvContent = inventario.map(item => {
-
-        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-        const diferencia = item.inventario_reporteria - total;
-
-        let validacion = '';
-        if (diferencia === 0) validacion = 'OK';
-        else if (diferencia < 0) validacion = 'VAL+';
-        else validacion = 'VAL-';
-
-		// 🔥 cálculo días de vida
-        let diasvida = '';
-        if (item.fecha_vencimiento) {
-            const hoy = new Date(item.fecha);
-            const venc = new Date(item.fecha_vencimiento);
-            const diffTime = venc - hoy;
-            diasvida = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        }
-
-        const rowData = {
-			bodega: item.idBodega || '',
-            fecha: item.fecha,
-			fecha_vencimiento: item.fecha_vencimiento || '',
-            codigo: item.codigo,
-			codigo_barra: item.codigo_barra || '',
-            descripcion: item.descripcion,
-            proveedor: item.proveedor,
-            inventarioReporteria: item.inventario_reporteria,
-            masterpack: item.masterpack,
-            cajasFardos: item.cajas_fardos || 0,
-            unidades: item.unidades,
-            total: total.toFixed(2),
-            diferencia: diferencia.toFixed(2),
-            validacion: validacion,
-			diasvida: diasvida
-        };
-
-        return selectedFields.map(field => `"${rowData[field]}"`).join(',');
-    }).join('\n');
-
-    const csv = headers.join(',') + '\n' + csvContent;
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-
-    link.setAttribute('href', url);
-    link.setAttribute('download', `inventario_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    showNotification('Éxito', 'CSV exportado desde Supabase', 'success');
-}
+		    const { data: inventario, error } = await supabase
+		        .from('inventarios_diarios')
+		        .select('*');
+		
+		    if (error) {
+		        console.error(error);
+		        showNotification('Error', 'No se pudo obtener datos de Supabase', 'error');
+		        return;
+		    }
+		
+		    if (!inventario || inventario.length === 0) {
+		        showNotification('Advertencia', 'No hay datos para exportar', 'warning');
+		        return;
+		    }
+		
+		    const selectedFields = Array.from(document.querySelectorAll('input[name="exportFields"]:checked'))
+		        .map(checkbox => checkbox.value);
+		
+		    const headersMap = {
+		        idBodega: 'Bodega',
+				fecha: 'Fecha Actual',
+				fecha_vencimiento: 'Fecha Vencimiento',
+		        codigo: 'Codigo Articulo',
+				codigo_barra: 'Codigo Barra',
+		        descripcion: 'Descripcion',
+		        proveedor: 'Proveedor',
+		        inventarioReporteria: 'Inventario Reporteria',
+		        masterpack: 'Masterpack',
+		        cajasFardos: 'Cajas/Fardos',
+		        unidades: 'Unidades',
+		        total: 'Total',
+		        diferencia: 'Diferencia',
+		        validacion: 'Validacion',
+				diasvida: 'Dias de Vida'
+		    };
+		
+		    const headers = selectedFields.map(field => headersMap[field]);
+		
+		    const csvContent = inventario.map(item => {
+		
+		        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
+		        const diferencia = item.inventario_reporteria - total;
+		
+		        let validacion = '';
+		        if (diferencia === 0) validacion = 'OK';
+		        else if (diferencia < 0) validacion = 'VAL+';
+		        else validacion = 'VAL-';
+		
+				// 🔥 cálculo días de vida
+		        let diasvida = '';
+		        if (item.fecha_vencimiento) {
+		            const hoy = new Date(item.fecha);
+		            const venc = new Date(item.fecha_vencimiento);
+		            const diffTime = venc - hoy;
+		            diasvida = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+		        }
+		
+		        const rowData = {
+					bodega: item.idBodega || '',
+		            fecha: item.fecha,
+					fecha_vencimiento: item.fecha_vencimiento || '',
+		            codigo: item.codigo,
+					codigo_barra: item.codigo_barra || '',
+		            descripcion: item.descripcion,
+		            proveedor: item.proveedor,
+		            inventarioReporteria: item.inventario_reporteria,
+		            masterpack: item.masterpack,
+		            cajasFardos: item.cajas_fardos || 0,
+		            unidades: item.unidades,
+		            total: total.toFixed(2),
+		            diferencia: diferencia.toFixed(2),
+		            validacion: validacion,
+					diasvida: diasvida
+		        };
+		
+		        return selectedFields.map(field => `"${rowData[field]}"`).join(',');
+		    }).join('\n');
+		
+		    const csv = headers.join(',') + '\n' + csvContent;
+		
+		    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+		    const link = document.createElement('a');
+		    const url = URL.createObjectURL(blob);
+		
+		    link.setAttribute('href', url);
+		    link.setAttribute('download', `inventario_${new Date().toISOString().split('T')[0]}.csv`);
+		    link.style.visibility = 'hidden';
+		
+		    document.body.appendChild(link);
+		    link.click();
+		    document.body.removeChild(link);
+		
+		    showNotification('Éxito', 'CSV exportado desde Supabase', 'success');
+		}
 
         // ===== IMPORTAR DATOS =====
         function previewInventoryFile(input) {
