@@ -437,6 +437,18 @@
 
             const agrupado = {};
 
+            procesado.forEach(item => {
+                if (!agrupado[item.codigo]) {
+                    agrupado[item.codigo] = 0;
+                }
+                agrupado[item.codigo] += item.total;
+            });
+            
+            const lista = Object.entries(agrupado).map(([codigo, total]) => ({
+                codigo,
+                total
+            }));
+
             (data || []).forEach(item => {
                 const proveedor = item.proveedor || 'Sin proveedor';
 
@@ -528,7 +540,8 @@
                 cargarValorInventario(),
                 cargarValorDiferencias(),
                 cargarUnidadesPorProveedor(),
-                cargarDiferenciasSeparadas()
+                cargarDiferenciasSeparadas(),
+                cargarTopSKUs()
             ]);
         }
 
@@ -824,6 +837,96 @@
                     }
                 }
             });
+        }
+
+        async function cargarTopSKUs() {
+            const { data, error } = await construirQueryBase('codigo, proveedor, total, cajas_fardos, masterpack, unidades');
+        
+            if (error) {
+                console.error('Error cargando top SKUs:', error);
+                return;
+            }
+        
+            const procesado = (data || []).map(item => {
+                let totalUnidades = 0;
+        
+                if (item.total != null && item.total !== '') {
+                    totalUnidades = Number(item.total);
+                } else {
+                    totalUnidades =
+                        (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) +
+                        Number(item.unidades || 0);
+                }
+        
+                return {
+                    codigo: item.codigo,
+                    total: totalUnidades
+                };
+            }).filter(item => item.codigo);
+        
+            // Top 5 mayor
+            const topHigh = [...procesado]
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 5);
+        
+            // Top 5 menor
+            const topLow = [...procesado]
+                .sort((a, b) => a.total - b.total)
+                .slice(0, 5);
+        
+            renderTopChart('topHigh', topHigh, 'Más inventario', '#6f4e37');
+            renderTopChart('topLow', topLow, 'Menos inventario', '#c0392b');
+        }
+
+        let topHighChartInstance = null;
+        let topLowChartInstance = null;
+        
+        function renderTopChart(canvasId, data, label, color) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+        
+            const ctx = canvas.getContext('2d');
+        
+            const labels = data.map(item => item.codigo);
+            const valores = data.map(item => item.total);
+        
+            let chartInstance = canvasId === 'topHigh' ? topHighChartInstance : topLowChartInstance;
+        
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+        
+            const newChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label,
+                        data: valores,
+                        backgroundColor: color,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        
+            if (canvasId === 'topHigh') {
+                topHighChartInstance = newChart;
+            } else {
+                topLowChartInstance = newChart;
+            }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
