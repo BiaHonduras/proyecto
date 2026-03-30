@@ -2312,13 +2312,29 @@ async function loadInventory() {
         // ===== GESTIÓN DE USUARIOS =====
 
 			function resetUserForm() {
-				const form = document.getElementById('userForm');
-				const inputUsername = document.getElementById('userUsername');
-					
-				form.reset();
-				document.getElementById('userId').value = '';
-				inputUsername.disabled = false;
-				document.getElementById('userFormTitle').textContent = 'Crear Nuevo Usuario';
+			    const form = document.getElementById('userForm');
+			
+			    form.reset();
+			    document.getElementById('userId').value = '';
+			
+			    document.getElementById('userUsername').disabled = false;
+			    document.getElementById('userUsername').readOnly = false;
+			
+			    document.getElementById('userNombre_corto').disabled = false;
+			    document.getElementById('userNombre_corto').readOnly = false;
+			
+			    document.getElementById('userEmail').disabled = false;
+			    document.getElementById('userEmail').readOnly = false;
+			
+			    document.getElementById('userPassword').disabled = false;
+			    document.getElementById('userPassword').readOnly = false;
+			
+			    document.getElementById('userConfirmPassword').disabled = false;
+			    document.getElementById('userConfirmPassword').readOnly = false;
+			
+			    document.getElementById('userRole').disabled = false;
+			
+			    document.getElementById('userFormTitle').textContent = 'Crear Nuevo Usuario';
 			}
 		
 	        function initUsers() {
@@ -2485,7 +2501,24 @@ async function loadInventory() {
 		    document.getElementById('userId').value = username;
 		
 		    document.getElementById('userFormTitle').textContent = 'Editar Usuario';
+		
+		    // Usuario bloqueado en edición
 		    document.getElementById('userUsername').disabled = true;
+		
+		    // Campos que sí deben poder editarse
+		    document.getElementById('userNombre_corto').disabled = false;
+		    document.getElementById('userNombre_corto').readOnly = false;
+		
+		    document.getElementById('userEmail').disabled = false;
+		    document.getElementById('userEmail').readOnly = false;
+		
+		    document.getElementById('userPassword').disabled = false;
+		    document.getElementById('userPassword').readOnly = false;
+		
+		    document.getElementById('userConfirmPassword').disabled = false;
+		    document.getElementById('userConfirmPassword').readOnly = false;
+		
+		    document.getElementById('userRole').disabled = false;
 		}
         
         async function deleteUser(username) {
