@@ -771,6 +771,18 @@
                                         <input type="checkbox" class="mr-2" name="exportFields" value="diasvida" checked>
                                         Días de Vida
                                     </label>
+									<label class="flex items-center">
+									    <input type="checkbox" class="mr-2" name="exportFields" value="justificacion" checked>
+									    Justificación
+									</label>
+									<label class="flex items-center">
+									    <input type="checkbox" class="mr-2" name="exportFields" value="usuario_justificacion" checked>
+									    Usuario Justificación
+									</label>
+									<label class="flex items-center">
+									    <input type="checkbox" class="mr-2" name="exportFields" value="fecha_modificacion_justificacion" checked>
+									    Fecha Justificación
+									</label>
                                 </div>
                             </div>
                             
@@ -1861,14 +1873,13 @@ async function loadInventory() {
 
         // ===== EXPORTAR CSV =====
         async function exportToCSV() {
-
 		    const { data: inventario, error } = await supabase
 		        .from('inventarios_diarios')
 		        .select('*');
 		
 		    if (error) {
 		        console.error(error);
-		        showNotification('Error', 'No se pudo obtener datos de Supabase', 'error');
+		        showNotification('Error', 'No se pudo obtener datos de inventario', 'error');
 		        return;
 		    }
 		
@@ -1877,17 +1888,39 @@ async function loadInventory() {
 		        return;
 		    }
 		
-		    const selectedFields = Array.from(document.querySelectorAll('input[name="exportFields"]:checked'))
-		        .map(checkbox => checkbox.value);
+		    const idsInventario = inventario.map(item => item.id).filter(Boolean);
+		
+		    let mapaJustificaciones = {};
+		
+		    if (idsInventario.length > 0) {
+		        const { data: justificaciones, error: errorJust } = await supabase
+		            .from('inventario_justificaciones')
+		            .select('id, codigo, justificacion, usuario, fecha_modificacion')
+		            .in('id', idsInventario);
+		
+		        if (errorJust) {
+		            console.error(errorJust);
+		            showNotification('Error', 'No se pudieron cargar las justificaciones', 'error');
+		            return;
+		        }
+		
+		        (justificaciones || []).forEach(j => {
+		            mapaJustificaciones[j.id] = j;
+		        });
+		    }
+		
+		    const selectedFields = Array.from(
+		        document.querySelectorAll('input[name="exportFields"]:checked')
+		    ).map(checkbox => checkbox.value);
 		
 		    const headersMap = {
 		        idBodega: 'Bodega',
-				fecha: 'Fecha Actual',
-				fecha_vencimiento: 'Fecha Vencimiento',
+		        fecha: 'Fecha Actual',
+		        fecha_vencimiento: 'Fecha Vencimiento',
 		        codigo: 'Codigo Articulo',
-				codigo_barra: 'Codigo Barra',
-		        descripcion: 'Descripcion',
+		        codigo_barra: 'Codigo Barra',
 		        proveedor: 'Proveedor',
+		        descripcion: 'Descripcion',
 		        inventarioReporteria: 'Inventario Reporteria',
 		        masterpack: 'Masterpack',
 		        cajasFardos: 'Cajas/Fardos',
@@ -1895,22 +1928,23 @@ async function loadInventory() {
 		        total: 'Total',
 		        diferencia: 'Diferencia',
 		        validacion: 'Validacion',
-				diasvida: 'Dias de Vida'
+		        diasvida: 'Dias de Vida',
+		        justificacion: 'Justificacion',
+		        usuario_justificacion: 'Usuario Justificacion',
+		        fecha_modificacion_justificacion: 'Fecha Modificacion Justificacion'
 		    };
 		
 		    const headers = selectedFields.map(field => headersMap[field]);
 		
 		    const csvContent = inventario.map(item => {
-		
-		        const total = (item.cajas_fardos * item.masterpack) + item.unidades;
-		        const diferencia = item.inventario_reporteria - total;
+		        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
+		        const diferencia = Number(item.inventario_reporteria || 0) - total;
 		
 		        let validacion = '';
 		        if (diferencia === 0) validacion = 'OK';
 		        else if (diferencia < 0) validacion = 'VAL+';
 		        else validacion = 'VAL-';
 		
-				// 🔥 cálculo días de vida
 		        let diasvida = '';
 		        if (item.fecha_vencimiento) {
 		            const hoy = new Date(item.fecha);
@@ -1919,25 +1953,33 @@ async function loadInventory() {
 		            diasvida = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 		        }
 		
+		        const justificacionData = mapaJustificaciones[item.id] || {};
+		
 		        const rowData = {
-					idBodega: item.idBodega || '',
-		            fecha: item.fecha,
-					fecha_vencimiento: item.fecha_vencimiento || '',
-		            codigo: item.codigo,
-					codigo_barra: item.codigo_barra || '',
-		            descripcion: item.descripcion,
-		            proveedor: item.proveedor,
-		            inventarioReporteria: item.inventario_reporteria,
-		            masterpack: item.masterpack,
-		            cajasFardos: item.cajas_fardos || 0,
-		            unidades: item.unidades,
+		            idBodega: item.idBodega || '',
+		            fecha: item.fecha || '',
+		            fecha_vencimiento: item.fecha_vencimiento || '',
+		            codigo: item.codigo || '',
+		            codigo_barra: item.codigo_barra || '',
+		            proveedor: item.proveedor || '',
+		            descripcion: item.descripcion || '',
+		            inventarioReporteria: item.inventario_reporteria ?? '',
+		            masterpack: item.masterpack ?? '',
+		            cajasFardos: item.cajas_fardos ?? 0,
+		            unidades: item.unidades ?? '',
 		            total: total.toFixed(2),
 		            diferencia: diferencia.toFixed(2),
 		            validacion: validacion,
-					diasvida: diasvida
+		            diasvida: diasvida,
+		            justificacion: justificacionData.justificacion || '',
+		            usuario_justificacion: justificacionData.usuario || '',
+		            fecha_modificacion_justificacion: justificacionData.fecha_modificacion || ''
 		        };
 		
-		        return selectedFields.map(field => `"${rowData[field]}"`).join(',');
+		        return selectedFields.map(field => {
+		            const valor = rowData[field] ?? '';
+		            return `"${String(valor).replace(/"/g, '""')}"`;
+		        }).join(',');
 		    }).join('\n');
 		
 		    const csv = headers.join(',') + '\n' + csvContent;
@@ -1954,7 +1996,7 @@ async function loadInventory() {
 		    link.click();
 		    document.body.removeChild(link);
 		
-		    showNotification('Éxito', 'CSV exportado desde Supabase', 'success');
+		    showNotification('Éxito', 'CSV exportado con justificaciones', 'success');
 		}
 
         // ===== IMPORTAR DATOS =====
@@ -2756,15 +2798,18 @@ async function cargarGraficoProveedores() {
 			}
 		
 		    const mapaJustificaciones = {};
-		    (justificaciones || []).forEach(j => {
-		        mapaJustificaciones[j.codigo] = j;
-		    });
-		
-		    const filtrados = inventario.filter(item => {
-		        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-		        const diferencia = total - Number(item.inventario_reporteria || 0);
-		        return diferencia !== 0 || mapaJustificaciones[item.id];
-		    });
+				(justificaciones || []).forEach(j => {
+				    mapaJustificaciones[j.id] = j;
+				});
+				
+				const filtrados = inventario.filter(item => {
+				    const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
+				    const diferencia = total - Number(item.inventario_reporteria || 0);
+				    return diferencia !== 0 || mapaJustificaciones[item.id];
+				});
+				
+				const justificacionGuardada = mapaJustificaciones[item.id]?.justificacion || '';
+				const justificacionId = mapaJustificaciones[item.id]?.id || '';
 		
 		    if (filtrados.length === 0) {
 		        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6">Sin diferencias</td></tr>`;
