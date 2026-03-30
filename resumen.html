@@ -264,6 +264,12 @@
             width: 100% !important;
             height: 220px !important;
         }
+
+        #topHigh,
+        #topLow {
+            width: 100% !important;
+            height: 260px !important;
+        }
         
     </style>
 </head>
@@ -436,18 +442,6 @@
             }
 
             const agrupado = {};
-
-            procesado.forEach(item => {
-                if (!agrupado[item.codigo]) {
-                    agrupado[item.codigo] = 0;
-                }
-                agrupado[item.codigo] += item.total;
-            });
-            
-            const lista = Object.entries(agrupado).map(([codigo, total]) => ({
-                codigo,
-                total
-            }));
 
             (data || []).forEach(item => {
                 const proveedor = item.proveedor || 'Sin proveedor';
