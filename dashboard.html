@@ -2334,7 +2334,8 @@ async function loadInventory() {
             const { data: users, error } = await supabase
             .from('usuarios')
             .select('*');
-        const tbody = document.getElementById('usersTableBody');
+        	const tbody = document.getElementById('usersTableBody');
+			console.log('USERS', users, error);
 
     if (error) {
         console.error(error);
