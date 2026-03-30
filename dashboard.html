@@ -2263,11 +2263,20 @@ async function loadInventory() {
         function initUsers() {
 		    const form = document.getElementById('userForm');
 		    const formTitle = document.getElementById('userFormTitle');
+		    const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
+		    const inputUsername = document.getElementById('userUsername');
+		
+		    function resetUserForm() {
+		        form.reset();
+		        document.getElementById('userId').value = '';
+		        inputUsername.disabled = false;
+		        formTitle.textContent = 'Crear Nuevo Usuario';
+		    }
 		
 		    form.addEventListener('submit', async function (e) {
 		        e.preventDefault();
 		
-		        const username = document.getElementById('userUsername').value.trim();
+		        const username = inputUsername.value.trim();
 		        const nombre_corto = document.getElementById('userNombre_corto').value.trim();
 		        const correo = document.getElementById('userEmail').value.trim();
 		        const password = document.getElementById('userPassword').value;
@@ -2314,30 +2323,16 @@ async function loadInventory() {
 		            showNotification('Error', error.message || 'No se pudo guardar el usuario', 'error');
 		            return;
 		        }
-
-				document.getElementById('btnNuevoUsuario').addEventListener('click', function () {
-				    form.reset();
-				    document.getElementById('userId').value = '';
-				    document.getElementById('userUsername').disabled = false;
-				    formTitle.textContent = 'Crear Nuevo Usuario';
-				});
 		
-		        form.reset();
-		        document.getElementById('userId').value = '';
-		        document.getElementById('userUsername').disabled = false;
-		        formTitle.textContent = 'Crear Nuevo Usuario';
-		
+		        resetUserForm();
 		        await loadUsers();
 		        showNotification('Éxito', userId ? 'Usuario actualizado' : 'Usuario creado', 'success');
 		    });
 		
-		    form.querySelector('button[type="reset"]').addEventListener('click', function () {
-		        form.reset();
-		        document.getElementById('userId').value = '';
-		        document.getElementById('userUsername').disabled = false;
-		        formTitle.textContent = 'Crear Nuevo Usuario';
-		    });
+		    form.querySelector('button[type="reset"]').addEventListener('click', resetUserForm);
+		    btnNuevoUsuario.addEventListener('click', resetUserForm);
 		
+		    resetUserForm();
 		    loadUsers();
 		}
         
@@ -2367,30 +2362,47 @@ async function loadInventory() {
     }
 
     tbody.innerHTML = users.map(user => `
-        <tr class="border-b border-gray-200 hover:bg-gray-50">
-            <td class="py-3 px-4 font-medium">${user.usuario}</td>
-            <td class="py-3 px-4">${user.nombre_corto}</td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-1 rounded-full text-xs ${
-                    user.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                }">
-                    ${user.rol}
-                </span>
-            </td>
-            <td class="py-3 px-4">
-    <div class="flex space-x-3">
-        <button class="text-blue-600" onclick="editUser('${user.usuario}','${user.nombre_corto}','${user.correo}','${user.rol}')">
-            <i class="fas fa-edit"></i>
-        </button>
+	    <tr class="border-b border-gray-200 hover:bg-gray-50">
+	        <td class="py-3 px-4 font-medium">${user.usuario}</td>
+	        <td class="py-3 px-4">${user.nombre_corto}</td>
+	        <td class="py-3 px-4">${user.rol}</td>
+	        <td class="py-3 px-4">
+	            <div class="flex space-x-3">
+	                <button class="text-blue-600 btn-edit-user"
+	                    data-username="${user.usuario}"
+	                    data-nombre="${user.nombre_corto}"
+	                    data-correo="${user.correo}"
+	                    data-rol="${user.rol}">
+	                    <i class="fas fa-edit"></i>
+	                </button>
+	
+	                <button class="text-red-600 btn-delete-user"
+	                    data-username="${user.usuario}">
+	                    <i class="fas fa-trash"></i>
+	                </button>
+	            </div>
+	        </td>
+	    </tr>
+	`).join('');
 
-        <button class="text-red-600" onclick="deleteUser('${user.usuario}')">
-            <i class="fas fa-trash"></i>
-        </button>
-    </div>
-</td>
-        </tr>
-    `).join('');
-}
+			document.getElementById('usersTableBody').addEventListener('click', async (e) => {
+			    const btnDelete = e.target.closest('.btn-delete-user');
+			    if (btnDelete) {
+			        await deleteUser(btnDelete.dataset.username);
+			        return;
+			    }
+			
+			    const btnEdit = e.target.closest('.btn-edit-user');
+			    if (btnEdit) {
+			        editUser(
+			            btnEdit.dataset.username,
+			            btnEdit.dataset.nombre,
+			            btnEdit.dataset.correo,
+			            btnEdit.dataset.rol
+			        );
+			    }
+			});
+		}
         
         function editUser(username, nombre_corto, correo, rol) {
 		    document.getElementById('userUsername').value = username;
@@ -2406,32 +2418,22 @@ async function loadInventory() {
 		}
         
         async function deleteUser(username) {
-			    if (!confirm(`¿Eliminar usuario ${username}?`)) return;
-			
-			    const { data, error, count } = await supabase
-			        .from('usuarios')
-			        .delete({ count: 'exact' })
-			        .eq('usuario', username)
-			        .select();
-			
-			    console.log('DELETE USER -> username:', username);
-			    console.log('DELETE USER -> data:', data);
-			    console.log('DELETE USER -> count:', count);
-			    console.log('DELETE USER -> error:', error);
-			
-			    if (error) {
-			        showNotification('Error', error.message || 'No se pudo eliminar el usuario', 'error');
-			        return;
-			    }
-			
-			    if (!count || count === 0) {
-			        showNotification('Advertencia', 'No se eliminó ningún registro. Revise el valor de usuario o políticas SQL.', 'warning');
-			        return;
-			    }
-			
-			    await loadUsers();
-			    showNotification('Éxito', 'Usuario eliminado', 'success');
-			}
+		    if (!confirm(`¿Eliminar usuario ${username}?`)) return;
+		
+		    const { error } = await supabase
+		        .from('usuarios')
+		        .delete()
+		        .eq('usuario', username);
+		
+		    if (error) {
+		        console.error('DELETE USER ERROR:', error);
+		        showNotification('Error', error.message || 'No se pudo eliminar el usuario', 'error');
+		        return;
+		    }
+		
+		    await loadUsers();
+		    showNotification('Éxito', 'Usuario eliminado', 'success');
+		}
 
         // ===== RESUMEN IMPORTACIONES =====
 async function cargarResumenCodigos() {
