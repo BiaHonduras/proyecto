@@ -1906,12 +1906,12 @@ async function loadInventory() {
         else validacion = 'VAL-';
 
 		// 🔥 cálculo días de vida
-        let diasVida = '';
+        let diasvida = '';
         if (item.fecha_vencimiento) {
             const hoy = new Date(item.fecha);
             const venc = new Date(item.fecha_vencimiento);
             const diffTime = venc - hoy;
-            diasVida = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            diasvida = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         }
 
         const rowData = {
