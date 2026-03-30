@@ -2265,22 +2265,23 @@ async function loadInventory() {
         });
 
         // ===== GESTIÓN DE USUARIOS =====
+
+			function resetUserForm() {
+				const form = document.getElementById('userForm');
+				const inputUsername = document.getElementById('userUsername');
+					
+				form.reset();
+				document.getElementById('userId').value = '';
+				inputUsername.disabled = false;
+				document.getElementById('userFormTitle').textContent = 'Crear Nuevo Usuario';
+			}
+		
 	        function initUsers() {
 			    const form = document.getElementById('userForm');
 			    const formTitle = document.getElementById('userFormTitle');
 			    const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
 			    const inputUsername = document.getElementById('userUsername');
 			    const tbody = document.getElementById('usersTableBody');
-			
-			    function resetUserForm() {
-				    const form = document.getElementById('userForm');
-				    const inputUsername = document.getElementById('userUsername');
-				
-				    form.reset();
-				    document.getElementById('userId').value = '';
-				    inputUsername.disabled = false;
-				    document.getElementById('userFormTitle').textContent = 'Crear Nuevo Usuario';
-				}
 			
 			    tbody.addEventListener('click', async (e) => {
 			        const btnDelete = e.target.closest('.btn-delete-user');
