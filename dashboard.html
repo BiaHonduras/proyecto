@@ -1890,7 +1890,7 @@ async function loadInventory() {
         total: 'Total',
         diferencia: 'Diferencia',
         validacion: 'Validacion',
-		dias_vida: 'Dias de Vida'
+		diasvida: 'Dias de Vida'
     };
 
     const headers = selectedFields.map(field => headersMap[field]);
@@ -1929,7 +1929,7 @@ async function loadInventory() {
             total: total.toFixed(2),
             diferencia: diferencia.toFixed(2),
             validacion: validacion,
-			dias_vida: diasvida
+			diasvida: diasvida
         };
 
         return selectedFields.map(field => `"${rowData[field]}"`).join(',');
