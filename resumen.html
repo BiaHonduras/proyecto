@@ -527,7 +527,8 @@
                 cargarTotalSKUs(),
                 cargarValorInventario(),
                 cargarValorDiferencias(),
-                cargarUnidadesPorProveedor()
+                cargarUnidadesPorProveedor(),
+                cargarDiferenciasSeparadas()
             ]);
         }
 
@@ -611,98 +612,146 @@
             }
 
         async function cargarDiferenciasSeparadas() {
-            try {
-                const { data: sobrantes, error: errorSobrantes } = await supabase
-                    .from('inventario_justificaciones')
-                    .select('codigo, diferencia, justificacion')
-                    .ilike('justificacion', '%sobrante%')
-                    .limit(10);
-        
-                const { data: faltantes, error: errorFaltantes } = await supabase
-                    .from('inventario_justificaciones')
-                    .select('codigo, diferencia, justificacion')
-                    .ilike('justificacion', '%faltante%')
-                    .limit(10);
-        
-                if (errorSobrantes) {
-                    console.error('Error cargando sobrantes:', errorSobrantes);
-                    return;
+                try {
+                    const { data: inventarioFiltrado, error: errorInventario } = await construirQueryBase('codigo');
+            
+                    if (errorInventario) {
+                        console.error('Error obteniendo códigos filtrados para diferencias:', errorInventario);
+                        renderTablaDiferencias([]);
+                        renderGraficoSobrantes([]);
+                        renderGraficoFaltantes([]);
+                        return;
+                    }
+            
+                    const codigos = [...new Set(
+                        (inventarioFiltrado || [])
+                            .map(item => String(item.codigo || '').trim())
+                            .filter(codigo => codigo !== '')
+                    )];
+            
+                    console.log('Códigos filtrados para tabla y gráficos:', codigos);
+            
+                    if (codigos.length === 0) {
+                        renderTablaDiferencias([]);
+                        renderGraficoSobrantes([]);
+                        renderGraficoFaltantes([]);
+                        return;
+                    }
+            
+                    const { data: justificaciones, error: errorJustificaciones } = await supabase
+                        .from('inventario_justificaciones')
+                        .select('codigo, diferencia, justificacion')
+                        .in('codigo', codigos);
+            
+                    if (errorJustificaciones) {
+                        console.error('Error cargando justificaciones filtradas:', errorJustificaciones);
+                        renderTablaDiferencias([]);
+                        renderGraficoSobrantes([]);
+                        renderGraficoFaltantes([]);
+                        return;
+                    }
+            
+                    const sobrantes = (justificaciones || []).filter(item =>
+                        String(item.justificacion || '').toLowerCase().includes('sobrante')
+                    );
+            
+                    const faltantes = (justificaciones || []).filter(item =>
+                        String(item.justificacion || '').toLowerCase().includes('faltante')
+                    );
+            
+                    const tabla = [
+                        ...sobrantes.map(item => ({
+                            ...item,
+                            tipo_grupo: 'Sobrante'
+                        })),
+                        ...faltantes.map(item => ({
+                            ...item,
+                            tipo_grupo: 'Faltante'
+                        }))
+                    ];
+            
+                    renderTablaDiferencias(tabla);
+                    renderGraficoSobrantes(sobrantes);
+                    renderGraficoFaltantes(faltantes);
+            
+                } catch (err) {
+                    console.error('Error inesperado al cargar diferencias:', err);
+                    renderTablaDiferencias([]);
+                    renderGraficoSobrantes([]);
+                    renderGraficoFaltantes([]);
                 }
-        
-                if (errorFaltantes) {
-                    console.error('Error cargando faltantes:', errorFaltantes);
-                    return;
-                }
-        
-                renderTablaDiferencias([
-                    ...(sobrantes || []).map(item => ({ ...item, tipo_grupo: 'Sobrante' })),
-                    ...(faltantes || []).map(item => ({ ...item, tipo_grupo: 'Faltante' }))
-                ]);
-        
-                renderGraficoSobrantes(sobrantes || []);
-                renderGraficoFaltantes(faltantes || []);
-        
-            } catch (err) {
-                console.error('Error inesperado al cargar diferencias:', err);
             }
+
+        let sobrantesChartInstance = null;
+        let faltantesChartInstance = null;
+
+        function renderTablaDiferencias(data) {
+            const tbody = document.getElementById('tabla-diferencias');
+            tbody.innerHTML = '';
+        
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align:center;">Sin datos</td>
+                    </tr>
+                `;
+                return;
+            }
+        
+            data.forEach(item => {
+                const fila = `
+                    <tr>
+                        <td>${item.codigo ?? ''}</td>
+                        <td>${item.diferencia ?? 0}</td>
+                        <td>${item.tipo_grupo ?? ''}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += fila;
+            });
         }
 
         let sobrantesChartInstance = null;
-let faltantesChartInstance = null;
+        let faltantesChartInstance = null;
 
-function renderTablaDiferencias(data) {
-    const tbody = document.getElementById('tabla-diferencias');
-    tbody.innerHTML = '';
-
-    data.forEach(item => {
-        const fila = `
-            <tr>
-                <td>${item.codigo ?? ''}</td>
-                <td>${item.diferencia ?? 0}</td>
-                <td>${item.tipo_grupo ?? item.justificacion ?? ''}</td>
-            </tr>
-        `;
-        tbody.innerHTML += fila;
-    });
-}
-
-function renderGraficoSobrantes(data) {
-    const canvas = document.getElementById('sobrantesChart');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const labels = data.map(item => item.codigo);
-    const valores = data.map(item => Number(item.diferencia || 0));
-
-    if (sobrantesChartInstance) {
-        sobrantesChartInstance.destroy();
-    }
-
-    sobrantesChartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [{
-                label: 'Sobrantes',
-                data: valores,
-                backgroundColor: '#6f4e37',
-                borderRadius: 6
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                x: { beginAtZero: true }
+        function renderGraficoSobrantes(data) {
+            const canvas = document.getElementById('sobrantesChart');
+            if (!canvas) return;
+        
+            const ctx = canvas.getContext('2d');
+            const labels = data.map(item => item.codigo);
+            const valores = data.map(item => Number(item.diferencia || 0));
+        
+            if (sobrantesChartInstance) {
+                sobrantesChartInstance.destroy();
             }
+        
+            sobrantesChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Sobrantes',
+                        data: valores,
+                        backgroundColor: '#6f4e37',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
         }
-    });
-}
-
+        
         function renderGraficoFaltantes(data) {
             const canvas = document.getElementById('faltantesChart');
             if (!canvas) return;
@@ -734,7 +783,9 @@ function renderGraficoSobrantes(data) {
                         legend: { display: false }
                     },
                     scales: {
-                        x: { beginAtZero: true }
+                        x: {
+                            beginAtZero: true
+                        }
                     }
                 }
             });
