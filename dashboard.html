@@ -1386,91 +1386,88 @@
         
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
         async function buscarArticulo(valor) {
-		    if (!valor) return;
-		
-		    const sede = document.getElementById('sede').value;
-		    const idBodega = document.getElementById('idBodega').value;
-		
-		    if (!sede) {
-		        limpiarCamposArticulo();
-		        showNotification('Error', 'Seleccione una sede antes de buscar', 'error');
-		        return;
-		    }
-		
-		    if (!idBodega) {
-		        limpiarCamposArticulo();
-		        showNotification('Error', 'Seleccione un identificador de bodega antes de buscar', 'error');
-		        return;
-		    }
-		
-		    let query = supabase
-		        .from('inventario_reporteria')
-		        .select('*')
-		        .eq('idBodega', idBodega);
-		
-		    // Actívalo solo si la columna sede existe en la tabla
-		    query = query.eq('sede', sede);
-		
-		    if (valor.length >= 10) {
-		        query = query.eq('codigo_barra', normalizarCodigo(valor));
-		    } else {
-		        query = query.eq('codigo', valor);
-		    }
-		
-		    const { data, error } = await query.limit(2);
-		
-		    if (error) {
-		        console.error('Error real en buscarArticulo:', error);
-		        limpiarCamposArticulo();
-		        showNotification('Error', `Falló la búsqueda: ${error.message}`, 'error');
-		        return;
-		    }
-		
-		    if (!data || data.length === 0) {
-		        limpiarCamposArticulo();
-		        showNotification('Error', 'No se encontró el artículo para esa bodega', 'error');
-		        return;
-		    }
-		
-		    if (data.length > 1) {
-		        limpiarCamposArticulo();
-		        showNotification('Error', 'Hay registros duplicados para ese código en esa bodega', 'error');
-		        console.error('Duplicados encontrados:', data);
-		        return;
-		    }
-		
-		    const item = data[0];
-		
-		    document.getElementById('codigoArticulo').value = item.codigo || '';
-		    document.getElementById('codigoBarra').value = item.codigo_barra || '';
-		    document.getElementById('proveedor').value = item.proveedor || '';
-		    document.getElementById('descripcion').value = item.descripcion || '';
-		    document.getElementById('inventarioReporteria').value = item.inventario_reporteria || 0;
-		    document.getElementById('masterpack').value = item.masterpack || 1;
-		
-		    const inv = item.inventario_reporteria || 0;
-		    const master = item.masterpack || 1;
-		
-		    document.getElementById('cajasFardosReporteria').value = Math.floor(inv / master);
-		    document.getElementById('unidadesReporteria').value = inv % master;
-		
-		    const { data: dataCosto, error: errorCosto } = await supabase
-		        .from('codigos')
-		        .select('costo')
-		        .eq('codigo', item.codigo)
-		        .limit(1)
-		        .maybeSingle();
-		
-		    const costo = (!errorCosto && dataCosto?.costo != null)
-		        ? Number(dataCosto.costo)
-		        : 0;
-		
-		    window.costoUnitarioActual = costo;
-		    document.getElementById('costoUnitario').value = formatearMoneda(costo);
-		
-		    calcularTotalUnidades();
-		    showNotification('Éxito', 'Artículo cargado', 'success');
-		}
+			    if (!valor) return;
+			
+			    const sede = document.getElementById('sede').value;
+			    const idBodega = document.getElementById('idBodega').value;
+			
+			    if (!sede) {
+			        limpiarCamposArticulo();
+			        showNotification('Error', 'Seleccione una sede antes de buscar', 'error');
+			        return;
+			    }
+			
+			    if (!idBodega) {
+			        limpiarCamposArticulo();
+			        showNotification('Error', 'Seleccione un identificador de bodega antes de buscar', 'error');
+			        return;
+			    }
+			
+			    let query = supabase
+			        .from('inventario_reporteria')
+			        .select('*')
+			        .eq('idBodega', idBodega);
+			
+			    if (valor.length >= 10) {
+			        query = query.eq('codigo_barra', normalizarCodigo(valor));
+			    } else {
+			        query = query.eq('codigo', valor);
+			    }
+			
+			    const { data, error } = await query.limit(2);
+			
+			    if (error) {
+			        console.error('Error real en buscarArticulo:', error);
+			        limpiarCamposArticulo();
+			        showNotification('Error', `Falló la búsqueda: ${error.message}`, 'error');
+			        return;
+			    }
+			
+			    if (!data || data.length === 0) {
+			        limpiarCamposArticulo();
+			        showNotification('Error', 'No se encontró el artículo para esa bodega', 'error');
+			        return;
+			    }
+			
+			    if (data.length > 1) {
+			        limpiarCamposArticulo();
+			        showNotification('Error', 'Hay registros duplicados para ese código en esa bodega', 'error');
+			        console.error('Duplicados encontrados:', data);
+			        return;
+			    }
+			
+			    const item = data[0];
+			
+			    document.getElementById('codigoArticulo').value = item.codigo || '';
+			    document.getElementById('codigoBarra').value = item.codigo_barra || '';
+			    document.getElementById('proveedor').value = item.proveedor || '';
+			    document.getElementById('descripcion').value = item.descripcion || '';
+			    document.getElementById('inventarioReporteria').value = item.inventario_reporteria || 0;
+			    document.getElementById('masterpack').value = item.masterpack || 1;
+			
+			    const inv = item.inventario_reporteria || 0;
+			    const master = item.masterpack || 1;
+			
+			    document.getElementById('cajasFardosReporteria').value = Math.floor(inv / master);
+			    document.getElementById('unidadesReporteria').value = inv % master;
+			
+			    const { data: dataCosto, error: errorCosto } = await supabase
+			        .from('codigos')
+			        .select('costo')
+			        .eq('codigo', item.codigo)
+			        .limit(1)
+			        .maybeSingle();
+			
+			    const costo = (!errorCosto && dataCosto?.costo != null)
+			        ? Number(dataCosto.costo)
+			        : 0;
+			
+			    window.costoUnitarioActual = costo;
+			    document.getElementById('costoUnitario').value = formatearMoneda(costo);
+			
+			    calcularTotalUnidades();
+			    showNotification('Éxito', 'Artículo cargado', 'success');
+			}
 
 		function limpiarCamposArticulo() {
     		document.getElementById('proveedor').value = '';
