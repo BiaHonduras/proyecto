@@ -395,7 +395,11 @@
             }
 
             if (proveedores.length > 0) {
-                query = query.in('proveedor', proveedores);
+                let orQuery = proveedores
+                    .map(p => `proveedor.ilike.${p}`)
+                    .join(',');
+            
+                query = query.or(orQuery);
             }
 
             return query;
