@@ -556,67 +556,62 @@
         }
 
         async function cargarValorDiferencias() {
-                try {
-                    const { data: inventarioFiltrado, error: errorInventario } = await construirQueryBase('codigo');
-            
-                    if (errorInventario) {
-                        console.error('Error obteniendo códigos filtrados para diferencias:', errorInventario);
-                        document.getElementById('valor-diferencias').textContent = 'L. 0.00';
-                        return;
-                    }
-            
-                    const codigos = [...new Set(
-                        (inventarioFiltrado || [])
-                            .map(item => String(item.codigo || '').trim())
-                            .filter(codigo => codigo !== '')
-                    )];
-            
-                    console.log('Códigos filtrados:', codigos);
-            
-                    if (codigos.length === 0) {
-                        document.getElementById('valor-diferencias').textContent = 'L. 0.00';
-                        return;
-                    }
-            
-                    const { data, error } = await supabase
-                        .from('inventario_justificaciones')
-                        .select('costo_total, codigo');
-                        console.log('Data Inventario Justificaciones:', data);
-            
-                    if (error) {
-                        console.error('Error cargando justificaciones:', error);
-                        document.getElementById('valor-diferencias').textContent = 'L. 0.00';
-                        return;
-                    }
-            
-                    console.log('Justificaciones completas:', data);
-            
-                    const justificacionesFiltradas = (data || []).filter(item =>
-                        codigos.includes(String(item.codigo || '').trim())
-                    );
-            
-                    console.log('Justificaciones filtradas:', justificacionesFiltradas);
-            
-                    const total = justificacionesFiltradas.reduce((acc, item) => {
-                        return acc + Number(item.costo_total || 0);
-                    }, 0);
-            
-                    const valorFormateado = total < 0
-                        ? `- L. ${Math.abs(total).toLocaleString('es-HN', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        })}`
-                        : `L. ${total.toLocaleString('es-HN', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        })}`;
-            
-                    document.getElementById('valor-diferencias').textContent = valorFormateado;
-                } catch (error) {
-                    console.error('Error inesperado en cargarValorDiferencias:', error);
+            try {
+                const { data: inventarioFiltrado, error: errorInventario } = await construirQueryBase('codigo');
+        
+                if (errorInventario) {
+                    console.error('Error obteniendo códigos filtrados para diferencias:', errorInventario);
                     document.getElementById('valor-diferencias').textContent = 'L. 0.00';
+                    return;
                 }
+        
+                const codigos = [...new Set(
+                    (inventarioFiltrado || [])
+                        .map(item => String(item.codigo || '').trim())
+                        .filter(codigo => codigo !== '')
+                )];
+        
+                if (codigos.length === 0) {
+                    document.getElementById('valor-diferencias').textContent = 'L. 0.00';
+                    return;
+                }
+        
+                const { data, error } = await supabase
+                    .from('inventario_justificaciones')
+                    .select('costo_total, codigo, justificacion')
+                    .in('codigo', codigos);
+        
+                if (error) {
+                    console.error('Error cargando justificaciones:', error);
+                    document.getElementById('valor-diferencias').textContent = 'L. 0.00';
+                    return;
+                }
+        
+                const justificacionesFiltradas = (data || []).filter(item => {
+                    const j = String(item.justificacion || '').trim().toLowerCase();
+                    return j.includes('sobrante') || j.includes('faltante');
+                });
+        
+                const total = justificacionesFiltradas.reduce((acc, item) => {
+                    return acc + Number(item.costo_total || 0);
+                }, 0);
+        
+                const valorFormateado = total < 0
+                    ? `- L. ${Math.abs(total).toLocaleString('es-HN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}`
+                    : `L. ${total.toLocaleString('es-HN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}`;
+        
+                document.getElementById('valor-diferencias').textContent = valorFormateado;
+            } catch (error) {
+                console.error('Error inesperado en cargarValorDiferencias:', error);
+                document.getElementById('valor-diferencias').textContent = 'L. 0.00';
             }
+        }
 
         async function cargarDiferenciasSeparadas() {
                 try {
