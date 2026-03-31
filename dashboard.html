@@ -2834,12 +2834,13 @@ async function cargarGraficoProveedores() {
 	        mapaJustificaciones[j.id] = j;
 	    });
 	
-	    const filtrados = inventario.filter(item => {
-	        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-	        const diferencia = total - Number(item.inventario_reporteria || 0);
-	        return diferencia !== 0 || mapaJustificaciones[item.id];
-	    });
-		.sort((a, b) => Number(a.codigo) - Number(b.codigo));
+	    const filtrados = inventario
+		    .filter(item => {
+		        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
+		        const diferencia = total - Number(item.inventario_reporteria || 0);
+		        return diferencia !== 0 || mapaJustificaciones[item.id];
+		    })
+		    .sort((a, b) => Number(a.codigo) - Number(b.codigo));
 		
 	    if (filtrados.length === 0) {
 	        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6">Sin diferencias</td></tr>`;
