@@ -413,11 +413,11 @@
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-gray-600">Vencidos</p>
-                                <h3 class="text-2xl font-bold text-red-600" id="totalVencidos">0</h3>
+                                <p class="text-sm text-gray-600">60 Días de Vida</p>
+                                <h3 class="text-2xl font-bold text-red-600" id="totalVida60">0</h3>
                             </div>
                             <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-triangle-exclamation text-red-600"></i>
+                                <i class="fas fa-hourglass-end text-red-600"></i>
                             </div>
                         </div>
                     </div>
@@ -425,11 +425,11 @@
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-gray-600">Vencen Hoy</p>
-                                <h3 class="text-2xl font-bold text-orange-600" id="totalVencenHoy">0</h3>
+                                <p class="text-sm text-gray-600">90 Días de Vida</p>
+                                <h3 class="text-2xl font-bold text-orange-600" id="totalVida90">0</h3>
                             </div>
                             <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-calendar-day text-orange-600"></i>
+                                <i class="fas fa-hourglass-half text-orange-600"></i>
                             </div>
                         </div>
                     </div>
@@ -437,11 +437,11 @@
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-gray-600">Próximos 7 días</p>
-                                <h3 class="text-2xl font-bold text-yellow-600" id="totalProximos7">0</h3>
+                                <p class="text-sm text-gray-600">120 Días o más de Vida</p>
+                                <h3 class="text-2xl font-bold text-green-600" id="totalVida120">0</h3>
                             </div>
-                            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-hourglass-half text-yellow-600"></i>
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-calendar-check text-green-600"></i>
                             </div>
                         </div>
                     </div>
@@ -449,7 +449,7 @@
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-gray-600">Sin fecha / PFN</p>
+                                <p class="text-sm text-gray-600">Sin Fecha / PFN</p>
                                 <h3 class="text-2xl font-bold text-gray-700" id="totalSinFecha">0</h3>
                             </div>
                             <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -1394,13 +1394,13 @@
     				loadTransitos();
 				}
 
+				if (section === 'vencimientos') {
+    				loadVencimientosData();
+				}
+
 				if (section === 'usuarios') {
 				    resetUserForm();
 				    loadUsers();
-				}
-
-				if (section === 'vencimientos') {
-				    loadVencimientosData();
 				}
 
 			// Actualizar título
@@ -1627,15 +1627,14 @@
 			    const totalUnidades = (cajas * masterpack) + unidades;
 			    const costoUnitario = Number(window.costoUnitarioActual || 0);
 			
-			    // Aquí está el cambio importante
-			    const costoTotal = inventarioReporteria * costoUnitario;
 			    let diasvida = null;
-			
 			    if (checkActivo && fechaVenc) {
-			        const fechaBase = normalizarFechaLocal(fecha);
-			        const fechaVencDate = normalizarFechaLocal(fechaVenc);
-			        diasvida = diferenciaDias(fechaBase, fechaVencDate);
+			        const fechaBase = new Date(`${fecha}T00:00:00`);
+			        const fechaObjetivo = new Date(`${fechaVenc}T00:00:00`);
+			        diasvida = Math.round((fechaObjetivo - fechaBase) / (1000 * 60 * 60 * 24));
 			    }
+			
+			    const costoTotal = inventarioReporteria * costoUnitario;
 			
 			    window.costoTotalActual = costoTotal;
 			
@@ -1651,7 +1650,7 @@
 			        idBodega,
 			        sede,
 			        fecha_vencimiento: checkActivo ? fechaVenc : null,
-			        diasvida: checkActivo ? diasvida : null,
+			        diasvida,
 			        costo_unitario: costoUnitario,
 			        costoTotal: costoTotal
 			    };
@@ -2907,163 +2906,6 @@ async function cargarGraficoProveedores() {
 	        `).join('')}
 	    `;
 	}
-
-        let vencimientosChartInstance = null;
-
-        function normalizarFechaLocal(fechaStr) {
-            if (!fechaStr) return null;
-            const [y, m, d] = fechaStr.split('-').map(Number);
-            return new Date(y, m - 1, d);
-        }
-
-        function diferenciaDias(fechaBase, fechaObjetivo) {
-            if (!fechaBase || !fechaObjetivo) return null;
-            const msPorDia = 1000 * 60 * 60 * 24;
-            const base = new Date(fechaBase.getFullYear(), fechaBase.getMonth(), fechaBase.getDate());
-            const objetivo = new Date(fechaObjetivo.getFullYear(), fechaObjetivo.getMonth(), fechaObjetivo.getDate());
-            return Math.round((objetivo - base) / msPorDia);
-        }
-
-        async function loadVencimientosData() {
-            const { data, error } = await supabase
-                .from('inventarios_diarios')
-                .select('id, idBodega, codigo, descripcion, fecha, fecha_vencimiento, diasvida, sede');
-
-            if (error) {
-                console.error(error);
-                showNotification('Error', 'No se pudo cargar vencimientos', 'error');
-                return;
-            }
-
-            const hoy = new Date();
-            const registrosConFecha = [];
-            const registrosSinFecha = [];
-
-            (data || []).forEach(item => {
-                const bodega = String(item.idBodega || '').trim();
-                const esPFN = ['015', '045', '095', '096', '099'].includes(bodega);
-
-                if (!item.fecha_vencimiento || esPFN) {
-                    registrosSinFecha.push(item);
-                    return;
-                }
-
-                const fechaVenc = normalizarFechaLocal(item.fecha_vencimiento);
-                const dias = Number.isFinite(Number(item.diasvida))
-                    ? Number(item.diasvida)
-                    : diferenciaDias(hoy, fechaVenc);
-
-                registrosConFecha.push({
-                    ...item,
-                    dias_restantes: dias
-                });
-            });
-
-            const vencidos = registrosConFecha.filter(x => x.dias_restantes < 0).length;
-            const vencenHoy = registrosConFecha.filter(x => x.dias_restantes === 0).length;
-            const proximos7 = registrosConFecha.filter(x => x.dias_restantes >= 1 && x.dias_restantes <= 7).length;
-            const sinFecha = registrosSinFecha.length;
-
-            document.getElementById('totalVencidos').textContent = vencidos;
-            document.getElementById('totalVencenHoy').textContent = vencenHoy;
-            document.getElementById('totalProximos7').textContent = proximos7;
-            document.getElementById('totalSinFecha').textContent = sinFecha;
-
-            const rangos = {
-                'Vencidos': registrosConFecha.filter(x => x.dias_restantes < 0).length,
-                '0 a 7 días': registrosConFecha.filter(x => x.dias_restantes >= 0 && x.dias_restantes <= 7).length,
-                '8 a 15 días': registrosConFecha.filter(x => x.dias_restantes >= 8 && x.dias_restantes <= 15).length,
-                '16 a 30 días': registrosConFecha.filter(x => x.dias_restantes >= 16 && x.dias_restantes <= 30).length,
-                '+30 días': registrosConFecha.filter(x => x.dias_restantes > 30).length
-            };
-
-            renderVencimientosChart(Object.keys(rangos), Object.values(rangos));
-
-            const urgentes = [...registrosConFecha]
-                .sort((a, b) => a.dias_restantes - b.dias_restantes)
-                .slice(0, 15);
-
-            const tbody = document.getElementById('tablaVencimientosUrgentes');
-
-            if (!urgentes.length) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="py-8 text-center text-gray-500">
-                            <i class="fas fa-inbox text-3xl mb-2"></i>
-                            <p>No hay datos de vencimiento</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            tbody.innerHTML = urgentes.map(item => {
-                let claseDias = 'text-green-600';
-                if (item.dias_restantes < 0) claseDias = 'text-red-600 font-bold';
-                else if (item.dias_restantes <= 7) claseDias = 'text-orange-600 font-semibold';
-
-                return `
-                    <tr class="border-b border-gray-200 hover:bg-gray-50">
-                        <td class="py-3 px-2">${item.idBodega || ''}</td>
-                        <td class="py-3 px-2 font-mono">${item.codigo || ''}</td>
-                        <td class="py-3 px-2">${item.descripcion || ''}</td>
-                        <td class="py-3 px-2">${item.fecha_vencimiento || ''}</td>
-                        <td class="py-3 px-2 ${claseDias}">${item.dias_restantes}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function renderVencimientosChart(labels, data) {
-            const contenedor = document.getElementById('vencimientosChartContainer');
-
-            if (!contenedor) return;
-
-            contenedor.innerHTML = `
-                <div class="w-full h-full relative">
-                    <canvas id="vencimientosChart"></canvas>
-                </div>
-            `;
-
-            const canvas = document.getElementById('vencimientosChart');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-
-            if (vencimientosChartInstance) {
-                vencimientosChartInstance.destroy();
-            }
-
-            vencimientosChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: 'Cantidad de artículos',
-                        data,
-                        borderWidth: 1,
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0
-                            }
-                        }
-                    }
-                }
-            });
-        }
 		
 	async function loadTransitos() {
 	    const { data: inventario, error: errorInventario } = await supabase
@@ -3305,6 +3147,159 @@ async function guardarJustificacion(id, texto) {
 			    });
 			}
 		
+
+        let vencimientosChartInstance = null;
+
+        function normalizarFechaLocal(fechaStr) {
+            const [y, m, d] = String(fechaStr).split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        function diferenciaDias(fechaBase, fechaObjetivo) {
+            const msPorDia = 1000 * 60 * 60 * 24;
+            const base = new Date(fechaBase.getFullYear(), fechaBase.getMonth(), fechaBase.getDate());
+            const objetivo = new Date(fechaObjetivo.getFullYear(), fechaObjetivo.getMonth(), fechaObjetivo.getDate());
+            return Math.round((objetivo - base) / msPorDia);
+        }
+
+        function formatearFechaCorta(fechaStr) {
+            if (!fechaStr) return '';
+            const [y, m, d] = String(fechaStr).split('-');
+            return `${d}/${m}/${String(y).slice(-2)}`;
+        }
+
+        async function loadVencimientosData() {
+            const { data, error } = await supabase
+                .from('inventarios_diarios')
+                .select('id, idBodega, codigo, descripcion, fecha, fecha_vencimiento, diasvida, sede');
+
+            if (error) {
+                console.error(error);
+                showNotification('Error', 'No se pudo cargar vencimientos', 'error');
+                return;
+            }
+
+            const hoy = new Date();
+            const registrosConFecha = [];
+            const registrosSinFecha = [];
+
+            (data || []).forEach(item => {
+                if (!item.fecha_vencimiento) {
+                    registrosSinFecha.push(item);
+                    return;
+                }
+
+                let dias = Number(item.diasvida);
+                if (!Number.isFinite(dias)) {
+                    dias = diferenciaDias(hoy, normalizarFechaLocal(item.fecha_vencimiento));
+                }
+
+                registrosConFecha.push({
+                    ...item,
+                    dias_restantes: dias
+                });
+            });
+
+            const vida60 = registrosConFecha.filter(x => x.dias_restantes <= 60).length;
+            const vida90 = registrosConFecha.filter(x => x.dias_restantes > 60 && x.dias_restantes <= 90).length;
+            const vida120 = registrosConFecha.filter(x => x.dias_restantes >= 120).length;
+            const sinFecha = registrosSinFecha.length;
+
+            document.getElementById('totalVida60').textContent = vida60;
+            document.getElementById('totalVida90').textContent = vida90;
+            document.getElementById('totalVida120').textContent = vida120;
+            document.getElementById('totalSinFecha').textContent = sinFecha;
+
+            const rangos = {
+                '60 días o menos': vida60,
+                '61 a 90 días': vida90,
+                '91 a 119 días': registrosConFecha.filter(x => x.dias_restantes > 90 && x.dias_restantes < 120).length,
+                '120 días o más': vida120
+            };
+
+            renderVencimientosChart(Object.keys(rangos), Object.values(rangos));
+
+            const urgentes = [...registrosConFecha]
+                .sort((a, b) => a.dias_restantes - b.dias_restantes)
+                .slice(0, 15);
+
+            const tbody = document.getElementById('tablaVencimientosUrgentes');
+            if (!urgentes.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-gray-500">
+                            <i class="fas fa-inbox text-3xl mb-2"></i>
+                            <p>No hay datos de vencimiento</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = urgentes.map(item => {
+                let claseDias = 'text-green-600';
+                if (item.dias_restantes <= 60) claseDias = 'text-red-600 font-bold';
+                else if (item.dias_restantes <= 90) claseDias = 'text-orange-600 font-semibold';
+
+                return `
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-2">${item.idBodega || ''}</td>
+                        <td class="py-3 px-2 font-mono">${item.codigo || ''}</td>
+                        <td class="py-3 px-2">${item.descripcion || ''}</td>
+                        <td class="py-3 px-2">${formatearFechaCorta(item.fecha_vencimiento)}</td>
+                        <td class="py-3 px-2 ${claseDias}">${item.dias_restantes}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderVencimientosChart(labels, data) {
+            const contenedor = document.getElementById('vencimientosChartContainer');
+            if (!contenedor) return;
+
+            contenedor.innerHTML = `
+                <div class="w-full h-full relative">
+                    <canvas id="vencimientosChart"></canvas>
+                </div>
+            `;
+
+            const ctx = document.getElementById('vencimientosChart').getContext('2d');
+
+            if (vencimientosChartInstance) {
+                vencimientosChartInstance.destroy();
+            }
+
+            vencimientosChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Cantidad de artículos',
+                        data,
+                        borderWidth: 1,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
 		function limpiarValor(valor) {
     		if (!valor) return '';
     		return String(valor)
@@ -3318,7 +3313,7 @@ async function guardarJustificacion(id, texto) {
     
     <!-- Lema -->
     <div class="text-[11px] text-gray-500">
-        Elaborado por Hernán Manuel Pérez Banegas®
+        Hernán Manuel Pérez Banegas®
     </div>
 
     <!-- Usuario -->
