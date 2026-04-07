@@ -1279,6 +1279,7 @@
             // Cargar datos iniciales
             loadDashboardData();
             loadVencimientosData();
+            mostrarRecordatorioLunes();
             loadInventory();
             cargarResumenInventario();
             initUsers(); // Initialize user management
@@ -1480,6 +1481,18 @@
         function formatearFecha(fechaISO) {
         const [año, mes, día] = fechaISO.split("-");
         return `${día}/${mes}/${año}`;
+        }
+
+        function mostrarRecordatorioLunes() {
+            const hoy = new Date();
+            if (hoy.getDay() !== 1) return;
+
+            showNotification(
+                'Recordatorio',
+                'Recuerda que hoy es Lunes y se deben de actualizar las Fechas de Vencimiento',
+                'warning',
+                10000
+            );
         }
         
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
@@ -2715,7 +2728,7 @@ tbody.innerHTML = data.map(item => {
     cargarResumenCodigos();
 }      
 
-    function showNotification(title, message, type = 'info') {
+    function showNotification(title, message, type = 'info', duration = 4000) {
 
     const notification = document.getElementById('notification');
     const titleEl = document.getElementById('notificationTitle');
@@ -2737,7 +2750,7 @@ tbody.innerHTML = data.map(item => {
 
     setTimeout(() => {
         notification.classList.add('hidden');
-    }, 4000);
+    }, duration);
 }
     async function cargarArticulosRecientes() {
     const { data, error } = await supabase
@@ -3313,7 +3326,7 @@ async function guardarJustificacion(id, texto) {
     
     <!-- Lema -->
     <div class="text-[11px] text-gray-500">
-        Hernán Manuel Pérez Banegas®
+        Elaborado por Hernán Manuel Pérez Banegas®
     </div>
 
     <!-- Usuario -->
