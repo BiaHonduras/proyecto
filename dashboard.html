@@ -335,6 +335,35 @@
         <main class="p-6 space-y-6">
             <!-- Dashboard Section -->
             <section id="resumen-section" class="section-content">
+                <div class="card p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Sede</label>
+                            <select id="filtroSedeGlobal" class="input-field w-full px-4 py-3 rounded-lg">
+                                <option value="Todas">Todas las sedes</option>
+                                <option value="Amarateca">Amarateca</option>
+                                <option value="La Ceiba">La Ceiba</option>
+                                <option value="San Pedro Sula">San Pedro Sula</option>
+                                <option value="Santa Rosa de Copan">Santa Rosa de Copan</option>
+                                <option value="Tegucigalpa">Tegucigalpa</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Bodega</label>
+                            <select id="filtroTipoBodegaGlobal" class="input-field w-full px-4 py-3 rounded-lg">
+                                <option value="Todas">Todas las bodegas</option>
+                                <option value="Principal">Principal</option>
+                                <option value="PPV">PPV</option>
+                                <option value="PFN">PFN</option>
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+                            <p class="text-sm text-gray-600">Vista activa</p>
+                            <p class="font-semibold text-gray-800" id="labelFiltrosActivos">Todas las sedes, Todas las bodegas</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
@@ -1186,6 +1215,10 @@
         let currentUser = null;
         let scannerActive = false;
         let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
+        let filtrosGlobales = {
+            sede: 'Todas',
+            tipoBodega: 'Todas'
+        };
 
 		const bodegasPorSede = {
 			    "Amarateca": [
@@ -1213,8 +1246,105 @@
 			        { value: "063", label: "Bodega PPV" },
 			        { value: "099", label: "Bodega PFN" }
 			    ]
-			};
-       
+			
+};
+
+        function obtenerTipoBodegaDesdeId(idBodega) {
+            const codigo = String(idBodega || '').trim();
+
+            for (const lista of Object.values(bodegasPorSede)) {
+                const encontrada = lista.find(bodega => String(bodega.value) === codigo);
+                if (encontrada) {
+                    if (encontrada.label.includes('PFN')) return 'PFN';
+                    if (encontrada.label.includes('PPV')) return 'PPV';
+                    if (encontrada.label.includes('Principal')) return 'Principal';
+                }
+            }
+
+            if (codigo.endsWith('3')) return 'PPV';
+            if (['015', '045', '095', '096', '099'].includes(codigo) || codigo.endsWith('5')) return 'PFN';
+            if (codigo.endsWith('0')) return 'Principal';
+
+            return '';
+        }
+
+        function aplicarFiltrosGlobales(data = []) {
+            return (data || []).filter(item => {
+                if (filtrosGlobales.sede !== 'Todas' && item.sede !== filtrosGlobales.sede) {
+                    return false;
+                }
+
+                if (filtrosGlobales.tipoBodega !== 'Todas') {
+                    const tipo = obtenerTipoBodegaDesdeId(item.idBodega);
+                    if (tipo !== filtrosGlobales.tipoBodega) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+        }
+
+        function actualizarLabelFiltrosActivos() {
+            const label = document.getElementById('labelFiltrosActivos');
+            if (!label) return;
+
+            const sedeTexto = filtrosGlobales.sede === 'Todas' ? 'Todas las sedes' : filtrosGlobales.sede;
+            const bodegaTexto = filtrosGlobales.tipoBodega === 'Todas'
+                ? 'Todas las bodegas'
+                : `Bodega ${filtrosGlobales.tipoBodega}`;
+
+            label.textContent = `${sedeTexto}, ${bodegaTexto}`;
+        }
+
+        function configurarFiltrosSegunUsuario() {
+            const filtroSede = document.getElementById('filtroSedeGlobal');
+            const filtroTipoBodega = document.getElementById('filtroTipoBodegaGlobal');
+
+            if (!filtroSede || !filtroTipoBodega) return;
+
+            const sedeUsuario = currentUser?.sede || currentUser?.Sede || null;
+            const tipoBodegaUsuario = currentUser?.tipo_bodega || currentUser?.tipoBodega || null;
+            const esAdmin = currentUser?.role === 'admin' || currentUser?.rol === 'admin';
+
+            filtrosGlobales.sede = sedeUsuario || 'Todas';
+            filtrosGlobales.tipoBodega = tipoBodegaUsuario || 'Todas';
+
+            filtroSede.value = filtrosGlobales.sede;
+            filtroTipoBodega.value = filtrosGlobales.tipoBodega;
+
+            if (!esAdmin && sedeUsuario) {
+                filtroSede.disabled = true;
+                filtroSede.classList.add('bg-gray-100');
+            }
+
+            if (!esAdmin && tipoBodegaUsuario) {
+                filtroTipoBodega.disabled = true;
+                filtroTipoBodega.classList.add('bg-gray-100');
+            }
+
+            filtroSede.addEventListener('change', function() {
+                filtrosGlobales.sede = this.value;
+                actualizarLabelFiltrosActivos();
+                recargarDashboardConFiltros();
+            });
+
+            filtroTipoBodega.addEventListener('change', function() {
+                filtrosGlobales.tipoBodega = this.value;
+                actualizarLabelFiltrosActivos();
+                recargarDashboardConFiltros();
+            });
+
+            actualizarLabelFiltrosActivos();
+        }
+
+        function recargarDashboardConFiltros() {
+            loadDashboardData();
+            loadVencimientosData();
+            loadInventory();
+            loadTransitos();
+        }
+
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', function() {
             
@@ -1277,6 +1407,7 @@
 			});
             
             // Cargar datos iniciales
+            configurarFiltrosSegunUsuario();
             loadDashboardData();
             loadVencimientosData();
             mostrarRecordatorioLunes();
@@ -1436,7 +1567,7 @@
 
         // ===== DASHBOARD =====
         async function loadDashboardData() {         
-    		const { data: inventario, error } = await supabase
+    		const { data, error } = await supabase
         		.from('inventarios_diarios')
         		.select('*');
 
@@ -1446,11 +1577,25 @@
         			return;
     				}
 
+                const inventario = aplicarFiltrosGlobales(data);
+
     			if (!inventario || inventario.length === 0) {
         			document.getElementById('totalArticulos').textContent = 0;
         			document.getElementById('totalUnidadesDashboard').textContent = 0;
         			document.getElementById('totalProveedores').textContent = 0;
         			document.getElementById('ultimaActualizacion').textContent = '-';
+                    document.getElementById('recentItems').innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-inbox text-3xl mb-2"></i>
+                            <p>No hay artículos para el filtro seleccionado</p>
+                        </div>
+                    `;
+                    document.getElementById('proveedorChart').innerHTML = `
+                        <div class="text-center text-gray-500">
+                            <i class="fas fa-chart-pie text-3xl mb-2"></i>
+                            <p>No hay datos disponibles</p>
+                        </div>
+                    `;
         			return;
     				}
 
@@ -1870,10 +2015,12 @@ function stopScanner() {
         // ===== VER INVENTARIO =====
 async function loadInventory() {
 
-    const { data: inventario, error } = await supabase
+    const { data, error } = await supabase
         .from('inventarios_diarios')
         .select('*')
         .order('fecha', { ascending: false });
+
+    const inventario = aplicarFiltrosGlobales(data);
 
     const tbody = document.getElementById('inventoryTableBody');
 
@@ -2003,9 +2150,11 @@ async function loadInventory() {
 
         // ===== EXPORTAR CSV =====
         async function exportToCSV() {
-		    const { data: inventario, error } = await supabase
+		    const { data, error } = await supabase
 		        .from('inventarios_diarios')
 		        .select('*');
+
+            const inventario = aplicarFiltrosGlobales(data);
 		
 		    if (error) {
 		        console.error(error);
@@ -2268,7 +2417,7 @@ async function loadInventory() {
 		
 		    const tabla = document.getElementById('tablaResumenInventario');
 		
-		    if (error || !data || data.length === 0) {
+		    if (error || !filtrados || filtrados.length === 0) {
 		        tabla.innerHTML = `
 		            <tr>
 		                <td colspan="3" class="text-center py-6">No hay registros</td>
@@ -2756,12 +2905,13 @@ tbody.innerHTML = data.map(item => {
     const { data, error } = await supabase
         .from('inventarios_diarios')
         .select('*')
-        .order('created_at', { ascending: false }) // o timestamp
-        .limit(5);
+        .order('created_at', { ascending: false }); // o timestamp
+
+    const filtrados = aplicarFiltrosGlobales(data).slice(0, 5);
 
     const contenedor = document.getElementById('recentItems');
 
-    if (error || !data || data.length === 0) {
+    if (error || !filtrados || filtrados.length === 0) {
         contenedor.innerHTML = `
             <div class="text-center py-8 text-gray-500">
                 <i class="fas fa-inbox text-3xl mb-2"></i>
@@ -2771,7 +2921,7 @@ tbody.innerHTML = data.map(item => {
         return;
     }
 
-    contenedor.innerHTML = data.map(item => `
+    contenedor.innerHTML = filtrados.map(item => `
         <div class="flex justify-between items-center border-b pb-2">
             <div>
                 <p class="font-semibold">${item.descripcion}</p>
@@ -2788,11 +2938,13 @@ async function cargarGraficoProveedores() {
 
     const { data, error } = await supabase
         .from('inventarios_diarios')
-        .select('proveedor');
+        .select('proveedor, sede, idBodega');
+
+    const filtrados = aplicarFiltrosGlobales(data);
 
     const contenedor = document.getElementById('proveedorChart');
 
-    if (error || !data || data.length === 0) {
+    if (error || !filtrados || filtrados.length === 0) {
         contenedor.innerHTML = `
             <div class="text-center text-gray-500">
                 <i class="fas fa-chart-pie text-3xl mb-2"></i>
@@ -2805,7 +2957,7 @@ async function cargarGraficoProveedores() {
     // Agrupar proveedores
     const conteo = {};
 
-    data.forEach(item => {
+    filtrados.forEach(item => {
         if (!item.proveedor) return;
         conteo[item.proveedor] = (conteo[item.proveedor] || 0) + 1;
     });
@@ -2921,9 +3073,11 @@ async function cargarGraficoProveedores() {
 	}
 		
 	async function loadTransitos() {
-	    const { data: inventario, error: errorInventario } = await supabase
+	    const { data, error: errorInventario } = await supabase
 	        .from('inventarios_diarios')
 	        .select('*');
+
+        const inventario = aplicarFiltrosGlobales(data);
 	
 	    const tbody = document.getElementById('transitosTableBody');
 	
@@ -3186,6 +3340,8 @@ async function guardarJustificacion(id, texto) {
                 .from('inventarios_diarios')
                 .select('id, idBodega, codigo, descripcion, fecha, fecha_vencimiento, diasvida, sede');
 
+            const filtrados = aplicarFiltrosGlobales(data);
+
             if (error) {
                 console.error(error);
                 showNotification('Error', 'No se pudo cargar vencimientos', 'error');
@@ -3196,7 +3352,7 @@ async function guardarJustificacion(id, texto) {
             const registrosConFecha = [];
             const registrosSinFecha = [];
 
-            (data || []).forEach(item => {
+            (filtrados || []).forEach(item => {
                 if (!item.fecha_vencimiento) {
                     registrosSinFecha.push(item);
                     return;
