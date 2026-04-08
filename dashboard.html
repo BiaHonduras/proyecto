@@ -3213,28 +3213,28 @@ async function cargarGraficoProveedores() {
 	    }).join('');
 	
 	    const inputsCantidad = tbody.querySelectorAll('.cantidad-justificada');
-	    inputsCantidad.forEach(input => {
-	        input.addEventListener('input', function() {
-	            this.value = this.value.replace(/[^0-9]/g, '');
-	
-	            const fila = this.closest('tr');
-	            if (!fila) return;
-	
-	            const id = fila.dataset.id;
-	            const item = filtrados.find(x => String(x.id) === String(id));
-	            if (!item) return;
-	
-	            const cantidad = Number(this.value || 0);
-	            const costoUnitario = Number(item.costo_unitario || 0);
-	            const costoTotal = cantidad * costoUnitario;
-	
-	            const celdaCostoTotal = fila.querySelector('.costo-total');
-	            if (celdaCostoTotal) {
-	                celdaCostoTotal.dataset.valor = costoTotal;
-	                celdaCostoTotal.textContent = formatearMoneda(costoTotal);
-	            }
-	        });
-	    });
+		inputsCantidad.forEach(input => {
+		    input.addEventListener('input', function() {
+		        this.value = this.value.replace(/[^0-9]/g, '');
+		
+		        const fila = this.closest('tr');
+		        if (!fila) return;
+		
+		        const id = fila.dataset.id;
+		        const item = filtrados.find(x => String(x.id) === String(id));
+		        if (!item) return;
+		
+		        const diferencia = Number(item.diferencia || 0);
+		        const costoUnitario = Number(item.costo_unitario || 0);
+		        const costoTotal = diferencia * costoUnitario;
+		
+		        const celdaCostoTotal = fila.querySelector('.costo-total');
+		        if (celdaCostoTotal) {
+		            celdaCostoTotal.dataset.valor = costoTotal;
+		            celdaCostoTotal.textContent = formatearMoneda(costoTotal);
+		        }
+		    });
+		});
 	}
 
 async function guardarJustificacion(id, texto) {
