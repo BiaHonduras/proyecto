@@ -796,6 +796,13 @@
 	        		<i class="fas fa-save mr-2"></i>
 	        		Guardar Registros
 	    		</button>
+
+				<button id="btnEliminarJustificaciones"
+			        type="button"
+			        class="px-4 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 flex items-center">
+			        <i class="fas fa-trash mr-2"></i>
+			        Eliminar Justificaciones
+			    </button>
 			</div>
 				
 	        <div class="overflow-x-auto">
@@ -1376,7 +1383,11 @@
 
 			document.getElementById('btnGuardarRegistros').addEventListener('click', () => {
     			guardarCambiosMasivos();
-			});
+				});
+
+			document.getElementById('btnEliminarJustificaciones').addEventListener('click', () => {
+    			eliminarJustificaciones();
+				});
 
 			document.getElementById('sede').addEventListener('change', () => {
 			    actualizarBodegasPorSede();
@@ -3267,6 +3278,82 @@ async function guardarJustificacion(id, texto) {
 	    }
 	
 	    showNotification('Éxito', 'Registros actualizados correctamente', 'success');
+	    loadTransitos();
+	}
+
+	async function eliminarJustificaciones() {
+	    const sedeIngresada = prompt(
+	        'Escriba la sede que desea eliminar.\n\n' +
+	        'Opciones:\n' +
+	        '- Amarateca\n' +
+	        '- La Ceiba\n' +
+	        '- San Pedro Sula\n' +
+	        '- Santa Rosa de Copan\n' +
+	        '- Tegucigalpa\n' +
+	        '- Todas'
+	    );
+	
+	    if (sedeIngresada === null) return;
+	
+	    const sedeNormalizada = sedeIngresada.trim();
+	
+	    if (!sedeNormalizada) {
+	        showNotification('Error', 'Debe escribir una sede o "Todas"', 'error');
+	        return;
+	    }
+	
+	    const sedesValidas = [
+	        'Amarateca',
+	        'La Ceiba',
+	        'San Pedro Sula',
+	        'Santa Rosa de Copan',
+	        'Tegucigalpa',
+	        'Todas'
+	    ];
+	
+	    const sedeValida = sedesValidas.find(s => s.toLowerCase() === sedeNormalizada.toLowerCase());
+	
+	    if (!sedeValida) {
+	        showNotification('Error', 'La sede ingresada no es válida', 'error');
+	        return;
+	    }
+	
+	    let confirmacion = '';
+	
+	    if (sedeValida === 'Todas') {
+	        confirmacion = prompt('Escriba ELIMINAR TODAS para confirmar que desea borrar toda la base de justificaciones');
+	        if (confirmacion !== 'ELIMINAR TODAS') return;
+	    } else {
+	        confirmacion = prompt(`Escriba exactamente "${sedeValida}" para confirmar la eliminación de esa sede`);
+	        if (confirmacion !== sedeValida) return;
+	    }
+	
+	    let query = supabase
+	        .from('inventario_justificaciones')
+	        .delete();
+	
+	    if (sedeValida !== 'Todas') {
+	        query = query.eq('sede', sedeValida);
+	    } else {
+	        query = query.not('id', 'is', null);
+	    }
+	
+	    const { error } = await query;
+	
+	    if (error) {
+	        console.error(error);
+	        showNotification('Error', 'No se pudieron eliminar las justificaciones', 'error');
+	        return;
+	    }
+	
+	    showNotification(
+	        'Éxito',
+	        sedeValida === 'Todas'
+	            ? 'Se eliminaron todas las justificaciones'
+	            : `Se eliminaron las justificaciones de ${sedeValida}`,
+	        'success'
+	    );
+	
 	    loadTransitos();
 	}
 
