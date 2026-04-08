@@ -248,18 +248,18 @@
             white-space: nowrap;
         }
 
-        #diferenciasChart 
+        #diferenciasChart
         {
             height: 300px !important;
         }
 
-        .chart-block 
+        .chart-block
         {
             margin-top: 18px;
         }
 
         #sobrantesChart,
-        #faltantesChart 
+        #faltantesChart
         {
             width: 100% !important;
             height: 220px !important;
@@ -270,7 +270,6 @@
             width: 100% !important;
             height: 260px !important;
         }
-        
     </style>
 </head>
 
@@ -335,35 +334,82 @@
         </div>
 
         <div class="right">
-    <div>
-            <h3>Diferencias</h3>
-    
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Cantidad</th>
-                        <th>Tipo</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-diferencias"></tbody>
-            </table>
-    
-            <div class="chart-block">
-                <h4>Sobrantes</h4>
-                <canvas id="sobrantesChart"></canvas>
-            </div>
-    
-            <div class="chart-block">
-                <h4>Faltantes</h4>
-                <canvas id="faltantesChart"></canvas>
+            <div>
+                <h3>Diferencias</h3>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Valor</th>
+                            <th>Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-diferencias"></tbody>
+                </table>
+
+                <div class="chart-block">
+                    <h4>Sobrantes</h4>
+                    <canvas id="sobrantesChart"></canvas>
+                </div>
+
+                <div class="chart-block">
+                    <h4>Faltantes</h4>
+                    <canvas id="faltantesChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <script>
         let proveedoresChartInstance = null;
+        let sobrantesChartInstance = null;
+        let faltantesChartInstance = null;
+        let diferenciasChartInstance = null;
+        let topHighChartInstance = null;
+        let topLowChartInstance = null;
+
+        function formatearMoneda(valor) {
+            const numero = Number(valor || 0);
+            return numero < 0
+                ? `- L. ${Math.abs(numero).toLocaleString('es-HN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })}`
+                : `L. ${numero.toLocaleString('es-HN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })}`;
+        }
+
+        function formatearMonedaCompacta(valor) {
+            const numero = Number(valor || 0);
+            const abs = Math.abs(numero);
+
+            let valorCompacto = numero;
+            let sufijo = '';
+
+            if (abs >= 1000000000) {
+                valorCompacto = numero / 1000000000;
+                sufijo = 'B';
+            } else if (abs >= 1000000) {
+                valorCompacto = numero / 1000000;
+                sufijo = 'M';
+            } else if (abs >= 1000) {
+                valorCompacto = numero / 1000;
+                sufijo = 'K';
+            }
+
+            return numero < 0
+                ? `- L. ${Math.abs(valorCompacto).toLocaleString('es-HN', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 1
+                })}${sufijo}`
+                : `L. ${valorCompacto.toLocaleString('es-HN', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 1
+                })}${sufijo}`;
+        }
 
         function obtenerFiltrosActivos() {
             const sede = document.getElementById('sede-filtro')?.value || '';
@@ -398,7 +444,7 @@
                 let orQuery = proveedores
                     .map(p => `proveedor.ilike.${p}`)
                     .join(',');
-            
+
                 query = query.or(orQuery);
             }
 
@@ -429,12 +475,7 @@
                 return acc + Number(item.costoTotal || 0);
             }, 0);
 
-            const valorFormateado = "L. " + total.toLocaleString('es-HN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-
-            document.getElementById('valor-inventario').textContent = valorFormateado;
+            document.getElementById('valor-inventario').textContent = formatearMoneda(total);
         }
 
         async function cargarUnidadesPorProveedor() {
@@ -562,55 +603,45 @@
         async function cargarValorDiferencias() {
             try {
                 const { data: inventarioFiltrado, error: errorInventario } = await construirQueryBase('codigo');
-        
+
                 if (errorInventario) {
                     console.error('Error obteniendo códigos filtrados para diferencias:', errorInventario);
                     document.getElementById('valor-diferencias').textContent = 'L. 0.00';
                     return;
                 }
-        
+
                 const codigos = [...new Set(
                     (inventarioFiltrado || [])
                         .map(item => String(item.codigo || '').trim())
                         .filter(codigo => codigo !== '')
                 )];
-        
+
                 if (codigos.length === 0) {
                     document.getElementById('valor-diferencias').textContent = 'L. 0.00';
                     return;
                 }
-        
+
                 const { data, error } = await supabase
                     .from('inventario_justificaciones')
                     .select('costo_total, codigo, justificacion')
                     .in('codigo', codigos);
-        
+
                 if (error) {
                     console.error('Error cargando justificaciones:', error);
                     document.getElementById('valor-diferencias').textContent = 'L. 0.00';
                     return;
                 }
-        
+
                 const justificacionesFiltradas = (data || []).filter(item => {
                     const j = String(item.justificacion || '').trim().toLowerCase();
                     return j.includes('sobrante') || j.includes('faltante');
                 });
-        
+
                 const total = justificacionesFiltradas.reduce((acc, item) => {
                     return acc + Number(item.costo_total || 0);
                 }, 0);
-        
-                const valorFormateado = total < 0
-                    ? `- L. ${Math.abs(total).toLocaleString('es-HN', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    })}`
-                    : `L. ${total.toLocaleString('es-HN', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    })}`;
-        
-                document.getElementById('valor-diferencias').textContent = valorFormateado;
+
+                document.getElementById('valor-diferencias').textContent = formatearMoneda(total);
             } catch (error) {
                 console.error('Error inesperado en cargarValorDiferencias:', error);
                 document.getElementById('valor-diferencias').textContent = 'L. 0.00';
@@ -618,83 +649,80 @@
         }
 
         async function cargarDiferenciasSeparadas() {
-                try {
-                    const { data: inventarioFiltrado, error: errorInventario } = await construirQueryBase('codigo');
-            
-                    if (errorInventario) {
-                        console.error('Error obteniendo códigos filtrados para diferencias:', errorInventario);
-                        renderTablaDiferencias([]);
-                        renderGraficoSobrantes([]);
-                        renderGraficoFaltantes([]);
-                        return;
-                    }
-            
-                    const codigos = [...new Set(
-                        (inventarioFiltrado || [])
-                            .map(item => String(item.codigo || '').trim())
-                            .filter(codigo => codigo !== '')
-                    )];
-            
-                    console.log('Códigos filtrados para tabla y gráficos:', codigos);
-            
-                    if (codigos.length === 0) {
-                        renderTablaDiferencias([]);
-                        renderGraficoSobrantes([]);
-                        renderGraficoFaltantes([]);
-                        return;
-                    }
-            
-                    const { data: justificaciones, error: errorJustificaciones } = await supabase
-                        .from('inventario_justificaciones')
-                        .select('codigo, diferencia, justificacion')
-                        .in('codigo', codigos);
-            
-                    if (errorJustificaciones) {
-                        console.error('Error cargando justificaciones filtradas:', errorJustificaciones);
-                        renderTablaDiferencias([]);
-                        renderGraficoSobrantes([]);
-                        renderGraficoFaltantes([]);
-                        return;
-                    }
-            
-                    const sobrantes = (justificaciones || []).filter(item =>
-                        String(item.justificacion || '').toLowerCase().includes('sobrante')
-                    );
-            
-                    const faltantes = (justificaciones || []).filter(item =>
-                        String(item.justificacion || '').toLowerCase().includes('faltante')
-                    );
-            
-                    const tabla = [
-                        ...sobrantes.map(item => ({
-                            ...item,
-                            tipo_grupo: 'Sobrante'
-                        })),
-                        ...faltantes.map(item => ({
-                            ...item,
-                            tipo_grupo: 'Faltante'
-                        }))
-                    ];
-            
-                    renderTablaDiferencias(tabla);
-                    renderGraficoSobrantes(sobrantes);
-                    renderGraficoFaltantes(faltantes);
-            
-                } catch (err) {
-                    console.error('Error inesperado al cargar diferencias:', err);
+            try {
+                const { data: inventarioFiltrado, error: errorInventario } = await construirQueryBase('codigo');
+
+                if (errorInventario) {
+                    console.error('Error obteniendo códigos filtrados para diferencias:', errorInventario);
                     renderTablaDiferencias([]);
                     renderGraficoSobrantes([]);
                     renderGraficoFaltantes([]);
+                    return;
                 }
-            }
 
-        let sobrantesChartInstance = null;
-        let faltantesChartInstance = null;
+                const codigos = [...new Set(
+                    (inventarioFiltrado || [])
+                        .map(item => String(item.codigo || '').trim())
+                        .filter(codigo => codigo !== '')
+                )];
+
+                console.log('Códigos filtrados para tabla y gráficos:', codigos);
+
+                if (codigos.length === 0) {
+                    renderTablaDiferencias([]);
+                    renderGraficoSobrantes([]);
+                    renderGraficoFaltantes([]);
+                    return;
+                }
+
+                const { data: justificaciones, error: errorJustificaciones } = await supabase
+                    .from('inventario_justificaciones')
+                    .select('codigo, costo_total, justificacion')
+                    .in('codigo', codigos);
+
+                if (errorJustificaciones) {
+                    console.error('Error cargando justificaciones filtradas:', errorJustificaciones);
+                    renderTablaDiferencias([]);
+                    renderGraficoSobrantes([]);
+                    renderGraficoFaltantes([]);
+                    return;
+                }
+
+                const sobrantes = (justificaciones || []).filter(item =>
+                    String(item.justificacion || '').toLowerCase().includes('sobrante')
+                );
+
+                const faltantes = (justificaciones || []).filter(item =>
+                    String(item.justificacion || '').toLowerCase().includes('faltante')
+                );
+
+                const tabla = [
+                    ...sobrantes.map(item => ({
+                        ...item,
+                        tipo_grupo: 'Sobrante'
+                    })),
+                    ...faltantes.map(item => ({
+                        ...item,
+                        tipo_grupo: 'Faltante'
+                    }))
+                ];
+
+                renderTablaDiferencias(tabla);
+                renderGraficoSobrantes(sobrantes);
+                renderGraficoFaltantes(faltantes);
+
+            } catch (err) {
+                console.error('Error inesperado al cargar diferencias:', err);
+                renderTablaDiferencias([]);
+                renderGraficoSobrantes([]);
+                renderGraficoFaltantes([]);
+            }
+        }
 
         function renderTablaDiferencias(data) {
             const tbody = document.getElementById('tabla-diferencias');
             tbody.innerHTML = '';
-        
+
             if (!data || data.length === 0) {
                 tbody.innerHTML = `
                     <tr>
@@ -703,12 +731,15 @@
                 `;
                 return;
             }
-        
+
             data.forEach(item => {
+                const valor = Number(item.costo_total || 0);
+                const valorFormateado = formatearMoneda(valor);
+
                 const fila = `
                     <tr>
                         <td>${item.codigo ?? ''}</td>
-                        <td>${item.diferencia ?? 0}</td>
+                        <td>${valorFormateado}</td>
                         <td>${item.tipo_grupo ?? ''}</td>
                     </tr>
                 `;
@@ -719,15 +750,15 @@
         function renderGraficoSobrantes(data) {
             const canvas = document.getElementById('sobrantesChart');
             if (!canvas) return;
-        
+
             const ctx = canvas.getContext('2d');
             const labels = data.map(item => item.codigo);
-            const valores = data.map(item => Number(item.diferencia || 0));
-        
+            const valores = data.map(item => Number(item.costo_total || 0));
+
             if (sobrantesChartInstance) {
                 sobrantesChartInstance.destroy();
             }
-        
+
             sobrantesChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -736,7 +767,9 @@
                         label: 'Sobrantes',
                         data: valores,
                         backgroundColor: '#6f4e37',
-                        borderRadius: 6
+                        borderRadius: 6,
+                        barThickness: 18,
+                        maxBarThickness: 22
                     }]
                 },
                 options: {
@@ -744,29 +777,49 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return formatearMoneda(context.raw);
+                                }
+                            }
+                        }
                     },
                     scales: {
                         x: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatearMonedaCompacta(value);
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(111, 78, 55, 0.08)'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
                         }
                     }
                 }
             });
         }
-        
+
         function renderGraficoFaltantes(data) {
             const canvas = document.getElementById('faltantesChart');
             if (!canvas) return;
-        
+
             const ctx = canvas.getContext('2d');
             const labels = data.map(item => item.codigo);
-            const valores = data.map(item => Math.abs(Number(item.diferencia || 0)));
-        
+            const valores = data.map(item => Math.abs(Number(item.costo_total || 0)));
+
             if (faltantesChartInstance) {
                 faltantesChartInstance.destroy();
             }
-        
+
             faltantesChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -775,7 +828,9 @@
                         label: 'Faltantes',
                         data: valores,
                         backgroundColor: '#c0392b',
-                        borderRadius: 6
+                        borderRadius: 6,
+                        barThickness: 18,
+                        maxBarThickness: 22
                     }]
                 },
                 options: {
@@ -783,29 +838,47 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return formatearMoneda(context.raw);
+                                }
+                            }
+                        }
                     },
                     scales: {
                         x: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatearMonedaCompacta(value);
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(192, 57, 43, 0.08)'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
                         }
                     }
                 }
             });
         }
 
-        let diferenciasChartInstance = null;
-
         function renderGraficoDiferencias(data) {
             const ctx = document.getElementById('diferenciasChart').getContext('2d');
-        
+
             const labels = data.map(item => item.codigo);
-            const valores = data.map(item => item.diferencia);
-        
+            const valores = data.map(item => Number(item.costo_total || 0));
+
             if (diferenciasChartInstance) {
                 diferenciasChartInstance.destroy();
             }
-        
+
             diferenciasChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -818,14 +891,26 @@
                     }]
                 },
                 options: {
-                    indexAxis: 'y', // ← esto lo hace horizontal
+                    indexAxis: 'y',
                     responsive: true,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return formatearMoneda(context.raw);
+                                }
+                            }
+                        }
                     },
                     scales: {
                         x: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatearMonedaCompacta(value);
+                                }
+                            }
                         }
                     }
                 }
@@ -834,15 +919,15 @@
 
         async function cargarTopSKUs() {
             const { data, error } = await construirQueryBase('codigo, proveedor, total, cajas_fardos, masterpack, unidades');
-        
+
             if (error) {
                 console.error('Error cargando top SKUs:', error);
                 return;
             }
-        
+
             const procesado = (data || []).map(item => {
                 let totalUnidades = 0;
-        
+
                 if (item.total != null && item.total !== '') {
                     totalUnidades = Number(item.total);
                 } else {
@@ -850,45 +935,40 @@
                         (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) +
                         Number(item.unidades || 0);
                 }
-        
+
                 return {
                     codigo: item.codigo,
                     total: totalUnidades
                 };
             }).filter(item => item.codigo);
-        
-            // Top 5 mayor
+
             const topHigh = [...procesado]
                 .sort((a, b) => b.total - a.total)
                 .slice(0, 5);
-        
-            // Top 5 menor
+
             const topLow = [...procesado]
                 .sort((a, b) => a.total - b.total)
                 .slice(0, 5);
-        
+
             renderTopChart('topHigh', topHigh, 'Más inventario', '#6f4e37');
             renderTopChart('topLow', topLow, 'Menos inventario', '#c0392b');
         }
 
-        let topHighChartInstance = null;
-        let topLowChartInstance = null;
-        
         function renderTopChart(canvasId, data, label, color) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
-        
+
             const ctx = canvas.getContext('2d');
-        
+
             const labels = data.map(item => item.codigo);
             const valores = data.map(item => item.total);
-        
+
             let chartInstance = canvasId === 'topHigh' ? topHighChartInstance : topLowChartInstance;
-        
+
             if (chartInstance) {
                 chartInstance.destroy();
             }
-        
+
             const newChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -914,7 +994,7 @@
                     }
                 }
             });
-        
+
             if (canvasId === 'topHigh') {
                 topHighChartInstance = newChart;
             } else {
