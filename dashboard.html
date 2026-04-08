@@ -3146,56 +3146,63 @@ async function cargarGraficoProveedores() {
 	    }
 	
 	    tbody.innerHTML = filtrados.map(item => {
-	        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-	        const diferencia = total - Number(item.inventario_reporteria || 0);
-	
-	        const justificacionGuardada = mapaJustificaciones[item.id] || {};
-	        const costoUnitario = Number(item.costo_unitario || 0);
-	        const cantidadJustificada = Number(justificacionGuardada.cantidad_justificada || 0);
-	        const costoTotal = cantidadJustificada * costoUnitario;
-	        const justificacionActual = justificacionGuardada.justificacion || '';
-	        const fechaRegistro = justificacionGuardada.fecha_registro || '';
-	        const sede = item.sede || '';
-	
-	        return `
-			    <tr class="border-b hover:bg-gray-50"
-			        data-id="${item.id}"
-			        data-sede="${sede}"
-			        data-fecha-registro="${fechaRegistro}"
-			        data-costo-unitario="${costoUnitario}">
-			        <td class="py-3">${item.idBodega || ''}</td>
-			        <td class="py-3 codigo">${item.codigo || ''}</td>
-			        <td class="py-3 descripcion">${item.descripcion || ''}</td>
-			        <td class="py-3 font-bold diferencia">${diferencia.toFixed(2)}</td>
-			        <td class="py-3">
-			            <input
-			                type="number"
-			                step="0.01"
-			                min="0"
-			                value="${cantidadJustificada || ''}"
-			                data-id="${item.id}"
-			                disabled
-			                class="input-field input-disabled cantidad-justificada px-2 py-1 w-full">
-			        </td>
-			        <td class="py-3 costo-total" data-valor="${costoTotal}">
-			            ${formatearMoneda(costoTotal)}
-			        </td>
-			        <td class="py-3">
-			            <select
-			                data-id="${item.id}"
-			                disabled
-			                class="input-field input-disabled justificacion px-2 py-1 w-full">
-			                ${construirOpcionesJustificacion(justificacionActual)}
-			            </select>
-			        </td>
-			        <td class="py-3 text-center">
-			            <button type="button" class="btnEditarFila opacity-50 cursor-not-allowed" data-id="${item.id}" disabled>
-			                <i class="fas fa-edit"></i>
-			            </button>
-			        </td>
-			    </tr>
-			`;
-	    }).join('');
+		    const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
+		    const diferencia = total - Number(item.inventario_reporteria || 0);
+		
+		    const justificacionGuardada = mapaJustificaciones[item.id] || {};
+		    const costoUnitario = Number(item.costo_unitario || 0);
+		    const cantidadJustificada = Number(justificacionGuardada.cantidad_justificada || 0);
+		
+		    const justificacionActual = justificacionGuardada.justificacion || '';
+		    const fechaRegistro = justificacionGuardada.fecha_registro || '';
+		    const sede = item.sede || '';
+		
+		    return `
+		        <tr class="border-b border-gray-200 hover:bg-gray-50"
+		            data-id="${item.id}"
+		            data-sede="${sede}"
+		            data-fecha-registro="${fechaRegistro}"
+		            data-costo-unitario="${costoUnitario}">
+		            
+		            <td class="py-4 px-4 text-sm">${item.idBodega || ''}</td>
+		            <td class="py-4 px-4 text-sm codigo">${item.codigo || ''}</td>
+		            <td class="py-4 px-4 text-sm descripcion">${item.descripcion || ''}</td>
+		            <td class="py-4 px-4 text-sm diferencia">${diferencia.toFixed(2)}</td>
+		
+		            <td class="py-4 px-4">
+		                <input
+		                    type="number"
+		                    min="0"
+		                    step="0.01"
+		                    inputmode="decimal"
+		                    value="${cantidadJustificada || ''}"
+		                    class="cantidad-justificada input-field w-full px-3 py-2 rounded-lg input-disabled"
+		                    data-id="${item.id}"
+		                    disabled
+		                >
+		            </td>
+		
+		            <td class="py-4 px-4">
+		                <select
+		                    class="justificacion input-field w-full px-3 py-2 rounded-lg input-disabled"
+		                    data-id="${item.id}"
+		                    disabled>
+		                    ${construirOpcionesJustificacion(justificacionActual)}
+		                </select>
+		            </td>
+		
+		            <td class="py-4 px-4 text-center">
+		                <button
+		                    type="button"
+		                    class="btnEditarFila text-blue-600 hover:text-blue-800 opacity-50 cursor-not-allowed"
+		                    data-id="${item.id}"
+		                    disabled>
+		                    <i class="fas fa-edit"></i>
+		                </button>
+		            </td>
+		        </tr>
+		    `;
+		}).join('');
 	
 	    const inputsCantidad = tbody.querySelectorAll('.cantidad-justificada');
 		inputsCantidad.forEach(input => {
@@ -3271,9 +3278,9 @@ async function guardarJustificacion(id, texto) {
 
 		async function guardarCambiosMasivos() {
 		    const filas = document.querySelectorAll('#transitosTableBody tr');
-		    let registros = [];
+		    const registros = [];
 		
-		    for (let fila of filas) {
+		    for (const fila of filas) {
 		        const inputJustificacion = fila.querySelector('.justificacion');
 		        if (!inputJustificacion) continue;
 		
@@ -3287,6 +3294,8 @@ async function guardarJustificacion(id, texto) {
 		        const justificacion = inputJustificacion.value || '';
 		        const cantidadJustificada = parseFloat(inputCantidad?.value || '0') || 0;
 		        const fechaRegistroExistente = fila.dataset.fechaRegistro || '';
+		        const costoUnitario = Number(fila.dataset.costoUnitario || 0);
+		        const costoTotal = cantidadJustificada * costoUnitario;
 		
 		        if (!justificacion) {
 		            showNotification('Error', 'No puedes guardar con justificaciones vacías', 'error');
@@ -3294,10 +3303,7 @@ async function guardarJustificacion(id, texto) {
 		            return;
 		        }
 		
-		        const costoUnitario = Number(fila.dataset.costoUnitario || 0);
-				const costoTotal = calcularCostoTotalJustificacion(cantidadJustificada, costoUnitario);
-		
-		        const registro = {
+		        registros.push({
 		            id,
 		            sede,
 		            usuario: currentUser?.username || '',
@@ -3307,16 +3313,9 @@ async function guardarJustificacion(id, texto) {
 		            cantidad_justificada: cantidadJustificada,
 		            costo_total: costoTotal,
 		            justificacion,
-		            fecha_modificacion: new Date().toISOString()
-		        };
-		
-		        if (fechaRegistroExistente) {
-		            registro.fecha_registro = fechaRegistroExistente;
-		        } else {
-		            registro.fecha_registro = new Date().toISOString();
-		        }
-		
-		        registros.push(registro);
+		            fecha_modificacion: new Date().toISOString(),
+		            fecha_registro: fechaRegistroExistente || new Date().toISOString()
+		        });
 		    }
 		
 		    if (registros.length === 0) {
