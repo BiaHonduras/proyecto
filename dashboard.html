@@ -906,6 +906,10 @@
 									    Justificación
 									</label>
 									<label class="flex items-center">
+									    <input type="checkbox" class="mr-2" name="exportFields" value="cantidad_justificada" checked>
+									    Cantidad Justificada
+									</label>
+									<label class="flex items-center">
 									    <input type="checkbox" class="mr-2" name="exportFields" value="usuario_justificacion" checked>
 									    Usuario Justificación
 									</label>
@@ -2170,8 +2174,8 @@ async function loadInventory() {
 		    const { data, error } = await supabase
 		        .from('inventarios_diarios')
 		        .select('*');
-
-            const inventario = aplicarFiltrosGlobales(data);
+		
+		    const inventario = aplicarFiltrosGlobales(data);
 		
 		    if (error) {
 		        console.error(error);
@@ -2191,7 +2195,7 @@ async function loadInventory() {
 		    if (idsInventario.length > 0) {
 		        const { data: justificaciones, error: errorJust } = await supabase
 		            .from('inventario_justificaciones')
-		            .select('id, codigo, justificacion, usuario, fecha_modificacion')
+		            .select('id, codigo, justificacion, cantidad_justificada, usuario, fecha_modificacion')
 		            .in('id', idsInventario);
 		
 		        if (errorJust) {
@@ -2225,6 +2229,7 @@ async function loadInventory() {
 		        diferencia: 'Diferencia',
 		        validacion: 'Validacion',
 		        diasvida: 'Dias de Vida',
+		        cantidad_justificada: 'Cantidad Justificada',
 		        justificacion: 'Justificacion',
 		        usuario_justificacion: 'Usuario Justificacion',
 		        fecha_modificacion_justificacion: 'Fecha Modificacion Justificacion'
@@ -2267,6 +2272,7 @@ async function loadInventory() {
 		            diferencia: diferencia.toFixed(2),
 		            validacion: validacion,
 		            diasvida: diasvida,
+		            cantidad_justificada: justificacionData.cantidad_justificada ?? '',
 		            justificacion: justificacionData.justificacion || '',
 		            usuario_justificacion: justificacionData.usuario || '',
 		            fecha_modificacion_justificacion: justificacionData.fecha_modificacion || ''
