@@ -3250,10 +3250,22 @@ async function guardarJustificacion(id, texto) {
 		
 	function activarModoEdicion() {
 	    const botones = document.querySelectorAll('.btnEditarFila');
+	    const inputs = document.querySelectorAll('.cantidad-justificada');
+	    const selects = document.querySelectorAll('.justificacion');
 	
 	    botones.forEach(btn => {
 	        btn.disabled = false;
 	        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+	    });
+	
+	    inputs.forEach(input => {
+	        input.disabled = false;
+	        input.classList.remove('input-disabled');
+	    });
+	
+	    selects.forEach(select => {
+	        select.disabled = false;
+	        select.classList.remove('input-disabled');
 	    });
 	}
 
