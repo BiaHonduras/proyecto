@@ -3078,9 +3078,8 @@ async function cargarGraficoProveedores() {
 	    const { data, error: errorInventario } = await supabase
 	        .from('inventarios_diarios')
 	        .select('*');
-
-        const inventario = aplicarFiltrosGlobales(data);
 	
+	    const inventario = aplicarFiltrosGlobales(data);
 	    const tbody = document.getElementById('transitosTableBody');
 	
 	    if (errorInventario || !inventario) {
@@ -3112,13 +3111,13 @@ async function cargarGraficoProveedores() {
 	    });
 	
 	    const filtrados = inventario
-		    .filter(item => {
-		        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-		        const diferencia = total - Number(item.inventario_reporteria || 0);
-		        return diferencia !== 0 || mapaJustificaciones[item.id];
-		    })
-		    .sort((a, b) => Number(a.codigo) - Number(b.codigo));
-		
+	        .filter(item => {
+	            const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
+	            const diferencia = total - Number(item.inventario_reporteria || 0);
+	            return diferencia !== 0 || mapaJustificaciones[item.id];
+	        })
+	        .sort((a, b) => Number(a.codigo) - Number(b.codigo));
+	
 	    if (filtrados.length === 0) {
 	        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6">Sin diferencias</td></tr>`;
 	        return;
@@ -3131,9 +3130,16 @@ async function cargarGraficoProveedores() {
 	        const costoTotal = calcularCostoTotalJustificacion(diferencia, costoUnitario);
 	
 	        const justificacionGuardada = mapaJustificaciones[item.id]?.justificacion || '';
+	        const fechaRegistroGuardada = mapaJustificaciones[item.id]?.fecha_registro || '';
+	        const fechaModificacionGuardada = mapaJustificaciones[item.id]?.fecha_modificacion || '';
 	
 	        return `
-	            <tr class="border-b hover:bg-gray-50">
+	            <tr class="border-b hover:bg-gray-50"
+	                data-id="${item.id}"
+	                data-sede="${item.sede || ''}"
+	                data-fecha-registro="${fechaRegistroGuardada}"
+	                data-fecha-modificacion="${fechaModificacionGuardada}">
+	                
 	                <td class="py-3">${item.idBodega}</td>
 	                <td class="py-3 codigo">${item.codigo}</td>
 	                <td class="py-3 descripcion">${item.descripcion}</td>
@@ -3200,57 +3206,69 @@ async function guardarJustificacion(id, texto) {
 	}
 
 	async function guardarCambiosMasivos() {
-		    const filas = document.querySelectorAll('#transitosTableBody tr');
-		    let registros = [];
-		
-		    for (let fila of filas) {
-		        const input = fila.querySelector('.justificacion');
-		        const id = input?.dataset?.id || null;
-		        const codigo = fila.querySelector('.codigo')?.textContent.trim();
-		        const descripcion = fila.querySelector('.descripcion')?.textContent.trim();
-		        const diferencia = parseFloat(fila.querySelector('.diferencia')?.textContent.trim()) || 0;
-		        const justificacion = input?.value || '';
-		
-		        if (!justificacion) {
-		            showNotification('Error', 'No puedes guardar con justificaciones vacías', 'error');
-		            input.focus();
-		            return;
-		        }
-		
-		        const costoTotalCell = fila.querySelector('.costo-total');
-		        const costoTotal = Number(costoTotalCell?.dataset?.valor || 0);
-		
-		        const registro = {
-		            usuario: currentUser?.username,
-		            codigo,
-		            descripcion,
-		            diferencia,
-		            costo_total: costoTotal,
-		            justificacion,
-		            fecha_modificacion: new Date().toISOString()
-		        };
-		
-		        if (id) {
-		            registro.id = id;
-		        } else {
-		            registro.fecha_registro = new Date().toISOString();
-		        }
-		
-		        registros.push(registro);
-		    }
-		
-		    const { error } = await supabase
-		        .from('inventario_justificaciones')
-		        .upsert(registros, { onConflict: 'id' });
-		
-		    if (error) {
-		        console.error(error);
-		        showNotification('Error', `Falló el guardado: ${error.message}`, 'error');
-		        return;
-		    }
-		
-		    showNotification('Éxito', 'Registros actualizados correctamente', 'success');
-		}
+	    const filas = document.querySelectorAll('#transitosTableBody tr');
+	    let registros = [];
+	
+	    for (let fila of filas) {
+	        const input = fila.querySelector('.justificacion');
+	        if (!input) continue;
+	
+	        const id = input.dataset.id || fila.dataset.id || null;
+	        const sede = fila.dataset.sede || '';
+	        const codigo = fila.querySelector('.codigo')?.textContent.trim() || '';
+	        const descripcion = fila.querySelector('.descripcion')?.textContent.trim() || '';
+	        const diferencia = parseFloat(fila.querySelector('.diferencia')?.textContent.trim()) || 0;
+	        const justificacion = input.value || '';
+	        const fechaRegistroExistente = fila.dataset.fechaRegistro || '';
+	
+	        if (!justificacion) {
+	            showNotification('Error', 'No puedes guardar con justificaciones vacías', 'error');
+	            input.focus();
+	            return;
+	        }
+	
+	        const costoTotalCell = fila.querySelector('.costo-total');
+	        const costoTotal = Number(costoTotalCell?.dataset?.valor || 0);
+	
+	        const registro = {
+	            id,
+	            sede,
+	            usuario: currentUser?.username || '',
+	            codigo,
+	            descripcion,
+	            diferencia,
+	            costo_total: costoTotal,
+	            justificacion,
+	            fecha_modificacion: new Date().toISOString()
+	        };
+	
+	        if (fechaRegistroExistente) {
+	            registro.fecha_registro = fechaRegistroExistente;
+	        } else {
+	            registro.fecha_registro = new Date().toISOString();
+	        }
+	
+	        registros.push(registro);
+	    }
+	
+	    if (registros.length === 0) {
+	        showNotification('Advertencia', 'No hay registros para guardar', 'warning');
+	        return;
+	    }
+	
+	    const { error } = await supabase
+	        .from('inventario_justificaciones')
+	        .upsert(registros, { onConflict: 'id' });
+	
+	    if (error) {
+	        console.error(error);
+	        showNotification('Error', `Falló el guardado: ${error.message}`, 'error');
+	        return;
+	    }
+	
+	    showNotification('Éxito', 'Registros actualizados correctamente', 'success');
+	    loadTransitos();
+	}
 
 	function formatearMoneda(valor) {
 	    const numero = Number(valor) || 0;
