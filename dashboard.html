@@ -2417,7 +2417,7 @@ async function loadInventory() {
 		
 		    const tabla = document.getElementById('tablaResumenInventario');
 		
-		    if (error || !filtrados || filtrados.length === 0) {
+		    if (error || !data || data.length === 0) {
 		        tabla.innerHTML = `
 		            <tr>
 		                <td colspan="3" class="text-center py-6">No hay registros</td>
