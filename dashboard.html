@@ -514,7 +514,7 @@
                                 </thead>
                                 <tbody id="tablaVencimientosUrgentes">
                                     <tr>
-                                        <td colspan="5" class="py-8 text-center text-gray-500">
+                                        <td colspan="7" class="py-8 text-center text-gray-500">
                                             <i class="fas fa-inbox text-3xl mb-2"></i>
                                             <p>No hay datos de vencimiento</p>
                                         </td>
@@ -718,7 +718,7 @@
                                 Agregar Artículo
                             </button>
 
-                            <button id="deleteTodayInventory"
+                            <button type="button" id="deleteTodayInventory"
                                 class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700">
                                 <i class="fas fa-trash mr-2"></i>
                                 Eliminar Inventario del Día
@@ -1504,11 +1504,11 @@
     			const activo = checkBodega.checked;
 
     			fechaVencimiento.disabled = !activo;
+                fechaVencimiento.readOnly = false;
 
     			if (activo) {
-        			fechaVencimiento.classList.remove('input-disabled');
+        			fechaVencimiento.classList.remove('input-disabled', 'bg-gray-100');
     			} else {
-        			fechaVencimiento.setAttribute('readonly', true);
         			fechaVencimiento.classList.add('bg-gray-100');
         			fechaVencimiento.value = '';
     			}
@@ -3029,7 +3029,7 @@ async function cargarGraficoProveedores() {
 		        return;
 		    }
 		
-		    const confirmar = confirm('¿Está seguro que desea eliminar TODO el inventario?');
+		    const confirmar = confirm('¿Está seguro que desea eliminar el inventario del día seleccionado?');
 		    if (!confirmar) return;
 		
 		    const confirmacion = prompt('Escribe ELIMINAR para continuar');
@@ -3038,11 +3038,11 @@ async function cargarGraficoProveedores() {
 		    const { error } = await supabase
 		        .from('inventarios_diarios')
 		        .delete()
-		        .not('id', 'is', null);
+		        .eq('fecha', fecha);
 		
 		    if (error) {
 		        console.error(error);
-		        showNotification('Error', 'No se pudo eliminar el inventario', 'error');
+		        showNotification('Error', 'No se pudo eliminar el inventario del día', 'error');
 		        return;
 		    }
 		
@@ -3105,14 +3105,14 @@ async function cargarGraficoProveedores() {
 	    const tbody = document.getElementById('transitosTableBody');
 	
 	    if (errorInventario || !inventario) {
-	        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-gray-500">Error cargando datos</td></tr>`;
+	        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-gray-500">Error cargando datos</td></tr>`;
 	        return;
 	    }
 	
 	    const ids = inventario.map(item => item.id).filter(Boolean);
 	
 	    if (!ids.length) {
-	        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6">Sin diferencias</td></tr>`;
+	        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6">Sin diferencias</td></tr>`;
 	        return;
 	    }
 	
@@ -3123,7 +3123,7 @@ async function cargarGraficoProveedores() {
 	
 	    if (errorJust) {
 	        console.error(errorJust);
-	        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-gray-500">Error cargando justificaciones</td></tr>`;
+	        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-gray-500">Error cargando justificaciones</td></tr>`;
 	        return;
 	    }
 	
@@ -3138,10 +3138,10 @@ async function cargarGraficoProveedores() {
 	            const diferencia = total - Number(item.inventario_reporteria || 0);
 	            return diferencia !== 0 || mapaJustificaciones[item.id];
 	        })
-	        .sort((a, b) => Number(a.codigo) - Number(b.codigo));
+	        .sort((a, b) => Number(a.codigo || 0) - Number(b.codigo || 0));
 	
 	    if (filtrados.length === 0) {
-	        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6">Sin diferencias</td></tr>`;
+	        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6">Sin diferencias</td></tr>`;
 	        return;
 	    }
 	
@@ -3150,11 +3150,9 @@ async function cargarGraficoProveedores() {
 	        const diferencia = total - Number(item.inventario_reporteria || 0);
 	
 	        const justificacionGuardada = mapaJustificaciones[item.id] || {};
-	
 	        const costoUnitario = Number(item.costo_unitario || 0);
 	        const cantidadJustificada = Number(justificacionGuardada.cantidad_justificada || 0);
 	        const costoTotal = cantidadJustificada * costoUnitario;
-	
 	        const justificacionActual = justificacionGuardada.justificacion || '';
 	        const fechaRegistro = justificacionGuardada.fecha_registro || '';
 	        const sede = item.sede || '';
@@ -3162,31 +3160,36 @@ async function cargarGraficoProveedores() {
 	        return `
 			    <tr class="border-b hover:bg-gray-50"
 			        data-id="${item.id}"
+			        data-sede="${sede}"
+			        data-fecha-registro="${fechaRegistro}"
 			        data-costo-unitario="${costoUnitario}">
-			        <td class="py-3">${item.idBodega}</td>
-			        <td class="py-3 codigo">${item.codigo}</td>
-			        <td class="py-3 descripcion">${item.descripcion}</td>
+			        <td class="py-3">${item.idBodega || ''}</td>
+			        <td class="py-3 codigo">${item.codigo || ''}</td>
+			        <td class="py-3 descripcion">${item.descripcion || ''}</td>
 			        <td class="py-3 font-bold diferencia">${diferencia.toFixed(2)}</td>
 			        <td class="py-3">
 			            <input
 			                type="number"
 			                step="0.01"
 			                min="0"
-			                value="${mapaJustificaciones[item.id]?.cantidad_justificada ?? ''}"
+			                value="${cantidadJustificada || ''}"
 			                data-id="${item.id}"
 			                disabled
 			                class="input-field input-disabled cantidad-justificada px-2 py-1 w-full">
+			        </td>
+			        <td class="py-3 costo-total" data-valor="${costoTotal}">
+			            ${formatearMoneda(costoTotal)}
 			        </td>
 			        <td class="py-3">
 			            <select
 			                data-id="${item.id}"
 			                disabled
 			                class="input-field input-disabled justificacion px-2 py-1 w-full">
-			                ${construirOpcionesJustificacion(mapaJustificaciones[item.id]?.justificacion || '')}
+			                ${construirOpcionesJustificacion(justificacionActual)}
 			            </select>
 			        </td>
 			        <td class="py-3 text-center">
-			            <button class="btnEditarFila opacity-50 cursor-not-allowed" data-id="${item.id}">
+			            <button type="button" class="btnEditarFila opacity-50 cursor-not-allowed" data-id="${item.id}" disabled>
 			                <i class="fas fa-edit"></i>
 			            </button>
 			        </td>
@@ -3197,18 +3200,14 @@ async function cargarGraficoProveedores() {
 	    const inputsCantidad = tbody.querySelectorAll('.cantidad-justificada');
 		inputsCantidad.forEach(input => {
 		    input.addEventListener('input', function() {
-		        this.value = this.value.replace(/[^0-9]/g, '');
+		        this.value = this.value.replace(/[^0-9.]/g, '');
 		
 		        const fila = this.closest('tr');
 		        if (!fila) return;
 		
-		        const id = fila.dataset.id;
-		        const item = filtrados.find(x => String(x.id) === String(id));
-		        if (!item) return;
-		
-		        const diferencia = Number(item.diferencia || 0);
-		        const costoUnitario = Number(item.costo_unitario || 0);
-		        const costoTotal = diferencia * costoUnitario;
+		        const cantidad = Number(this.value || 0);
+		        const costoUnitario = Number(fila.dataset.costoUnitario || 0);
+		        const costoTotal = cantidad * costoUnitario;
 		
 		        const celdaCostoTotal = fila.querySelector('.costo-total');
 		        if (celdaCostoTotal) {
@@ -3274,7 +3273,7 @@ async function guardarJustificacion(id, texto) {
 		        const descripcion = fila.querySelector('.descripcion')?.textContent.trim() || '';
 		        const diferencia = parseFloat(fila.querySelector('.diferencia')?.textContent.trim()) || 0;
 		        const justificacion = inputJustificacion.value || '';
-		        const cantidadJustificada = parseInt(inputCantidad?.value || '0', 10) || 0;
+		        const cantidadJustificada = parseFloat(inputCantidad?.value || '0') || 0;
 		        const fechaRegistroExistente = fila.dataset.fechaRegistro || '';
 		
 		        if (!justificacion) {
@@ -3284,8 +3283,7 @@ async function guardarJustificacion(id, texto) {
 		        }
 		
 		        const costoUnitario = Number(fila.dataset.costoUnitario || 0);
-				const costoTotal = calcularCostoTotalJustificacion(diferencia, costoUnitario);
-				const cantidadJustificada = parseFloat(fila.querySelector('.cantidad-justificada')?.value) || 0;
+				const costoTotal = calcularCostoTotalJustificacion(cantidadJustificada, costoUnitario);
 		
 		        const registro = {
 		            id,
