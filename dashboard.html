@@ -2398,6 +2398,7 @@ async function loadInventory() {
         return;
     }
         showNotification('Éxito', 'Inventario de reportería cargado correctamente', 'success');
+		cargarResumenInventario();
 
         document.getElementById('inventoryPreview').classList.add('hidden');
         document.getElementById('confirmImportInventory').disabled = true;
