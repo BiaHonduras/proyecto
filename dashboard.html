@@ -718,10 +718,10 @@
                                 Agregar Artículo
                             </button>
 
-                            <button type="button" id="deleteTodayInventory"
+                            <button type="button" id="btnEliminarGeneral"
                                 class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700">
                                 <i class="fas fa-trash mr-2"></i>
-                                Eliminar Inventario del Día
+                                Eliminar
                             </button>
                         </div>
 					</form>
@@ -797,12 +797,6 @@
 	        		Guardar Registros
 	    		</button>
 
-				<button id="btnEliminarJustificaciones"
-			        type="button"
-			        class="px-4 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 flex items-center">
-			        <i class="fas fa-trash mr-2"></i>
-			        Eliminar Justificaciones
-			    </button>
 			</div>
 				
 	        <div class="overflow-x-auto">
@@ -1013,11 +1007,6 @@
                             Importar Reportería
                         </button>
 
-                        <button id="deleteInventoryReporteria"
-                            class="px-6 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">
-                            <i class="fas fa-trash mr-2"></i>
-                            Eliminar Inventario Reportería
-                        </button>
                     </div>
                 </div>
             </section>
@@ -1090,7 +1079,7 @@
                         Importar Base de Códigos
                     </button>
 
-                    <button id="deleteCodesDatabase"
+                    <button id="btnEliminarBaseCodigos"
                         class="mt-4 px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white">
                         <i class="fas fa-trash mr-2"></i>
                         Eliminar Base de Datos
@@ -1225,6 +1214,10 @@
         let currentUser = null;
         let scannerActive = false;
         let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
+        const STORAGE_BACKUP_BUCKET = 'respaldos-sistema';
+        const STORAGE_BACKUP_FOLDER = 'eliminaciones';
+        const HISTORIAL_RESPALDOS_TABLE = 'historial_respaldos';
+
         let filtrosGlobales = {
             sede: 'Todas',
             tipoBodega: 'Todas'
@@ -1388,9 +1381,6 @@
     			guardarCambiosMasivos();
 				});
 
-			document.getElementById('btnEliminarJustificaciones').addEventListener('click', () => {
-    			eliminarJustificaciones();
-				});
 
 			document.getElementById('sede').addEventListener('change', () => {
 			    actualizarBodegasPorSede();
@@ -1458,9 +1448,15 @@
             // Import buttons
             document.getElementById('confirmImportInventory').addEventListener('click', importInventory);
             document.getElementById('confirmImportCodes').addEventListener('click', importCodes);
-            document.getElementById('deleteCodesDatabase').addEventListener('click', eliminarBaseCodigos);            
-            document.getElementById('deleteInventoryReporteria').addEventListener('click',eliminarInventarioReporteria);
-            document.getElementById('deleteTodayInventory').addEventListener('click', eliminarInventarioDelDia);
+            const btnEliminarGeneral = document.getElementById('btnEliminarGeneral');
+            if (btnEliminarGeneral) {
+                btnEliminarGeneral.addEventListener('click', eliminarGeneralProtegido);
+            }
+
+            const btnEliminarBaseCodigos = document.getElementById('btnEliminarBaseCodigos');
+            if (btnEliminarBaseCodigos) {
+                btnEliminarBaseCodigos.addEventListener('click', eliminarBaseCodigosProtegida);
+            }
 
 			const codigoInput = document.getElementById('codigoArticulo');
 			const barraInput = document.getElementById('codigoBarra');
@@ -2456,26 +2452,285 @@ async function loadInventory() {
 		        </tr>
 		    `).join('');
 		}
-        async function eliminarInventarioReporteria() {
+        async function descargarRespaldoJSON(nombreBase, payload) {
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${nombreBase}_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
 
-    if (!confirm("¿Está seguro de eliminar TODO el inventario de reportería?")) {
-        return;
-    }
+        function generarTimestampArchivo() {
+            return new Date().toISOString().replace(/[:.]/g, '-');
+        }
 
-    const { error } = await supabase
-        .from('inventario_reporteria')
-        .delete()
-        .not('id','is',null);
+        function obtenerRutaRespaldo(nombreBase) {
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const nombreSeguro = String(nombreBase || 'respaldo')
+                .toLowerCase()
+                .replace(/[^a-z0-9_-]/gi, '_')
+                .replace(/_+/g, '_');
 
-    if (error) {
-        console.error(error);
-        showNotification('Error', 'No se pudo eliminar el inventario', 'error');
-        return;
-    }
+            return `${STORAGE_BACKUP_FOLDER}/${yyyy}/${mm}/${dd}/${nombreSeguro}_${generarTimestampArchivo()}.json`;
+        }
 
-    showNotification('Éxito', 'Inventario de reportería eliminado completamente', 'success');
-	cargarResumenInventario();
-}
+        async function registrarHistorialRespaldo(registro) {
+            try {
+                const payload = {
+                    tipo_respaldo: registro.tipo_respaldo,
+                    bucket: registro.bucket,
+                    ruta_archivo: registro.ruta_archivo,
+                    nombre_archivo: registro.nombre_archivo,
+                    ejecutado_por: registro.ejecutado_por,
+                    autorizado_por: registro.autorizado_por,
+                    tablas_incluidas: registro.tablas_incluidas,
+                    totales_registros: registro.totales_registros,
+                    fecha_generacion: registro.fecha_generacion
+                };
+
+                const { error } = await supabase
+                    .from(HISTORIAL_RESPALDOS_TABLE)
+                    .insert([payload]);
+
+                if (error) {
+                    console.warn('No se pudo registrar en historial_respaldos:', error);
+                    return false;
+                }
+
+                return true;
+            } catch (error) {
+                console.warn('No se pudo registrar el historial del respaldo:', error);
+                return false;
+            }
+        }
+
+        async function subirRespaldoASupabase(nombreBase, payload, opciones = {}) {
+            const fechaGeneracion = new Date().toISOString();
+            const rutaArchivo = obtenerRutaRespaldo(nombreBase);
+            const contenido = JSON.stringify(payload, null, 2);
+            const archivo = new File([contenido], rutaArchivo.split('/').pop(), {
+                type: 'application/json'
+            });
+
+            const { data, error } = await supabase.storage
+                .from(STORAGE_BACKUP_BUCKET)
+                .upload(rutaArchivo, archivo, {
+                    contentType: 'application/json',
+                    upsert: false
+                });
+
+            if (error) {
+                console.error('Error subiendo respaldo a Storage:', error);
+                throw new Error(`No se pudo subir el respaldo a Supabase Storage. Verifique el bucket "${STORAGE_BACKUP_BUCKET}" y sus políticas.`);
+            }
+
+            await registrarHistorialRespaldo({
+                tipo_respaldo: opciones.tipo_respaldo || nombreBase,
+                bucket: STORAGE_BACKUP_BUCKET,
+                ruta_archivo: data.path,
+                nombre_archivo: archivo.name,
+                ejecutado_por: currentUser?.username || currentUser?.usuario || 'desconocido',
+                autorizado_por: opciones.autorizado_por || null,
+                tablas_incluidas: opciones.tablas_incluidas || [],
+                totales_registros: opciones.totales_registros || {},
+                fecha_generacion: fechaGeneracion
+            });
+
+            return {
+                bucket: STORAGE_BACKUP_BUCKET,
+                path: data.path,
+                nombreArchivo: archivo.name,
+                fechaGeneracion
+            };
+        }
+
+        async function validarCredencialesAdministrador(usuario, password) {
+            const { data, error } = await supabase
+                .from('usuarios')
+                .select('usuario, rol')
+                .eq('usuario', usuario)
+                .eq('contraseña', password)
+                .eq('rol', 'admin')
+                .maybeSingle();
+
+            if (error) {
+                console.error(error);
+                throw new Error('No se pudo validar el usuario administrador');
+            }
+
+            return !!data;
+        }
+
+        async function solicitarAutorizacionAdmin() {
+            const usuario = prompt('Usuario administrador:');
+            if (usuario === null) return null;
+
+            const password = prompt('Contraseña del administrador:');
+            if (password === null) return null;
+
+            const credencialesValidas = await validarCredencialesAdministrador(usuario.trim(), password);
+
+            if (!credencialesValidas) {
+                showNotification('Error', 'Credenciales inválidas o sin permisos de administrador', 'error');
+                return null;
+            }
+
+            return usuario.trim();
+        }
+
+        async function eliminarGeneralProtegido() {
+            const confirmar = confirm('¿Estás seguro que deseas eliminar todos los registros de Inventarios, Justificaciones y Reportería?');
+            if (!confirmar) return;
+
+            const adminAutorizador = await solicitarAutorizacionAdmin();
+            if (!adminAutorizador) return;
+
+            const [inventariosRes, justificacionesRes, reporteriaRes] = await Promise.all([
+                supabase.from('inventarios_diarios').select('*'),
+                supabase.from('inventario_justificaciones').select('*'),
+                supabase.from('inventario_reporteria').select('*')
+            ]);
+
+            const erroresConsulta = [inventariosRes.error, justificacionesRes.error, reporteriaRes.error].filter(Boolean);
+            if (erroresConsulta.length > 0) {
+                console.error(erroresConsulta);
+                showNotification('Error', 'No se pudo generar el respaldo antes de eliminar', 'error');
+                return;
+            }
+
+            const payloadRespaldo = {
+                tipo_respaldo: 'eliminacion_inventarios_justificaciones_reporteria',
+                fecha_generacion: new Date().toISOString(),
+                ejecutado_por: currentUser?.username || currentUser?.usuario || 'desconocido',
+                autorizado_por: adminAutorizador,
+                tablas: {
+                    inventarios_diarios: inventariosRes.data || [],
+                    inventario_justificaciones: justificacionesRes.data || [],
+                    inventario_reporteria: reporteriaRes.data || []
+                },
+                resumen: {
+                    inventarios_diarios: (inventariosRes.data || []).length,
+                    inventario_justificaciones: (justificacionesRes.data || []).length,
+                    inventario_reporteria: (reporteriaRes.data || []).length
+                },
+                version_esquema: 1
+            };
+
+            let respaldoStorage;
+            try {
+                respaldoStorage = await subirRespaldoASupabase(
+                    'respaldo_inventarios_justificaciones_reporteria',
+                    payloadRespaldo,
+                    {
+                        tipo_respaldo: 'eliminacion_general',
+                        autorizado_por: adminAutorizador,
+                        tablas_incluidas: ['inventarios_diarios', 'inventario_justificaciones', 'inventario_reporteria'],
+                        totales_registros: payloadRespaldo.resumen
+                    }
+                );
+            } catch (errorRespaldo) {
+                showNotification('Error', errorRespaldo.message, 'error');
+                return;
+            }
+
+            const [deleteInventarios, deleteJustificaciones, deleteReporteria] = await Promise.all([
+                supabase.from('inventarios_diarios').delete().not('id', 'is', null),
+                supabase.from('inventario_justificaciones').delete().not('id', 'is', null),
+                supabase.from('inventario_reporteria').delete().not('id', 'is', null)
+            ]);
+
+            const erroresDelete = [deleteInventarios.error, deleteJustificaciones.error, deleteReporteria.error].filter(Boolean);
+            if (erroresDelete.length > 0) {
+                console.error(erroresDelete);
+                showNotification('Error', 'El respaldo se guardó, pero ocurrió un error al eliminar los registros', 'error');
+                return;
+            }
+
+            showNotification(
+                'Éxito',
+                `Respaldo guardado en Storage: ${respaldoStorage.path}. Luego se eliminaron Inventarios, Justificaciones y Reportería.`,
+                'success'
+            );
+
+            loadInventory();
+            loadDashboardData();
+            loadVencimientosData();
+            loadTransitos();
+        }
+
+        async function eliminarBaseCodigosProtegida() {
+            const confirmar = confirm('¿Estás seguro que deseas eliminar todos los registros de la Base de Códigos?');
+            if (!confirmar) return;
+
+            const adminAutorizador = await solicitarAutorizacionAdmin();
+            if (!adminAutorizador) return;
+
+            const { data: codigos, error: errorConsulta } = await supabase
+                .from('codigos')
+                .select('*');
+
+            if (errorConsulta) {
+                console.error(errorConsulta);
+                showNotification('Error', 'No se pudo generar el respaldo de la base de códigos', 'error');
+                return;
+            }
+
+            const payloadRespaldo = {
+                tipo_respaldo: 'eliminacion_base_codigos',
+                fecha_generacion: new Date().toISOString(),
+                ejecutado_por: currentUser?.username || currentUser?.usuario || 'desconocido',
+                autorizado_por: adminAutorizador,
+                tablas: {
+                    codigos: codigos || []
+                },
+                resumen: {
+                    codigos: (codigos || []).length
+                },
+                version_esquema: 1
+            };
+
+            let respaldoStorage;
+            try {
+                respaldoStorage = await subirRespaldoASupabase(
+                    'respaldo_base_codigos',
+                    payloadRespaldo,
+                    {
+                        tipo_respaldo: 'eliminacion_base_codigos',
+                        autorizado_por: adminAutorizador,
+                        tablas_incluidas: ['codigos'],
+                        totales_registros: payloadRespaldo.resumen
+                    }
+                );
+            } catch (errorRespaldo) {
+                showNotification('Error', errorRespaldo.message, 'error');
+                return;
+            }
+
+            const { error } = await supabase
+                .from('codigos')
+                .delete()
+                .not('codigo', 'is', null);
+
+            if (error) {
+                console.error(error);
+                showNotification('Error', 'El respaldo se guardó, pero no se pudo eliminar la base de códigos', 'error');
+                return;
+            }
+
+            showNotification(
+                'Éxito',
+                `Respaldo guardado en Storage: ${respaldoStorage.path}. Luego se eliminó la base de códigos.`,
+                'success'
+            );
+            cargarResumenCodigos();
+        }
 
         function previewCodesFile(input) {
             const file = input.files[0];
@@ -2586,25 +2841,6 @@ async function loadInventory() {
 
     reader.readAsText(file);
 }
-
-        async function eliminarBaseCodigos() {
-
-    if (!confirm("¿Está seguro de eliminar TODOS los códigos de la Base de Datos?")) {
-        return;
-    }
-    const { error } = await supabase
-        .from('codigos')
-        .delete()
-        .not('codigo','is',null);
-    if (error) {
-        console.error(error);
-        showNotification('Error', 'No se pudo eliminar la base de códigos', 'error');
-        return;
-    }
-    showNotification('Éxito', 'Base de códigos eliminada completamente', 'success');
-    cargarResumenCodigos();
-}
-        
         document.getElementById('closeNotification').addEventListener('click', function() {
             document.getElementById('notification').classList.add('hidden');
             // Reset to default white background when closed manually
@@ -3336,82 +3572,6 @@ async function guardarJustificacion(id, texto) {
 		    showNotification('Éxito', 'Registros actualizados correctamente', 'success');
 		    loadTransitos();
 		}
-
-	async function eliminarJustificaciones() {
-	    const sedeIngresada = prompt(
-	        'Escriba la sede que desea eliminar.\n\n' +
-	        'Opciones:\n' +
-	        '- Amarateca\n' +
-	        '- La Ceiba\n' +
-	        '- San Pedro Sula\n' +
-	        '- Santa Rosa de Copan\n' +
-	        '- Tegucigalpa\n' +
-	        '- Todas'
-	    );
-	
-	    if (sedeIngresada === null) return;
-	
-	    const sedeNormalizada = sedeIngresada.trim();
-	
-	    if (!sedeNormalizada) {
-	        showNotification('Error', 'Debe escribir una sede o "Todas"', 'error');
-	        return;
-	    }
-	
-	    const sedesValidas = [
-	        'Amarateca',
-	        'La Ceiba',
-	        'San Pedro Sula',
-	        'Santa Rosa de Copan',
-	        'Tegucigalpa',
-	        'Todas'
-	    ];
-	
-	    const sedeValida = sedesValidas.find(s => s.toLowerCase() === sedeNormalizada.toLowerCase());
-	
-	    if (!sedeValida) {
-	        showNotification('Error', 'La sede ingresada no es válida', 'error');
-	        return;
-	    }
-	
-	    let confirmacion = '';
-	
-	    if (sedeValida === 'Todas') {
-	        confirmacion = prompt('Escriba ELIMINAR TODAS para confirmar que desea borrar toda la base de justificaciones');
-	        if (confirmacion !== 'ELIMINAR TODAS') return;
-	    } else {
-	        confirmacion = prompt(`Escriba exactamente "${sedeValida}" para confirmar la eliminación de esa sede`);
-	        if (confirmacion !== sedeValida) return;
-	    }
-	
-	    let query = supabase
-	        .from('inventario_justificaciones')
-	        .delete();
-	
-	    if (sedeValida !== 'Todas') {
-	        query = query.eq('sede', sedeValida);
-	    } else {
-	        query = query.not('id', 'is', null);
-	    }
-	
-	    const { error } = await query;
-	
-	    if (error) {
-	        console.error(error);
-	        showNotification('Error', 'No se pudieron eliminar las justificaciones', 'error');
-	        return;
-	    }
-	
-	    showNotification(
-	        'Éxito',
-	        sedeValida === 'Todas'
-	            ? 'Se eliminaron todas las justificaciones'
-	            : `Se eliminaron las justificaciones de ${sedeValida}`,
-	        'success'
-	    );
-	
-	    loadTransitos();
-	}
 
 	function formatearMoneda(valor) {
 	    const numero = Number(valor) || 0;
