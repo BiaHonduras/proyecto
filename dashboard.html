@@ -12,18 +12,94 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 	<!-- Gráficos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1">
+let resolveAuth = null;
+function abrirModalAuth() {
+  return new Promise((resolve) => {
+    resolveAuth = resolve;
+    document.getElementById('modalAuth').classList.remove('hidden');
+  });
+}
+function cerrarModalAuth() {
+  document.getElementById('modalAuth').classList.add('hidden');
+  if (resolveAuth) resolveAuth(null);
+}
+function confirmarAuth() {
+  const usuario = document.getElementById('authUser').value;
+  const password = document.getElementById('authPass').value;
+  document.getElementById('modalAuth').classList.add('hidden');
+  if (resolveAuth) resolveAuth({ usuario, password });
+}
+
+</script>
 
 	<!-- Varios -->
-	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://cdn.tailwindcss.com">
+let resolveAuth = null;
+function abrirModalAuth() {
+  return new Promise((resolve) => {
+    resolveAuth = resolve;
+    document.getElementById('modalAuth').classList.remove('hidden');
+  });
+}
+function cerrarModalAuth() {
+  document.getElementById('modalAuth').classList.add('hidden');
+  if (resolveAuth) resolveAuth(null);
+}
+function confirmarAuth() {
+  const usuario = document.getElementById('authUser').value;
+  const password = document.getElementById('authPass').value;
+  document.getElementById('modalAuth').classList.add('hidden');
+  if (resolveAuth) resolveAuth({ usuario, password });
+}
+
+</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js" defer>
+let resolveAuth = null;
+function abrirModalAuth() {
+  return new Promise((resolve) => {
+    resolveAuth = resolve;
+    document.getElementById('modalAuth').classList.remove('hidden');
+  });
+}
+function cerrarModalAuth() {
+  document.getElementById('modalAuth').classList.add('hidden');
+  if (resolveAuth) resolveAuth(null);
+}
+function confirmarAuth() {
+  const usuario = document.getElementById('authUser').value;
+  const password = document.getElementById('authPass').value;
+  document.getElementById('modalAuth').classList.add('hidden');
+  if (resolveAuth) resolveAuth({ usuario, password });
+}
+
+</script>
 
     <script type="module">
         import { supabase, verificarConexion } from './supabase-config.js';
         window.supabase = supabase;
         window.verificarConexion = verificarConexion;
-    </script>
+    
+let resolveAuth = null;
+function abrirModalAuth() {
+  return new Promise((resolve) => {
+    resolveAuth = resolve;
+    document.getElementById('modalAuth').classList.remove('hidden');
+  });
+}
+function cerrarModalAuth() {
+  document.getElementById('modalAuth').classList.add('hidden');
+  if (resolveAuth) resolveAuth(null);
+}
+function confirmarAuth() {
+  const usuario = document.getElementById('authUser').value;
+  const password = document.getElementById('authPass').value;
+  document.getElementById('modalAuth').classList.add('hidden');
+  if (resolveAuth) resolveAuth({ usuario, password });
+}
+
+</script>
     
     <style>
         :root {
@@ -1082,7 +1158,7 @@
                     <button id="btnEliminarBaseCodigos"
                         class="mt-4 px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white">
                         <i class="fas fa-trash mr-2"></i>
-                        Eliminar Base de Códigos
+                        Eliminar Base de Datos
                     </button>          
                  </div>
         </section>
@@ -3799,6 +3875,25 @@ async function guardarJustificacion(id, texto) {
 		        .replace(/\r?\n/g, '')
 		        .replace(/"/g, '');
 			}
+
+let resolveAuth = null;
+function abrirModalAuth() {
+  return new Promise((resolve) => {
+    resolveAuth = resolve;
+    document.getElementById('modalAuth').classList.remove('hidden');
+  });
+}
+function cerrarModalAuth() {
+  document.getElementById('modalAuth').classList.add('hidden');
+  if (resolveAuth) resolveAuth(null);
+}
+function confirmarAuth() {
+  const usuario = document.getElementById('authUser').value;
+  const password = document.getElementById('authPass').value;
+  document.getElementById('modalAuth').classList.add('hidden');
+  if (resolveAuth) resolveAuth({ usuario, password });
+}
+
 </script>
 
 <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
@@ -3820,5 +3915,18 @@ async function guardarJustificacion(id, texto) {
 		</button>
 	</div>
 </div>
+
+<div id="modalAuth" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg w-80">
+    <h3 class="text-lg font-semibold mb-4">Autorización requerida</h3>
+    <input id="authUser" type="text" placeholder="Usuario" class="w-full mb-3 px-3 py-2 border rounded">
+    <input id="authPass" type="password" placeholder="Contraseña" class="w-full mb-4 px-3 py-2 border rounded">
+    <div class="flex justify-end gap-2">
+      <button onclick="cerrarModalAuth()" class="px-3 py-2 border rounded">Cancelar</button>
+      <button onclick="confirmarAuth()" class="px-3 py-2 bg-blue-600 text-white rounded">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
