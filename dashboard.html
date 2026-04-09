@@ -12,94 +12,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 	<!-- Gráficos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1">
-let resolveAuth = null;
-function abrirModalAuth() {
-  return new Promise((resolve) => {
-    resolveAuth = resolve;
-    document.getElementById('modalAuth').classList.remove('hidden');
-  });
-}
-function cerrarModalAuth() {
-  document.getElementById('modalAuth').classList.add('hidden');
-  if (resolveAuth) resolveAuth(null);
-}
-function confirmarAuth() {
-  const usuario = document.getElementById('authUser').value;
-  const password = document.getElementById('authPass').value;
-  document.getElementById('modalAuth').classList.add('hidden');
-  if (resolveAuth) resolveAuth({ usuario, password });
-}
-
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
 
 	<!-- Varios -->
-	<script src="https://cdn.tailwindcss.com">
-let resolveAuth = null;
-function abrirModalAuth() {
-  return new Promise((resolve) => {
-    resolveAuth = resolve;
-    document.getElementById('modalAuth').classList.remove('hidden');
-  });
-}
-function cerrarModalAuth() {
-  document.getElementById('modalAuth').classList.add('hidden');
-  if (resolveAuth) resolveAuth(null);
-}
-function confirmarAuth() {
-  const usuario = document.getElementById('authUser').value;
-  const password = document.getElementById('authPass').value;
-  document.getElementById('modalAuth').classList.add('hidden');
-  if (resolveAuth) resolveAuth({ usuario, password });
-}
-
-</script>
+	<script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js" defer>
-let resolveAuth = null;
-function abrirModalAuth() {
-  return new Promise((resolve) => {
-    resolveAuth = resolve;
-    document.getElementById('modalAuth').classList.remove('hidden');
-  });
-}
-function cerrarModalAuth() {
-  document.getElementById('modalAuth').classList.add('hidden');
-  if (resolveAuth) resolveAuth(null);
-}
-function confirmarAuth() {
-  const usuario = document.getElementById('authUser').value;
-  const password = document.getElementById('authPass').value;
-  document.getElementById('modalAuth').classList.add('hidden');
-  if (resolveAuth) resolveAuth({ usuario, password });
-}
-
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js" defer></script>
 
     <script type="module">
         import { supabase, verificarConexion } from './supabase-config.js';
         window.supabase = supabase;
         window.verificarConexion = verificarConexion;
-    
-let resolveAuth = null;
-function abrirModalAuth() {
-  return new Promise((resolve) => {
-    resolveAuth = resolve;
-    document.getElementById('modalAuth').classList.remove('hidden');
-  });
-}
-function cerrarModalAuth() {
-  document.getElementById('modalAuth').classList.add('hidden');
-  if (resolveAuth) resolveAuth(null);
-}
-function confirmarAuth() {
-  const usuario = document.getElementById('authUser').value;
-  const password = document.getElementById('authPass').value;
-  document.getElementById('modalAuth').classList.add('hidden');
-  if (resolveAuth) resolveAuth({ usuario, password });
-}
-
-</script>
+    </script>
     
     <style>
         :root {
@@ -1435,7 +1359,8 @@ function confirmarAuth() {
             }
             
             currentUser = JSON.parse(userData);
-			document.getElementById('nombreCorto').textContent = currentUser.nombre_corto || '';
+			const nombreCortoEl = document.getElementById('nombreCorto');
+            if (nombreCortoEl) nombreCortoEl.textContent = currentUser.nombre_corto || '';
 
             if(currentUser.role !== 'admin'){
                 document.querySelector('[data-section="usuarios"]').style.display = "none";
@@ -1651,10 +1576,13 @@ function confirmarAuth() {
 		});
             
             // Logout
-            document.getElementById('logoutBtn').addEventListener('click', function() {
-                sessionStorage.removeItem('currentUser');
-                window.location.href = 'index.html';
-            });
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    sessionStorage.removeItem('currentUser');
+                    window.location.href = 'index.html';
+                });
+            }
         }
 
         // ===== DASHBOARD =====
@@ -2645,20 +2573,18 @@ async function loadInventory() {
         }
 
         async function solicitarAutorizacionAdmin() {
-            const usuario = prompt('Usuario administrador:');
-            if (usuario === null) return null;
+            const credenciales = await abrirModalAuth();
+            if (!credenciales) return null;
 
-            const password = prompt('Contraseña del administrador:');
-            if (password === null) return null;
-
-            const credencialesValidas = await validarCredencialesAdministrador(usuario.trim(), password);
+            const { usuario, password } = credenciales;
+            const credencialesValidas = await validarCredencialesAdministrador(usuario, password);
 
             if (!credencialesValidas) {
                 showNotification('Error', 'Credenciales inválidas o sin permisos de administrador', 'error');
                 return null;
             }
 
-            return usuario.trim();
+            return usuario;
         }
 
         async function eliminarGeneralProtegido() {
@@ -3878,20 +3804,75 @@ async function guardarJustificacion(id, texto) {
 
 let resolveAuth = null;
 function abrirModalAuth() {
+  const modal = document.getElementById('modalAuth');
+  const userInput = document.getElementById('authUser');
+  const passInput = document.getElementById('authPass');
+
+  if (!modal || !userInput || !passInput) {
+    return Promise.resolve(null);
+  }
+
+  userInput.value = '';
+  passInput.value = '';
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+  requestAnimationFrame(() => userInput.focus());
+
   return new Promise((resolve) => {
     resolveAuth = resolve;
-    document.getElementById('modalAuth').classList.remove('hidden');
   });
 }
+
 function cerrarModalAuth() {
-  document.getElementById('modalAuth').classList.add('hidden');
-  if (resolveAuth) resolveAuth(null);
+  const modal = document.getElementById('modalAuth');
+  const userInput = document.getElementById('authUser');
+  const passInput = document.getElementById('authPass');
+
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  if (userInput) userInput.value = '';
+  if (passInput) passInput.value = '';
+
+  if (resolveAuth) {
+    resolveAuth(null);
+    resolveAuth = null;
+  }
 }
+
 function confirmarAuth() {
-  const usuario = document.getElementById('authUser').value;
-  const password = document.getElementById('authPass').value;
-  document.getElementById('modalAuth').classList.add('hidden');
-  if (resolveAuth) resolveAuth({ usuario, password });
+  const modal = document.getElementById('modalAuth');
+  const userInput = document.getElementById('authUser');
+  const passInput = document.getElementById('authPass');
+
+  const usuario = userInput?.value?.trim() || '';
+  const password = passInput?.value || '';
+
+  if (!usuario || !password) {
+    showNotification('Error', 'Debe ingresar usuario y contraseña', 'error');
+    if (!usuario) {
+      userInput?.focus();
+    } else {
+      passInput?.focus();
+    }
+    return;
+  }
+
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  if (userInput) userInput.value = '';
+  if (passInput) passInput.value = '';
+
+  if (resolveAuth) {
+    resolveAuth({ usuario, password });
+    resolveAuth = null;
+  }
 }
 
 </script>
@@ -3919,14 +3900,39 @@ function confirmarAuth() {
 <div id="modalAuth" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
   <div class="bg-white p-6 rounded-lg w-80">
     <h3 class="text-lg font-semibold mb-4">Autorización requerida</h3>
-    <input id="authUser" type="text" placeholder="Usuario" class="w-full mb-3 px-3 py-2 border rounded">
-    <input id="authPass" type="password" placeholder="Contraseña" class="w-full mb-4 px-3 py-2 border rounded">
+    <input id="authUser" type="text" placeholder="Usuario" autocomplete="username" class="w-full mb-3 px-3 py-2 border rounded">
+    <input id="authPass" type="password" placeholder="Contraseña" autocomplete="current-password" class="w-full mb-4 px-3 py-2 border rounded">
     <div class="flex justify-end gap-2">
       <button onclick="cerrarModalAuth()" class="px-3 py-2 border rounded">Cancelar</button>
       <button onclick="confirmarAuth()" class="px-3 py-2 bg-blue-600 text-white rounded">Confirmar</button>
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('keydown', function(e) {
+  const modal = document.getElementById('modalAuth');
+  if (!modal || modal.classList.contains('hidden')) return;
+
+  if (e.key === 'Escape') {
+    cerrarModalAuth();
+  }
+
+  if (e.key === 'Enter') {
+    const active = document.activeElement;
+    if (active && (active.id === 'authUser' || active.id === 'authPass')) {
+      e.preventDefault();
+      confirmarAuth();
+    }
+  }
+});
+
+document.getElementById('modalAuth')?.addEventListener('click', function(e) {
+  if (e.target === this) {
+    cerrarModalAuth();
+  }
+});
+</script>
 
 </body>
 </html>
