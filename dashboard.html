@@ -1717,48 +1717,46 @@
 			    let encontradoSoloEnBaseCodigos = false;
 
 			    if (!item) {
-			        let queryCodigos = supabase
-			            .from('codigos')
-			            .select('codigo, codigo_barra, proveedor, descripcion, masterpack, costo');
-
-			        queryCodigos = esBusquedaPorBarra
-			            ? queryCodigos.eq('codigo_barra', valorNormalizado)
-			            : queryCodigos.eq('codigo', valorNormalizado);
-
-			        const { data: dataCodigos, error: errorCodigos } = await queryCodigos.limit(2);
-
-			        if (errorCodigos) {
-			            console.error('Error buscando en base de códigos:', errorCodigos);
-			            limpiarCamposArticulo();
-			            showNotification('Error', `Falló la búsqueda en Base de Códigos: ${errorCodigos.message}`, 'error');
-			            return;
-			        }
-
-			        if (dataCodigos && dataCodigos.length > 1) {
-			            limpiarCamposArticulo();
-			            showNotification('Error', 'Hay registros duplicados en la Base de Códigos', 'error');
-			            return;
-			        }
-
-			        if (!dataCodigos || dataCodigos.length === 0) {
-			            limpiarCamposArticulo();
-			            showNotification('Error', 'No se encontró el artículo ni en inventario ni en la Base de Códigos', 'error');
-			            return;
-			        }
-
-			        const itemBase = dataCodigos[0];
-			        item = {
-			            codigo: itemBase.codigo || valorNormalizado,
-			            codigo_barra: itemBase.codigo_barra || (esBusquedaPorBarra ? valorNormalizado : ''),
-			            proveedor: itemBase.proveedor || '',
-			            descripcion: itemBase.descripcion || '',
-			            inventario_reporteria: 0,
-			            masterpack: Number(itemBase.masterpack || 1),
-			            costo: Number(itemBase.costo || 0)
-			        };
-			        encontradoSoloEnBaseCodigos = true;
-			    }
-
+				    let queryCodigos = supabase
+				        .from('codigos')
+				        .select('codigo, codigo_barra, proveedor, descripcion, masterpack, costo');
+				
+				    queryCodigos = esBusquedaPorBarra
+				        ? queryCodigos.eq('codigo_barra', valorNormalizado)
+				        : queryCodigos.eq('codigo', valorNormalizado);
+				
+				    const { data: dataCodigos, error: errorCodigos } = await queryCodigos.limit(2);
+				
+				    if (errorCodigos) {
+				        console.error('Error buscando en base de códigos:', errorCodigos);
+				        limpiarCamposArticulo();
+				        showNotification('Error', `Falló la búsqueda en Base de Códigos: ${errorCodigos.message}`, 'error');
+				        return;
+				    }
+				
+				    if (dataCodigos && dataCodigos.length > 1) {
+				        limpiarCamposArticulo();
+				        showNotification('Error', 'Hay registros duplicados en la Base de Códigos', 'error');
+				        return;
+				    }
+				
+				    if (!dataCodigos || dataCodigos.length === 0) {
+				        limpiarCamposArticulo();
+				        showNotification('Error', 'No se encontró el artículo ni en inventario ni en la Base de Códigos', 'error');
+				        return;
+				    }
+				
+				    const itemBase = dataCodigos[0];
+				    item = {
+				        codigo: itemBase.codigo || valorNormalizado,
+				        codigo_barra: itemBase.codigo_barra || '',
+				        proveedor: itemBase.proveedor || '',
+				        descripcion: itemBase.descripcion || '',
+				        inventario_reporteria: 0,
+				        masterpack: Number(itemBase.masterpack || 1),
+				        costo: Number(itemBase.costo || 0)
+				    };
+				}
 			    document.getElementById('codigoArticulo').value = item.codigo || '';
 			    document.getElementById('codigoBarra').value = item.codigo_barra || (esBusquedaPorBarra ? valorNormalizado : '');
 			    document.getElementById('proveedor').value = item.proveedor || '';
