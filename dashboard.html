@@ -1397,24 +1397,31 @@
 			});
 
 			document.addEventListener('click', function(e) {
-			    if (e.target.closest('.btnEditarFila')) {
-			        const btn = e.target.closest('.btnEditarFila');
-			        const id = btn.dataset.id;
+			    const btn = e.target.closest('.btnEditarFila');
+			    if (!btn || btn.disabled) return;
 			
-			        const campoJustificacion = document.querySelector(`.justificacion[data-id="${id}"]`);
-			        const campoCantidad = document.querySelector(`.cantidad-justificada[data-id="${id}"]`);
+			    const id = btn.dataset.id;
+			    const fila = btn.closest('tr');
 			
-			        if (campoJustificacion) {
-			            campoJustificacion.disabled = false;
-			            campoJustificacion.classList.remove('input-disabled');
-			        }
+			    if (!fila) return;
 			
-			        if (campoCantidad) {
-			            campoCantidad.disabled = false;
-			            campoCantidad.classList.remove('input-disabled');
-			            campoCantidad.focus();
-			        }
+			    const campoJustificacion = fila.querySelector(`.justificacion[data-id="${id}"]`);
+			    const campoCantidad = fila.querySelector(`.cantidad-justificada[data-id="${id}"]`);
+			
+			    if (campoJustificacion) {
+			        campoJustificacion.disabled = false;
+			        campoJustificacion.classList.remove('input-disabled');
 			    }
+			
+			    if (campoCantidad) {
+			        campoCantidad.disabled = false;
+			        campoCantidad.classList.remove('input-disabled');
+			        campoCantidad.focus();
+			    }
+			
+			    fila.dataset.editando = 'true';
+			    btn.disabled = true;
+			    btn.classList.add('opacity-50', 'cursor-not-allowed');
 			});
             
             // Cargar datos iniciales
@@ -3582,34 +3589,42 @@ async function guardarJustificacion(id, texto) {
 		
 	function activarModoEdicion() {
 	    const botones = document.querySelectorAll('.btnEditarFila');
-	    const inputs = document.querySelectorAll('.cantidad-justificada');
-	    const selects = document.querySelectorAll('.justificacion');
 	
 	    botones.forEach(btn => {
 	        btn.disabled = false;
 	        btn.classList.remove('opacity-50', 'cursor-not-allowed');
 	    });
 	
-	    inputs.forEach(input => {
-	        input.disabled = false;
-	        input.classList.remove('input-disabled');
+	    document.querySelectorAll('.cantidad-justificada').forEach(input => {
+	        input.disabled = true;
+	        input.classList.add('input-disabled');
 	    });
 	
-	    selects.forEach(select => {
-	        select.disabled = false;
-	        select.classList.remove('input-disabled');
+	    document.querySelectorAll('.justificacion').forEach(select => {
+	        select.disabled = true;
+	        select.classList.add('input-disabled');
+	    });
+	
+	    document.querySelectorAll('#transitosTableBody tr').forEach(fila => {
+	        delete fila.dataset.editando;
 	    });
 	}
 
 		async function guardarCambiosMasivos() {
-		    const filas = document.querySelectorAll('#transitosTableBody tr');
+		    const filas = document.querySelectorAll('#transitosTableBody tr[data-editando="true"]');
 		    const registros = [];
+		
+		    if (filas.length === 0) {
+		        showNotification('Advertencia', 'No hay filas seleccionadas para guardar', 'warning');
+		        return;
+		    }
 		
 		    for (const fila of filas) {
 		        const inputJustificacion = fila.querySelector('.justificacion');
 		        if (!inputJustificacion) continue;
 		
 		        const inputCantidad = fila.querySelector('.cantidad-justificada');
+		        if (!inputCantidad) continue;
 		
 		        const id = inputJustificacion.dataset.id || fila.dataset.id || null;
 		        const sede = fila.dataset.sede || '';
@@ -3617,25 +3632,24 @@ async function guardarJustificacion(id, texto) {
 		        const descripcion = fila.querySelector('.descripcion')?.textContent.trim() || '';
 		        const diferencia = parseFloat(fila.querySelector('.diferencia')?.textContent.trim()) || 0;
 		        const justificacion = inputJustificacion.value || '';
-		        const valorCantidad = (inputCantidad?.value || '').trim();
+		        const valorCantidad = (inputCantidad.value || '').trim();
 
-				if (!/^-?\d+$/.test(valorCantidad)) {
-				    showNotification('Error', 'Cantidad Justificada debe ser un número entero, positivo o negativo', 'error');
-				    inputCantidad?.focus();
-				    return;
-				}
-				
-				const cantidadJustificada = parseInt(valorCantidad, 10);
-				
-		        const fechaRegistroExistente = fila.dataset.fechaRegistro || '';
-		        const costoUnitario = Number(fila.dataset.costoUnitario || 0);
-		        const costoTotal = cantidadJustificada * costoUnitario;
+		        if (!esEnteroValido(valorCantidad)) {
+		            showNotification('Error', 'Cantidad Justificada debe ser un número entero, positivo o negativo', 'error');
+		            inputCantidad.focus();
+		            return;
+		        }
 		
 		        if (!justificacion) {
 		            showNotification('Error', 'No puedes guardar con justificaciones vacías', 'error');
 		            inputJustificacion.focus();
 		            return;
 		        }
+		
+		        const cantidadJustificada = parseInt(valorCantidad, 10);
+		        const fechaRegistroExistente = fila.dataset.fechaRegistro || '';
+		        const costoUnitario = Number(fila.dataset.costoUnitario || 0);
+		        const costoTotal = cantidadJustificada * costoUnitario;
 		
 		        registros.push({
 		            id,
@@ -3670,7 +3684,6 @@ async function guardarJustificacion(id, texto) {
 		    showNotification('Éxito', 'Registros actualizados correctamente', 'success');
 		    loadTransitos();
 		}
-
 	function formatearMoneda(valor) {
 	    const numero = Number(valor) || 0;
 	    const esNegativo = numero < 0;
