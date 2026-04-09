@@ -2523,24 +2523,51 @@ async function loadInventory() {
 		    }
 		}
 
-        await registrarHistorialRespaldo({
-		    tipo_respaldo: opciones.tipo_respaldo || nombreBase,
-		    bucket: STORAGE_BACKUP_BUCKET,
-		    ruta_archivo: data.path,
-		    nombre_archivo: archivo.name,
-		
-		    usuario: currentUser?.username || currentUser?.usuario || 'desconocido',
-		    ejecutado_por: currentUser?.username || currentUser?.usuario || 'desconocido',
-		    autorizado_por: opciones.autorizado_por || null,
-		
-		    resumen: JSON.stringify(opciones.totales_registros || {}),
-		    tamano_bytes: archivo.size,
-		    observaciones: opciones.observaciones || null,
-		
-		    tablas_incluidas: opciones.tablas_incluidas || [],
-		    totales_registros: opciones.totales_registros || {},
-		    fecha_generacion: fechaGeneracion
-			});
+
+        async function subirRespaldoASupabase(nombreBase, payload, opciones = {}) {
+            const fechaGeneracion = new Date().toISOString();
+            const rutaArchivo = obtenerRutaRespaldo(nombreBase);
+            const contenido = JSON.stringify(payload, null, 2);
+            const archivo = new File([contenido], rutaArchivo.split('/').pop(), {
+                type: 'application/json'
+            });
+
+            const { data, error } = await supabase.storage
+                .from(STORAGE_BACKUP_BUCKET)
+                .upload(rutaArchivo, archivo, {
+                    contentType: 'application/json',
+                    upsert: false
+                });
+
+            if (error) {
+                console.error('Error subiendo respaldo a Storage:', error);
+                throw new Error(`No se pudo subir el respaldo a Supabase Storage. Verifique el bucket "${STORAGE_BACKUP_BUCKET}" y sus políticas.`);
+            }
+
+            await registrarHistorialRespaldo({
+                tipo_respaldo: opciones.tipo_respaldo || nombreBase,
+                bucket: STORAGE_BACKUP_BUCKET,
+                ruta_archivo: data.path,
+                nombre_archivo: archivo.name,
+                usuario: currentUser?.username || currentUser?.usuario || 'desconocido',
+                ejecutado_por: currentUser?.username || currentUser?.usuario || 'desconocido',
+                autorizado_por: opciones.autorizado_por || null,
+                resumen: JSON.stringify(opciones.totales_registros || {}),
+                tamano_bytes: archivo.size,
+                observaciones: opciones.observaciones || null,
+                tablas_incluidas: opciones.tablas_incluidas || [],
+                totales_registros: opciones.totales_registros || {},
+                fecha_generacion: fechaGeneracion
+            });
+
+            return {
+                bucket: STORAGE_BACKUP_BUCKET,
+                path: data.path,
+                nombreArchivo: archivo.name,
+                fechaGeneracion
+            };
+        }
+
 
         async function validarCredencialesAdministrador(usuario, password) {
             const { data, error } = await supabase
