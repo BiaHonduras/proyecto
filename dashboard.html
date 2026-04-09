@@ -1626,7 +1626,7 @@
     			}, 0);
 
     		document.getElementById('totalUnidadesDashboard').textContent =
-        		totalUnidades.toLocaleString();
+			    Math.round(totalUnidades).toLocaleString('en-US');
 
     		const proveedores = new Set(inventario.map(i => i.proveedor));
     			document.getElementById('totalProveedores').textContent = proveedores.size;
@@ -3491,15 +3491,14 @@ async function cargarGraficoProveedores() {
 		
 		            <td class="py-4 px-4">
 		                <input
-		                    type="number"
-		                    min="0"
-		                    step="0.01"
-		                    inputmode="decimal"
-		                    value="${cantidadJustificada || ''}"
-		                    class="cantidad-justificada input-field w-full px-3 py-2 rounded-lg input-disabled"
-		                    data-id="${item.id}"
-		                    disabled
-		                >
+						  type="text"
+						  class="cantidad-justificada input-field w-full px-2 py-1 rounded-lg"
+						  value="${cantidadJustificada}"
+						  inputmode="numeric"
+						  pattern="-?[0-9]+"
+						  placeholder="0"
+						  disabled
+						>
 		            </td>
 		
 		            <td class="py-4 px-4">
@@ -3618,14 +3617,16 @@ async function guardarJustificacion(id, texto) {
 		        const descripcion = fila.querySelector('.descripcion')?.textContent.trim() || '';
 		        const diferencia = parseFloat(fila.querySelector('.diferencia')?.textContent.trim()) || 0;
 		        const justificacion = inputJustificacion.value || '';
-		        const valorCantidad = inputCantidad?.value?.trim() || '';
-		        if (valorCantidad && !esEnteroValido(valorCantidad)) {
-		            showNotification('Error', 'Cantidad Justificada solo permite números enteros positivos o negativos', 'error');
-		            inputCantidad.focus();
-		            return;
-		        }
+		        const valorCantidad = (inputCantidad?.value || '').trim();
 
-		        const cantidadJustificada = valorCantidad === '' ? 0 : parseInt(valorCantidad, 10);
+				if (!/^-?\d+$/.test(valorCantidad)) {
+				    showNotification('Error', 'Cantidad Justificada debe ser un número entero, positivo o negativo', 'error');
+				    inputCantidad?.focus();
+				    return;
+				}
+				
+				const cantidadJustificada = parseInt(valorCantidad, 10);
+				
 		        const fechaRegistroExistente = fila.dataset.fechaRegistro || '';
 		        const costoUnitario = Number(fila.dataset.costoUnitario || 0);
 		        const costoTotal = cantidadJustificada * costoUnitario;
