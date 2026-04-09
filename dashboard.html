@@ -134,10 +134,24 @@
             top: 50%;
             left: 50%;
             width: 80%;
+            max-width: 420px;
             height: 120px;
             transform: translate(-50%, -50%);
-            border: 2px solid var(--coffee-accent);
-            border-radius: 10px;
+            border: 3px solid var(--coffee-accent);
+            border-radius: 12px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.28);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .scanner-box.scanner-success {
+            border-color: #22c55e;
+            box-shadow: 0 0 18px rgba(34, 197, 94, 0.85), 0 0 0 9999px rgba(0, 0, 0, 0.18);
+            transform: translate(-50%, -50%) scale(1.01);
+        }
+
+        .scanner-box.scanner-error {
+            border-color: #ef4444;
+            box-shadow: 0 0 18px rgba(239, 68, 68, 0.8), 0 0 0 9999px rgba(0, 0, 0, 0.18);
         }
 
         .scanner-line {
@@ -154,9 +168,26 @@
             position: relative;
             width: 100%;
             height: 50vh;
+            min-height: 320px;
             background: #000;
             border-radius: 12px;
             overflow: hidden;
+        }
+
+        .scanner-message {
+            position: absolute;
+            left: 50%;
+            bottom: 16px;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.72);
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            text-align: center;
+            max-width: calc(100% - 24px);
         }
 
         @keyframes scanLine {
@@ -1668,24 +1699,25 @@
         }
         
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
-        async function buscarArticulo(valor) {
+        async function buscarArticulo(valor, opciones = {}) {
 			    if (!valor) return;
 
 			    const sede = document.getElementById('sede').value;
 			    const idBodega = document.getElementById('idBodega').value;
 			    const valorNormalizado = normalizarCodigo(valor);
+			    const mostrarMensajes = opciones.mostrarMensajes !== false;
 			    const esBusquedaPorBarra = valorNormalizado.length >= 10;
 
 			    if (!sede) {
 			        limpiarCamposArticulo();
-			        showNotification('Error', 'Seleccione una sede antes de buscar', 'error');
-			        return;
+			        if (mostrarMensajes) showNotification('Error', 'Seleccione una sede antes de buscar', 'error');
+			        return null;
 			    }
 
 			    if (!idBodega) {
 			        limpiarCamposArticulo();
-			        showNotification('Error', 'Seleccione un identificador de bodega antes de buscar', 'error');
-			        return;
+			        if (mostrarMensajes) showNotification('Error', 'Seleccione un identificador de bodega antes de buscar', 'error');
+			        return null;
 			    }
 
 			    let query = supabase
@@ -1702,15 +1734,15 @@
 			    if (error) {
 			        console.error('Error real en buscarArticulo:', error);
 			        limpiarCamposArticulo();
-			        showNotification('Error', `Falló la búsqueda: ${error.message}`, 'error');
-			        return;
+			        if (mostrarMensajes) showNotification('Error', `Falló la búsqueda: ${error.message}`, 'error');
+			        return null;
 			    }
 
 			    if (data && data.length > 1) {
 			        limpiarCamposArticulo();
-			        showNotification('Error', 'Hay registros duplicados para ese código en esa bodega', 'error');
+			        if (mostrarMensajes) showNotification('Error', 'Hay registros duplicados para ese código en esa bodega', 'error');
 			        console.error('Duplicados encontrados:', data);
-			        return;
+			        return null;
 			    }
 
 			    let item = data?.[0] || null;
@@ -1730,19 +1762,19 @@
 				    if (errorCodigos) {
 				        console.error('Error buscando en base de códigos:', errorCodigos);
 				        limpiarCamposArticulo();
-				        showNotification('Error', `Falló la búsqueda en Base de Códigos: ${errorCodigos.message}`, 'error');
+				        if (mostrarMensajes) showNotification('Error', `Falló la búsqueda en Base de Códigos: ${errorCodigos.message}`, 'error');
 				        return;
 				    }
 				
 				    if (dataCodigos && dataCodigos.length > 1) {
 				        limpiarCamposArticulo();
-				        showNotification('Error', 'Hay registros duplicados en la Base de Códigos', 'error');
+				        if (mostrarMensajes) showNotification('Error', 'Hay registros duplicados en la Base de Códigos', 'error');
 				        return;
 				    }
 				
 				    if (!dataCodigos || dataCodigos.length === 0) {
 				        limpiarCamposArticulo();
-				        showNotification('Error', 'No se encontró el artículo ni en inventario ni en la Base de Códigos', 'error');
+				        if (mostrarMensajes) showNotification('Error', 'No se encontró el artículo ni en inventario ni en la Base de Códigos', 'error');
 				        return;
 				    }
 				
@@ -1790,11 +1822,12 @@
 			    calcularTotalUnidades();
 
 			    if (encontradoSoloEnBaseCodigos) {
-			        showNotification('Advertencia', 'El artículo no existe en inventario de reportería para esa bodega. Se cargó usando la Base de Códigos.', 'warning');
-			        return;
+			        if (mostrarMensajes) showNotification('Advertencia', 'El artículo no existe en inventario de reportería para esa bodega. Se cargó usando la Base de Códigos.', 'warning');
+			        return item;
 			    }
 
-			    showNotification('Éxito', 'Artículo cargado', 'success');
+			    if (mostrarMensajes) showNotification('Éxito', 'Artículo cargado', 'success');
+			    return item;
 			}
 
 		function limpiarCamposArticulo() {
@@ -1925,132 +1958,208 @@
 			    document.querySelector('[data-section="inventario-diario"]').click();
 			}
 
-        // Barcode Scanner Functions
-        let lastScanned = null;
-let scanning = false;
+        function validarEAN13(codigo) {
+            if (!/^\d{13}$/.test(codigo)) return false;
 
-async function startScanner() {
-
-    const area = document.getElementById('scanner-area');
-    const scannerDiv = document.getElementById('scanner');
-
-    area.classList.remove('hidden');
-
-    // limpiar completamente
-    scannerDiv.innerHTML = "";
-
-    // VALIDACIÓN REAL
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert("Este dispositivo no soporta cámara");
-        return;
-    }
-
-    Quagga.init({
-        inputStream: {
-            type: "LiveStream",
-            target: scannerDiv,
-            constraints: {
-                facingMode: "environment"
+            let suma = 0;
+            for (let i = 0; i < 12; i++) {
+                const num = parseInt(codigo[i], 10);
+                suma += (i % 2 === 0) ? num : num * 3;
             }
-        },
-        locator: {
-            patchSize: "medium",
-            halfSample: true
-        },
-        decoder: {
-            readers: [
-                "code_128_reader",
-                "ean_reader",
-                "ean_8_reader",
-                "upc_reader",
-                "upc_e_reader"
-            ]
-        },
-        locate: true
-    }, function(err) {
 
-        if (err) {
-            console.error("QUAGGA ERROR:", err);
-            alert("Error iniciando cámara");
-            return;
+            const digitoVerificador = (10 - (suma % 10)) % 10;
+            return digitoVerificador === parseInt(codigo[12], 10);
         }
 
-        Quagga.start();
-        scanning = true;
+        function actualizarEstadoScanner(mensaje = 'Centre el código dentro de la guía') {
+            const label = document.getElementById('scannerStatusLabel');
+            if (label) label.textContent = mensaje;
+        }
 
-        // 🔥 CREAR OVERLAY DESPUÉS de iniciar cámara
-        const overlay = document.createElement('div');
-        overlay.className = 'scanner-overlay';
-        overlay.innerHTML = `
-            <div class="scanner-box"></div>
-            <div class="scanner-line"></div>
-        `;
+        function marcarLecturaCorrecta() {
+            const box = document.querySelector('.scanner-box');
+            if (!box) return;
+            box.classList.remove('scanner-error');
+            box.classList.add('scanner-success');
+            setTimeout(() => box.classList.remove('scanner-success'), 650);
+        }
 
-        scannerDiv.appendChild(overlay);
-    });
+        function marcarLecturaInvalida() {
+            const box = document.querySelector('.scanner-box');
+            if (!box) return;
+            box.classList.remove('scanner-success');
+            box.classList.add('scanner-error');
+            setTimeout(() => box.classList.remove('scanner-error'), 500);
+        }
 
-    // evitar múltiples listeners
+        function renderScannerOverlay() {
+            return `
+                <div class="scanner-overlay">
+                    <div class="scanner-box"></div>
+                    <div class="scanner-line"></div>
+                    <div class="scanner-message" id="scannerStatusLabel">Centre el código EAN-13 dentro de la guía</div>
+                </div>
+            `;
+        }
 
-	console.log(navigator.userAgent);
-    Quagga.offDetected(handleDetection);
-    Quagga.onDetected(handleDetection);
-}
+        // Barcode Scanner Functions
+        let lastScanned = null;
+        let scanning = false;
+        let lastScans = [];
+        const REQUIRED_MATCHES = 4;
+        const SCAN_TARGET_LENGTH = 13;
 
-let lastScans = [];
-const MIN_LENGTH = 13; // ajusta si usas otros formatos
-const REQUIRED_MATCHES = 3;
+        async function startScanner() {
+            const area = document.getElementById('scanner-area');
+            const scannerDiv = document.getElementById('scanner');
 
-function handleDetection(result) {
-    if (!scanning) return;
+            area.classList.remove('hidden');
+            scannerDiv.innerHTML = '';
+            scannerDiv.insertAdjacentHTML('beforeend', renderScannerOverlay());
+            actualizarEstadoScanner('Iniciando cámara...');
 
-    const code = result.codeResult.code;
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showNotification('Error', 'Este dispositivo no soporta cámara', 'error');
+                actualizarEstadoScanner('La cámara no está disponible en este dispositivo');
+                return;
+            }
 
-    if (!code) return;
+            if (typeof Quagga === 'undefined') {
+                showNotification('Error', 'La librería del escáner no está disponible', 'error');
+                actualizarEstadoScanner('No se pudo cargar el motor de escaneo');
+                return;
+            }
 
-    // ❌ descartar códigos cortos
-    if (code.length < MIN_LENGTH) return;
+            lastScans = [];
+            lastScanned = null;
 
-    // guardar últimas lecturas
-    lastScans.push(code);
+            Quagga.offDetected(handleDetection);
 
-    if (lastScans.length > REQUIRED_MATCHES) {
-        lastScans.shift();
-    }
+            Quagga.init({
+                inputStream: {
+                    type: 'LiveStream',
+                    target: scannerDiv,
+                    constraints: {
+                        facingMode: 'environment'
+                    }
+                },
+                locator: {
+                    patchSize: 'medium',
+                    halfSample: true
+                },
+                decoder: {
+                    readers: ['ean_reader']
+                },
+                locate: true,
+                numOfWorkers: navigator.hardwareConcurrency ? Math.min(4, navigator.hardwareConcurrency) : 2,
+                frequency: 10
+            }, function(err) {
+                if (err) {
+                    console.error('QUAGGA ERROR:', err);
+                    showNotification('Error', 'Error iniciando cámara', 'error');
+                    actualizarEstadoScanner('No se pudo iniciar la cámara');
+                    return;
+                }
 
-    // validar que las últimas lecturas sean iguales
-    const allEqual = lastScans.every(c => c === code);
+                Quagga.start();
+                scanning = true;
+                scannerDiv.querySelector('video')?.setAttribute('playsinline', true);
+                actualizarEstadoScanner('Centre el código EAN-13 dentro de la guía');
+            });
 
-    if (!allEqual) return;
+            Quagga.onDetected(handleDetection);
+        }
 
-    scanning = false;
-    lastScans = [];
+        async function handleDetection(result) {
+            if (!scanning) return;
 
-    document.getElementById('codigoBarra').value = code;
+            const code = result?.codeResult?.code?.replace(/\D/g, '') || '';
+            if (!code) return;
 
-    beep();
-    if (navigator.vibrate) navigator.vibrate(100);
+            if (code.length != SCAN_TARGET_LENGTH) {
+                actualizarEstadoScanner('Lectura descartada, el código no tiene 13 dígitos');
+                marcarLecturaInvalida();
+                lastScans = [];
+                return;
+            }
 
-    stopScanner();
-    buscarArticulo(code);
-}
+            if (!validarEAN13(code)) {
+                actualizarEstadoScanner('Lectura descartada, EAN-13 inválido');
+                marcarLecturaInvalida();
+                lastScans = [];
+                return;
+            }
 
-function beep() {
-    const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
-    audio.play();
-}
+            lastScans.push(code);
+            if (lastScans.length > REQUIRED_MATCHES) {
+                lastScans.shift();
+            }
 
-function stopScanner() {
-    try {
-        Quagga.stop();
-        Quagga.offDetected(handleDetection);
-    } catch(e) {}
+            const allEqual = lastScans.length === REQUIRED_MATCHES && lastScans.every(c => c === code);
+            if (!allEqual) {
+                actualizarEstadoScanner(`Validando lectura ${lastScans.length}/${REQUIRED_MATCHES}`);
+                if (lastScans.length === REQUIRED_MATCHES) lastScans = [];
+                return;
+            }
 
-    document.getElementById('scanner-area').classList.add('hidden');
-    scanning = false;
-    lastScanned = null;
-}
+            lastScanned = code;
+            scanning = false;
+            lastScans = [];
+
+            actualizarEstadoScanner('Código confirmado');
+            marcarLecturaCorrecta();
+            beep();
+            if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+
+            const articulo = await buscarArticulo(code, { mostrarMensajes: false });
+
+            if (!articulo) {
+                marcarLecturaInvalida();
+                actualizarEstadoScanner('Código válido, pero no está registrado');
+                showNotification('Error', 'Código válido, pero no está registrado en la base', 'error');
+                setTimeout(() => {
+                    scanning = true;
+                    actualizarEstadoScanner('Centre el código EAN-13 dentro de la guía');
+                }, 1200);
+                return;
+            }
+
+            document.getElementById('codigoBarra').value = code;
+            showNotification('Éxito', 'Código EAN-13 detectado correctamente', 'success');
+
+            setTimeout(() => {
+                stopScanner();
+            }, 500);
+        }
+
+        function beep() {
+            const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+            audio.volume = 1.0;
+            audio.play().catch(error => console.warn('No se pudo reproducir el beep:', error));
+        }
+
+        function stopScanner() {
+            try {
+                Quagga.offDetected(handleDetection);
+                Quagga.stop();
+            } catch (e) {
+                console.warn('No se pudo detener Quagga:', e);
+            }
+
+            document.getElementById('scanner-area').classList.add('hidden');
+            document.getElementById('scanner').innerHTML = `
+                <div class="text-center text-gray-600 pt-10">
+                    <i class="fas fa-camera text-3xl mb-2"></i>
+                    <p>Escáner detenido</p>
+                </div>
+            `;
+            scanning = false;
+            lastScanned = null;
+            lastScans = [];
+        }
 
         function importarReporteria() {
+
             const archivo = document.getElementById("archivoReporteria").files[0];
             if (!archivo) {
             alert("Por favor selecciona un archivo Excel.");
