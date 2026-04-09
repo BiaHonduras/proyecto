@@ -1400,21 +1400,21 @@
 			    const btn = e.target.closest('.btnEditarFila');
 			    if (!btn || btn.disabled) return;
 			
-			    const id = btn.dataset.id;
 			    const fila = btn.closest('tr');
-			
 			    if (!fila) return;
 			
-			    const campoJustificacion = fila.querySelector(`.justificacion[data-id="${id}"]`);
-			    const campoCantidad = fila.querySelector(`.cantidad-justificada[data-id="${id}"]`);
+			    const campoJustificacion = fila.querySelector('.justificacion');
+			    const campoCantidad = fila.querySelector('.cantidad-justificada');
 			
 			    if (campoJustificacion) {
 			        campoJustificacion.disabled = false;
+			        campoJustificacion.removeAttribute('disabled');
 			        campoJustificacion.classList.remove('input-disabled');
 			    }
 			
 			    if (campoCantidad) {
 			        campoCantidad.disabled = false;
+			        campoCantidad.removeAttribute('disabled');
 			        campoCantidad.classList.remove('input-disabled');
 			        campoCantidad.focus();
 			    }
@@ -3496,18 +3496,16 @@ async function cargarGraficoProveedores() {
 		            <td class="py-4 px-4 text-sm descripcion">${item.descripcion || ''}</td>
 		            <td class="py-4 px-4 text-sm diferencia">${diferencia.toFixed(2)}</td>
 		
-		            <td class="py-4 px-4">
-		                <input
-						  type="text"
-						  class="cantidad-justificada input-field w-full px-2 py-1 rounded-lg"
-						  value="${cantidadJustificada}"
-						  inputmode="numeric"
-						  pattern="-?[0-9]+"
-						  placeholder="0"
-						  disabled
-						>
-		            </td>
-		
+					<td class="py-4 px-4">
+					    <input
+					        type="text"
+					        value="${cantidadJustificada || ''}"
+					        class="cantidad-justificada input-field w-full px-3 py-2 rounded-lg input-disabled"
+					        data-id="${item.id}"
+					        disabled
+					    >
+					</td>
+							
 		            <td class="py-4 px-4">
 		                <select
 		                    class="justificacion input-field w-full px-3 py-2 rounded-lg input-disabled"
