@@ -1663,85 +1663,132 @@
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
         async function buscarArticulo(valor) {
 			    if (!valor) return;
-			
+
 			    const sede = document.getElementById('sede').value;
 			    const idBodega = document.getElementById('idBodega').value;
-			
+			    const valorNormalizado = normalizarCodigo(valor);
+			    const esBusquedaPorBarra = valorNormalizado.length >= 10;
+
 			    if (!sede) {
 			        limpiarCamposArticulo();
 			        showNotification('Error', 'Seleccione una sede antes de buscar', 'error');
 			        return;
 			    }
-			
+
 			    if (!idBodega) {
 			        limpiarCamposArticulo();
 			        showNotification('Error', 'Seleccione un identificador de bodega antes de buscar', 'error');
 			        return;
 			    }
-			
+
 			    let query = supabase
 			        .from('inventario_reporteria')
 			        .select('*')
 			        .eq('idBodega', idBodega);
-			
-			    if (valor.length >= 10) {
-			        query = query.eq('codigo_barra', normalizarCodigo(valor));
-			    } else {
-			        query = query.eq('codigo', valor);
-			    }
-			
+
+			    query = esBusquedaPorBarra
+			        ? query.eq('codigo_barra', valorNormalizado)
+			        : query.eq('codigo', valorNormalizado);
+
 			    const { data, error } = await query.limit(2);
-			
+
 			    if (error) {
 			        console.error('Error real en buscarArticulo:', error);
 			        limpiarCamposArticulo();
 			        showNotification('Error', `Falló la búsqueda: ${error.message}`, 'error');
 			        return;
 			    }
-			
-			    if (!data || data.length === 0) {
-			        limpiarCamposArticulo();
-			        showNotification('Error', 'No se encontró el artículo para esa bodega', 'error');
-			        return;
-			    }
-			
-			    if (data.length > 1) {
+
+			    if (data && data.length > 1) {
 			        limpiarCamposArticulo();
 			        showNotification('Error', 'Hay registros duplicados para ese código en esa bodega', 'error');
 			        console.error('Duplicados encontrados:', data);
 			        return;
 			    }
-			
-			    const item = data[0];
-			
+
+			    let item = data?.[0] || null;
+			    let encontradoSoloEnBaseCodigos = false;
+
+			    if (!item) {
+			        let queryCodigos = supabase
+			            .from('codigos')
+			            .select('codigo, codigo_barra, proveedor, descripcion, masterpack, costo');
+
+			        queryCodigos = esBusquedaPorBarra
+			            ? queryCodigos.eq('codigo_barra', valorNormalizado)
+			            : queryCodigos.eq('codigo', valorNormalizado);
+
+			        const { data: dataCodigos, error: errorCodigos } = await queryCodigos.limit(2);
+
+			        if (errorCodigos) {
+			            console.error('Error buscando en base de códigos:', errorCodigos);
+			            limpiarCamposArticulo();
+			            showNotification('Error', `Falló la búsqueda en Base de Códigos: ${errorCodigos.message}`, 'error');
+			            return;
+			        }
+
+			        if (dataCodigos && dataCodigos.length > 1) {
+			            limpiarCamposArticulo();
+			            showNotification('Error', 'Hay registros duplicados en la Base de Códigos', 'error');
+			            return;
+			        }
+
+			        if (!dataCodigos || dataCodigos.length === 0) {
+			            limpiarCamposArticulo();
+			            showNotification('Error', 'No se encontró el artículo ni en inventario ni en la Base de Códigos', 'error');
+			            return;
+			        }
+
+			        const itemBase = dataCodigos[0];
+			        item = {
+			            codigo: itemBase.codigo || valorNormalizado,
+			            codigo_barra: itemBase.codigo_barra || (esBusquedaPorBarra ? valorNormalizado : ''),
+			            proveedor: itemBase.proveedor || '',
+			            descripcion: itemBase.descripcion || '',
+			            inventario_reporteria: 0,
+			            masterpack: Number(itemBase.masterpack || 1),
+			            costo: Number(itemBase.costo || 0)
+			        };
+			        encontradoSoloEnBaseCodigos = true;
+			    }
+
 			    document.getElementById('codigoArticulo').value = item.codigo || '';
-			    document.getElementById('codigoBarra').value = item.codigo_barra || '';
+			    document.getElementById('codigoBarra').value = item.codigo_barra || (esBusquedaPorBarra ? valorNormalizado : '');
 			    document.getElementById('proveedor').value = item.proveedor || '';
 			    document.getElementById('descripcion').value = item.descripcion || '';
-			    document.getElementById('inventarioReporteria').value = item.inventario_reporteria || 0;
-			    document.getElementById('masterpack').value = item.masterpack || 1;
-			
-			    const inv = item.inventario_reporteria || 0;
-			    const master = item.masterpack || 1;
-			
+			    document.getElementById('inventarioReporteria').value = Number(item.inventario_reporteria || 0);
+			    document.getElementById('masterpack').value = Number(item.masterpack || 1);
+
+			    const inv = Number(item.inventario_reporteria || 0);
+			    const master = Number(item.masterpack || 1) || 1;
+
 			    document.getElementById('cajasFardosReporteria').value = Math.floor(inv / master);
 			    document.getElementById('unidadesReporteria').value = inv % master;
-			
-			    const { data: dataCosto, error: errorCosto } = await supabase
-			        .from('codigos')
-			        .select('costo')
-			        .eq('codigo', item.codigo)
-			        .limit(1)
-			        .maybeSingle();
-			
-			    const costo = (!errorCosto && dataCosto?.costo != null)
-			        ? Number(dataCosto.costo)
-			        : 0;
-			
+
+			    let costo = Number(item.costo || 0);
+			    if (!encontradoSoloEnBaseCodigos) {
+			        const { data: dataCosto, error: errorCosto } = await supabase
+			            .from('codigos')
+			            .select('costo')
+			            .eq('codigo', item.codigo)
+			            .limit(1)
+			            .maybeSingle();
+
+			        costo = (!errorCosto && dataCosto?.costo != null)
+			            ? Number(dataCosto.costo)
+			            : costo;
+			    }
+
 			    window.costoUnitarioActual = costo;
 			    document.getElementById('costoUnitario').value = formatearMoneda(costo);
-			
+
 			    calcularTotalUnidades();
+
+			    if (encontradoSoloEnBaseCodigos) {
+			        showNotification('Advertencia', 'El artículo no existe en inventario de reportería para esa bodega. Se cargó usando la Base de Códigos.', 'warning');
+			        return;
+			    }
+
 			    showNotification('Éxito', 'Artículo cargado', 'success');
 			}
 
@@ -1789,6 +1836,7 @@
 			    const checkActivo = document.getElementById('checkBodega').checked;
 			    const fechaVenc = document.getElementById('fechaVencimiento').value || null;
 			    const codigo = document.getElementById('codigoArticulo').value;
+			    const codigoBarra = normalizarCodigo(document.getElementById('codigoBarra').value);
 			    const proveedor = document.getElementById('proveedor').value;
 			    const descripcion = document.getElementById('descripcion').value;
 			    const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
@@ -1819,6 +1867,7 @@
 			    const payload = {
 			        fecha,
 			        codigo,
+			        codigo_barra: codigoBarra || null,
 			        proveedor,
 			        descripcion,
 			        inventario_reporteria: inventarioReporteria,
@@ -3323,8 +3372,26 @@ async function cargarGraficoProveedores() {
     return { success: true, data };
 }
 	function normalizarCodigo(codigo) {
-   		return codigo.trim();
+   		return String(codigo || '').trim();
 		}
+
+	function formatearNumeroEntero(valor) {
+	    return Number(valor || 0).toLocaleString('en-US', {
+	        maximumFractionDigits: 0
+	    });
+	}
+
+	function sanitizarEnteroConSigno(valor) {
+	    let limpio = String(valor || '').replace(/[^0-9-]/g, '');
+	    if (!limpio) return '';
+	    const esNegativo = limpio.startsWith('-');
+	    limpio = limpio.replace(/-/g, '');
+	    return (esNegativo ? '-' : '') + limpio;
+	}
+
+	function esEnteroValido(valor) {
+	    return /^-?\d+$/.test(String(valor || '').trim());
+	}
 		
 	const OPCIONES_JUSTIFICACION = [
 		'Asignado en GP - La Colonia',
@@ -3460,12 +3527,12 @@ async function cargarGraficoProveedores() {
 	    const inputsCantidad = tbody.querySelectorAll('.cantidad-justificada');
 		inputsCantidad.forEach(input => {
 		    input.addEventListener('input', function() {
-		        this.value = this.value.replace(/[^0-9.]/g, '');
+		        this.value = sanitizarEnteroConSigno(this.value);
 		
 		        const fila = this.closest('tr');
 		        if (!fila) return;
 		
-		        const cantidad = Number(this.value || 0);
+		        const cantidad = esEnteroValido(this.value) ? parseInt(this.value, 10) : 0;
 		        const costoUnitario = Number(fila.dataset.costoUnitario || 0);
 		        const costoTotal = cantidad * costoUnitario;
 		
@@ -3473,6 +3540,12 @@ async function cargarGraficoProveedores() {
 		        if (celdaCostoTotal) {
 		            celdaCostoTotal.dataset.valor = costoTotal;
 		            celdaCostoTotal.textContent = formatearMoneda(costoTotal);
+		        }
+		    });
+		
+		    input.addEventListener('blur', function() {
+		        if (this.value && !esEnteroValido(this.value)) {
+		            this.value = '';
 		        }
 		    });
 		});
@@ -3545,7 +3618,14 @@ async function guardarJustificacion(id, texto) {
 		        const descripcion = fila.querySelector('.descripcion')?.textContent.trim() || '';
 		        const diferencia = parseFloat(fila.querySelector('.diferencia')?.textContent.trim()) || 0;
 		        const justificacion = inputJustificacion.value || '';
-		        const cantidadJustificada = parseFloat(inputCantidad?.value || '0') || 0;
+		        const valorCantidad = inputCantidad?.value?.trim() || '';
+		        if (valorCantidad && !esEnteroValido(valorCantidad)) {
+		            showNotification('Error', 'Cantidad Justificada solo permite números enteros positivos o negativos', 'error');
+		            inputCantidad.focus();
+		            return;
+		        }
+
+		        const cantidadJustificada = valorCantidad === '' ? 0 : parseInt(valorCantidad, 10);
 		        const fechaRegistroExistente = fila.dataset.fechaRegistro || '';
 		        const costoUnitario = Number(fila.dataset.costoUnitario || 0);
 		        const costoTotal = cantidadJustificada * costoUnitario;
@@ -3612,7 +3692,7 @@ async function guardarJustificacion(id, texto) {
 	    const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
 	
 	    const totalUnidades = (cajas * masterpack) + unidades;
-	    document.getElementById('totalUnidadesCalculo').textContent = totalUnidades.toFixed(2);
+	    document.getElementById('totalUnidadesCalculo').textContent = formatearNumeroEntero(totalUnidades);
 	
 	    const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
 	    const costoUnitario = Number(window.costoUnitarioActual) || 0;
