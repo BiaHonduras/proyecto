@@ -1254,6 +1254,18 @@
             tipoBodega: 'Todas'
         };
 
+        const DNI_REGEX = /^\d{4}-\d{4}-\d{5}$/;
+
+        function formatearDNI(valor = '') {
+            const digits = String(valor).replace(/\D/g, '').slice(0, 13);
+            const parts = [];
+            if (digits.length > 0) parts.push(digits.slice(0, 4));
+            if (digits.length > 4) parts.push(digits.slice(4, 8));
+            if (digits.length > 8) parts.push(digits.slice(8, 13));
+            return parts.join('-');
+        }
+
+
 		const bodegasPorSede = {
 			    "Amarateca": [
 			        { value: "010", label: "Bodega Principal" },
@@ -1390,6 +1402,14 @@
             }
             
             currentUser = JSON.parse(userData);
+
+            if (currentUser.must_change_password) {
+                alert('Debe cambiar su contraseña antes de continuar.');
+                sessionStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+                return;
+            }
+
 			const nombreCortoEl = document.getElementById('nombreCorto');
             if (nombreCortoEl) nombreCortoEl.textContent = currentUser.nombre_corto || '';
 
@@ -1426,6 +1446,13 @@
 			    document.getElementById('codigoArticulo').value = '';
 			    document.getElementById('codigoBarra').value = '';
 			});
+
+            const userDniInput = document.getElementById('userDNI');
+            if (userDniInput) {
+                userDniInput.addEventListener('input', function () {
+                    this.value = formatearDNI(this.value);
+                });
+            }
 
 			document.addEventListener('click', function(e) {
 			    const btn = e.target.closest('.btnEditarFila');
@@ -1490,12 +1517,20 @@
             const btnEliminarGeneral = document.getElementById('btnEliminarGeneral');
             if (btnEliminarGeneral) {
                 btnEliminarGeneral.addEventListener('click', eliminarGeneralProtegido);
+                btnEliminarGeneral.title = 'Deshabilitado temporalmente por seguridad';
             }
 
             const btnEliminarBaseCodigos = document.getElementById('btnEliminarBaseCodigos');
             if (btnEliminarBaseCodigos) {
                 btnEliminarBaseCodigos.addEventListener('click', eliminarBaseCodigosProtegida);
+                btnEliminarBaseCodigos.title = 'Deshabilitado temporalmente por seguridad';
             }
+
+            const btnImportInv = document.getElementById('confirmImportInventory');
+            if (btnImportInv) btnImportInv.title = 'Deshabilitado temporalmente por seguridad';
+
+            const btnImportCodes = document.getElementById('confirmImportCodes');
+            if (btnImportCodes) btnImportCodes.title = 'Deshabilitado temporalmente por seguridad';
 
 			const codigoInput = document.getElementById('codigoArticulo');
 			const barraInput = document.getElementById('codigoBarra');
@@ -2513,6 +2548,9 @@ async function loadInventory() {
         }
 
         async function importInventory() {
+            showNotification('Bloqueado', 'Importación de inventario deshabilitada temporalmente por seguridad.', 'warning');
+            return;
+
 
             console.log("Favor confirmar la Importación");
             const fileInput = document.getElementById('importInventoryFile');
@@ -2775,6 +2813,9 @@ async function loadInventory() {
         }
 
         async function eliminarGeneralProtegido() {
+            showNotification('Bloqueado', 'Eliminación masiva deshabilitada temporalmente por seguridad.', 'warning');
+            return;
+
             const confirmar = confirm('¿Estás seguro que deseas eliminar todos los registros de Inventarios, Justificaciones y Reportería?');
             if (!confirmar) return;
 
@@ -2856,6 +2897,9 @@ async function loadInventory() {
         }
 
         async function eliminarBaseCodigosProtegida() {
+            showNotification('Bloqueado', 'Eliminación de base de códigos deshabilitada temporalmente por seguridad.', 'warning');
+            return;
+
             const confirmar = confirm('¿Estás seguro que deseas eliminar todos los registros de la Base de Códigos?');
             if (!confirmar) return;
 
@@ -2961,6 +3005,9 @@ async function loadInventory() {
         }
 
         async function importCodes() {
+            showNotification('Bloqueado', 'Importación de códigos deshabilitada temporalmente por seguridad.', 'warning');
+            return;
+
     		const fileInput = document.getElementById('importCodesFile');
     		const file = fileInput.files[0];
 
@@ -3092,77 +3139,12 @@ async function loadInventory() {
 			
 			    form.addEventListener('submit', async function (e) {
 			        e.preventDefault();
-			
-			        const username = inputUsername.value.trim();
-			        const nombre_corto = document.getElementById('userNombre_corto').value.trim();
-			        const correo = document.getElementById('userEmail').value.trim();
-			        const password = document.getElementById('userPassword').value;
-			        const confirmPassword = document.getElementById('userConfirmPassword').value;
-			        const rol = document.getElementById('userRole').value;
-			        const userId = document.getElementById('userId').value;
-			
-			        let error;
-			
-			        if (userId) {
-			            const updateData = {
-			                nombre_corto,
-			                correo,
-			                rol
-			            };
-			
-			            if (password || confirmPassword) {
-			                if (password !== confirmPassword) {
-			                    showNotification('Error', 'Las contraseñas no coinciden', 'error');
-			                    return;
-			                }
-			
-			                if (password.length < 6) {
-			                    showNotification('Error', 'La contraseña debe tener al menos 6 caracteres', 'error');
-			                    return;
-			                }
-			
-			                updateData.contraseña = password;
-			            }
-			
-			            ({ error } = await supabase
-			                .from('usuarios')
-			                .update(updateData)
-			                .eq('usuario', userId));
-			
-			        } else {
-			            if (password !== confirmPassword) {
-			                showNotification('Error', 'Las contraseñas no coinciden', 'error');
-			                return;
-			            }
-			
-			            if (password.length < 6) {
-			                showNotification('Error', 'La contraseña debe tener al menos 6 caracteres', 'error');
-			                return;
-			            }
-			
-			            ({ error } = await supabase
-			                .from('usuarios')
-			                .insert([{
-			                    usuario: username,
-			                    nombre_corto,
-			                    correo,
-			                    contraseña: password,
-			                    rol
-			                }]));
-			        }
-			
-			        if (error) {
-			            console.error(error);
-			            showNotification('Error', error.message || 'No se pudo guardar el usuario', 'error');
-			            return;
-			        }
-			
-			        resetUserForm();
-			        await loadUsers();
-			        showNotification('Éxito', userId ? 'Usuario actualizado' : 'Usuario creado', 'success');
+
+                    showNotification('Bloqueado', 'La gestión de usuarios debe migrarse a funciones RPC seguras antes de activarse.', 'warning');
+                    return;
 			    });
-			
-			    form.querySelector('button[type="reset"]').addEventListener('click', resetUserForm);
+
+form.querySelector('button[type="reset"]').addEventListener('click', resetUserForm);
 			    btnNuevoUsuario.addEventListener('click', resetUserForm);
 			
 			    resetUserForm();
@@ -3170,96 +3152,28 @@ async function loadInventory() {
 			}
         
         async function loadUsers() {
-		    const { data: users, error } = await supabase
-		        .from('usuarios')
-		        .select('*');
-		
-		    const tbody = document.getElementById('usersTableBody');
-		
-		    if (error) {
-		        console.error(error);
-		        showNotification('Error', 'No se pudieron cargar los usuarios', 'error');
-		        return;
-		    }
-		
-		    if (!users || users.length === 0) {
-		        tbody.innerHTML = `
-		            <tr>
-		                <td colspan="4" class="py-8 text-center text-gray-500">
-		                    <i class="fas fa-users text-3xl mb-2"></i>
-		                    <p>No hay usuarios registrados</p>
-		                </td>
-		            </tr>
-		        `;
-		        return;
-		    }
-		
-		    tbody.innerHTML = users.map(user => `
-		        <tr class="border-b border-gray-200 hover:bg-gray-50">
-		            <td class="py-3 px-4 font-medium">${user.usuario}</td>
-		            <td class="py-3 px-4">${user.nombre_corto}</td>
-		            <td class="py-3 px-4">${user.rol}</td>
-		            <td class="py-3 px-4">
-		                <div class="flex space-x-3">
-		                    <button type="button" class="text-blue-600 btn-edit-user"
-		                        data-username="${user.usuario}"
-		                        data-nombre="${user.nombre_corto}"
-		                        data-correo="${user.correo}"
-		                        data-rol="${user.rol}">
-		                        <i class="fas fa-edit"></i>
-		                    </button>
-		
-		                    <button type="button" class="text-red-600 btn-delete-user"
-		                        data-username="${user.usuario}">
-		                        <i class="fas fa-trash"></i>
-		                    </button>
-		                </div>
-		            </td>
-		        </tr>
-		    `).join('');
-		}
-        
-        function editUser(username, nombre_corto, correo, rol) {
-		    document.getElementById('userUsername').value = username;
-		    document.getElementById('userNombre_corto').value = nombre_corto;
-		    document.getElementById('userEmail').value = correo;
-		    document.getElementById('userPassword').value = '';
-		    document.getElementById('userConfirmPassword').value = '';
-		    document.getElementById('userRole').value = rol;
-		    document.getElementById('userId').value = username;
-		
-		    document.getElementById('userFormTitle').textContent = 'Editar Usuario';
-		
-		    document.getElementById('userUsername').disabled = false;
-		    document.getElementById('userNombre_corto').disabled = false;
-		    document.getElementById('userNombre_corto').readOnly = false;
-		    document.getElementById('userEmail').disabled = false;
-		    document.getElementById('userEmail').readOnly = false;
-		    document.getElementById('userPassword').disabled = false;
-		    document.getElementById('userPassword').readOnly = false;
-		    document.getElementById('userConfirmPassword').disabled = false;
-		    document.getElementById('userConfirmPassword').readOnly = false;
-		    document.getElementById('userRole').disabled = false;
-		}
-        
-        async function deleteUser(username) {
-		    if (!confirm(`¿Eliminar usuario ${username}?`)) return;
-		
-		    const { error } = await supabase
-		        .from('usuarios')
-		        .delete()
-		        .eq('usuario', username);
-		
-		    if (error) {
-		        console.error('DELETE USER ERROR:', error);
-		        showNotification('Error', error.message || 'No se pudo eliminar el usuario', 'error');
-		        return;
-		    }
-		
-		    await loadUsers();
-		    showNotification('Éxito', 'Usuario eliminado', 'success');
-		}
+            const tbody = document.getElementById('usersTableBody');
+            if (!tbody) return;
 
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="py-8 text-center text-gray-500">
+                        <i class="fas fa-lock text-3xl mb-2"></i>
+                        <p>Módulo deshabilitado temporalmente por seguridad</p>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function editUser() {
+            showNotification('Bloqueado', 'La gestión de usuarios debe migrarse a funciones RPC seguras antes de activarse.', 'warning');
+        }
+
+        async function deleteUser() {
+            showNotification('Bloqueado', 'La gestión de usuarios debe migrarse a funciones RPC seguras antes de activarse.', 'warning');
+        }
+
+        // ===== RESUMEN IMPORTACIONES =====
         // ===== RESUMEN IMPORTACIONES =====
 async function cargarResumenCodigos() {
 
