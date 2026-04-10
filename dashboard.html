@@ -3618,7 +3618,6 @@ async function cargarGraficoProveedores() {
 			    const inventarioOriginal = Array.isArray(data) ? data : [];
 			    let inventario = aplicarFiltrosGlobales(inventarioOriginal);
 			
-			    // Respaldo: si los filtros dejan vacío pero sí hay datos en SQL, mostrar todo
 			    if (inventario.length === 0 && inventarioOriginal.length > 0) {
 			        inventario = inventarioOriginal;
 			    }
@@ -3628,14 +3627,14 @@ async function cargarGraficoProveedores() {
 			        return;
 			    }
 			
-			    const codigos = inventario
-			        .map(item => String(item.codigo || '').trim())
+			    const idsInventario = inventario
+			        .map(item => item.id)
 			        .filter(Boolean);
 			
 			    const { data: justificaciones, error: errorJust } = await supabase
 			        .from('inventario_justificaciones')
 			        .select('*')
-			        .in('codigo', codigos);
+			        .in('id', idsInventario);
 			
 			    if (errorJust) {
 			        console.error('Error inventario_justificaciones:', errorJust);
@@ -3645,17 +3644,14 @@ async function cargarGraficoProveedores() {
 			
 			    const mapaJustificaciones = {};
 			    (justificaciones || []).forEach(j => {
-			        const codigo = String(j.codigo || '').trim();
-			        if (codigo) mapaJustificaciones[codigo] = j;
+			        if (j.id) mapaJustificaciones[j.id] = j;
 			    });
 			
 			    const filtrados = inventario
 			        .filter(item => {
 			            const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
 			            const diferencia = total - Number(item.inventario_reporteria || 0);
-			            const codigo = String(item.codigo || '').trim();
-			
-			            return diferencia !== 0 || !!mapaJustificaciones[codigo];
+			            return diferencia !== 0 || !!mapaJustificaciones[item.id];
 			        })
 			        .sort((a, b) => Number(a.codigo || 0) - Number(b.codigo || 0));
 			
@@ -3667,21 +3663,21 @@ async function cargarGraficoProveedores() {
 			    tbody.innerHTML = filtrados.map(item => {
 			        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
 			        const diferencia = total - Number(item.inventario_reporteria || 0);
-			        const codigo = String(item.codigo || '').trim();
 			
-			        const justificacionGuardada = mapaJustificaciones[codigo]?.justificacion || '';
-			        const cantidadJustificada = mapaJustificaciones[codigo]?.cantidad_justificada ?? '';
-			        const fechaRegistro = mapaJustificaciones[codigo]?.fecha_registro || '';
+			        const justificacionGuardada = mapaJustificaciones[item.id]?.justificacion || '';
+			        const cantidadJustificada = mapaJustificaciones[item.id]?.cantidad_justificada ?? '';
+			        const fechaRegistro = mapaJustificaciones[item.id]?.fecha_registro || '';
 			        const costoUnitario = Number(item.costo_unitario || 0);
 			
 			        return `
 			            <tr class="border-b hover:bg-gray-50"
-			                data-id="${codigo}"
+			                data-id="${item.id}"
+			                data-codigo="${item.codigo || ''}"
 			                data-sede="${item.sede || ''}"
 			                data-fecha-registro="${fechaRegistro}"
 			                data-costo-unitario="${costoUnitario}">
 			                <td class="py-3">${item.idBodega || ''}</td>
-			                <td class="py-3 codigo">${codigo}</td>
+			                <td class="py-3 codigo">${item.codigo || ''}</td>
 			                <td class="py-3 descripcion">${item.descripcion || ''}</td>
 			                <td class="py-3 font-bold diferencia">${diferencia}</td>
 			                <td class="py-3">
@@ -3695,7 +3691,7 @@ async function cargarGraficoProveedores() {
 			                <td class="py-3">
 			                    <select
 			                        class="justificacion input-field w-full px-2 py-1 rounded input-disabled"
-			                        data-id="${codigo}"
+			                        data-id="${item.id}"
 			                        disabled>
 			                        ${construirOpcionesJustificacion(justificacionGuardada)}
 			                    </select>
