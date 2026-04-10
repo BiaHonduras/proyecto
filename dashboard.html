@@ -1677,7 +1677,9 @@
         }
 
         // ===== DASHBOARD =====
-        async function loadDashboardData() {         
+        async function loadDashboardData() {
+
+			console.log('Supabase URL activa:', supabase?.supabaseUrl || supabase?.storageUrl || 'no visible');
     		const { data, error } = await supabase
         		.from('inventarios_diarios')
         		.select('*');
