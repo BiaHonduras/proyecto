@@ -1344,45 +1344,45 @@
         }
 
         function configurarFiltrosSegunUsuario() {
-            const filtroSede = document.getElementById('filtroSedeGlobal');
-            const filtroTipoBodega = document.getElementById('filtroTipoBodegaGlobal');
-
-            if (!filtroSede || !filtroTipoBodega) return;
-
-            const sedeUsuario = currentUser?.sede || currentUser?.Sede || null;
-            const tipoBodegaUsuario = currentUser?.tipo_bodega || currentUser?.tipoBodega || null;
-            const esAdmin = currentUser?.role === 'admin' || currentUser?.rol === 'admin';
-
-            filtrosGlobales.sede = sedeUsuario || 'Todas';
-            filtrosGlobales.tipoBodega = tipoBodegaUsuario || 'Todas';
-
-            filtroSede.value = filtrosGlobales.sede;
-            filtroTipoBodega.value = filtrosGlobales.tipoBodega;
-
-            if (!esAdmin && sedeUsuario) {
-                filtroSede.disabled = true;
-                filtroSede.classList.add('bg-gray-100');
-            }
-
-            if (!esAdmin && tipoBodegaUsuario) {
-                filtroTipoBodega.disabled = true;
-                filtroTipoBodega.classList.add('bg-gray-100');
-            }
-
-            filtroSede.addEventListener('change', function() {
-                filtrosGlobales.sede = this.value;
-                actualizarLabelFiltrosActivos();
-                recargarDashboardConFiltros();
-            });
-
-            filtroTipoBodega.addEventListener('change', function() {
-                filtrosGlobales.tipoBodega = this.value;
-                actualizarLabelFiltrosActivos();
-                recargarDashboardConFiltros();
-            });
-
-            actualizarLabelFiltrosActivos();
-        }
+		    const filtroSede = document.getElementById('filtroSedeGlobal');
+		    const filtroTipoBodega = document.getElementById('filtroTipoBodegaGlobal');
+		
+		    if (!filtroSede || !filtroTipoBodega) return;
+		
+		    const sedeUsuario = currentUser?.sede || currentUser?.Sede || null;
+		    const tipoBodegaUsuario = currentUser?.tipo_bodega || currentUser?.tipoBodega || null;
+		    const esAdmin = currentUser?.role === 'admin' || currentUser?.rol === 'admin';
+		
+		    filtrosGlobales.sede = esAdmin ? 'Todas' : (sedeUsuario || 'Todas');
+		    filtrosGlobales.tipoBodega = esAdmin ? 'Todas' : (tipoBodegaUsuario || 'Todas');
+		
+		    filtroSede.value = filtrosGlobales.sede;
+		    filtroTipoBodega.value = filtrosGlobales.tipoBodega;
+		
+		    if (!esAdmin && sedeUsuario) {
+		        filtroSede.disabled = true;
+		        filtroSede.classList.add('bg-gray-100');
+		    }
+		
+		    if (!esAdmin && tipoBodegaUsuario) {
+		        filtroTipoBodega.disabled = true;
+		        filtroTipoBodega.classList.add('bg-gray-100');
+		    }
+		
+		    filtroSede.addEventListener('change', function() {
+		        filtrosGlobales.sede = this.value;
+		        actualizarLabelFiltrosActivos();
+		        recargarDashboardConFiltros();
+		    });
+		
+		    filtroTipoBodega.addEventListener('change', function() {
+		        filtrosGlobales.tipoBodega = this.value;
+		        actualizarLabelFiltrosActivos();
+		        recargarDashboardConFiltros();
+		    });
+		
+		    actualizarLabelFiltrosActivos();
+		}
 
         function recargarDashboardConFiltros() {
             loadDashboardData();
