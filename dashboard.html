@@ -671,7 +671,7 @@
                         </div>
 
 						<div>
-    						<label class="block text-sm font-medium text-gray-700 mb-2">Cantidad Justificada</label>
+    						<label class="block text-sm font-medium text-gray-700 mb-2">Costo Unitario</label>
     						<input type="text" id="costoUnitario"
         						class="input-field w-full px-4 py-3 rounded-lg bg-gray-100"
         						placeholder="L. 0.00"
@@ -694,7 +694,7 @@
        								required
        								inputmode="numeric"
        								pattern="[0-9]*"
-       								oninput="buscarArticulo(this.value)">
+       								>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Código de Barra Artículo *</label>
@@ -1500,13 +1500,15 @@
 			const codigoInput = document.getElementById('codigoArticulo');
 			const barraInput = document.getElementById('codigoBarra');
 
-			codigoInput.addEventListener('input', function () {
-    			this.value = this.value.replace(/\D/g, ''); // solo números
+			codigoInput.addEventListener('input', function (e) {
+    				this.value = this.value.replace(/\D/g, '');
 
     				if (this.value.length >= 6) {
-        				this.setCustomValidity('');
+        					this.setCustomValidity('');
+        					debounceBuscar(e);
     				} else {
-        				this.setCustomValidity('Debe tener al menos 6 dígitos');
+        					this.setCustomValidity('Debe tener al menos 6 dígitos');
+        					limpiarCamposArticulo();
     				}
 			});
 			
@@ -1699,9 +1701,12 @@
         }
         
         // ===== INVENTARIO DIARIO (AGREGAR ARTÍCULO Y ESCANEAR) =====
-        async function buscarArticulo(valor, opciones = {}) {
-			    if (!valor) return;
+        let ultimoTokenBusqueda = 0;
 
+        async function buscarArticulo(valor, opciones = {}) {
+			    if (!valor) return null;
+
+			    const token = ++ultimoTokenBusqueda;
 			    const sede = document.getElementById('sede').value;
 			    const idBodega = document.getElementById('idBodega').value;
 			    const valorNormalizado = normalizarCodigo(valor);
@@ -1730,6 +1735,7 @@
 			        : query.eq('codigo', valorNormalizado);
 
 			    const { data, error } = await query.limit(2);
+			    if (token !== ultimoTokenBusqueda) return null;
 
 			    if (error) {
 			        console.error('Error real en buscarArticulo:', error);
@@ -1749,46 +1755,49 @@
 			    let encontradoSoloEnBaseCodigos = false;
 
 			    if (!item) {
-				    let queryCodigos = supabase
-				        .from('codigos')
-				        .select('codigo, codigo_barra, proveedor, descripcion, masterpack, costo');
-				
-				    queryCodigos = esBusquedaPorBarra
-				        ? queryCodigos.eq('codigo_barra', valorNormalizado)
-				        : queryCodigos.eq('codigo', valorNormalizado);
-				
-				    const { data: dataCodigos, error: errorCodigos } = await queryCodigos.limit(2);
-				
-				    if (errorCodigos) {
-				        console.error('Error buscando en base de códigos:', errorCodigos);
-				        limpiarCamposArticulo();
-				        if (mostrarMensajes) showNotification('Error', `Falló la búsqueda en Base de Códigos: ${errorCodigos.message}`, 'error');
-				        return;
-				    }
-				
-				    if (dataCodigos && dataCodigos.length > 1) {
-				        limpiarCamposArticulo();
-				        if (mostrarMensajes) showNotification('Error', 'Hay registros duplicados en la Base de Códigos', 'error');
-				        return;
-				    }
-				
-				    if (!dataCodigos || dataCodigos.length === 0) {
-				        limpiarCamposArticulo();
-				        if (mostrarMensajes) showNotification('Error', 'No se encontró el artículo ni en inventario ni en la Base de Códigos', 'error');
-				        return;
-				    }
-				
-				    const itemBase = dataCodigos[0];
-				    item = {
-				        codigo: itemBase.codigo || valorNormalizado,
-				        codigo_barra: itemBase.codigo_barra || '',
-				        proveedor: itemBase.proveedor || '',
-				        descripcion: itemBase.descripcion || '',
-				        inventario_reporteria: 0,
-				        masterpack: Number(itemBase.masterpack || 1),
-				        costo: Number(itemBase.costo || 0)
-				    };
-				}
+			        let queryCodigos = supabase
+			            .from('codigos')
+			            .select('codigo, codigo_barra, proveedor, descripcion, masterpack, costo');
+
+			        queryCodigos = esBusquedaPorBarra
+			            ? queryCodigos.eq('codigo_barra', valorNormalizado)
+			            : queryCodigos.eq('codigo', valorNormalizado);
+
+			        const { data: dataCodigos, error: errorCodigos } = await queryCodigos.limit(2);
+			        if (token !== ultimoTokenBusqueda) return null;
+
+			        if (errorCodigos) {
+			            console.error('Error buscando en base de códigos:', errorCodigos);
+			            limpiarCamposArticulo();
+			            if (mostrarMensajes) showNotification('Error', `Falló la búsqueda en Base de Códigos: ${errorCodigos.message}`, 'error');
+			            return null;
+			        }
+
+			        if (dataCodigos && dataCodigos.length > 1) {
+			            limpiarCamposArticulo();
+			            if (mostrarMensajes) showNotification('Error', 'Hay registros duplicados en la Base de Códigos', 'error');
+			            return null;
+			        }
+
+			        if (!dataCodigos || dataCodigos.length === 0) {
+			            limpiarCamposArticulo();
+			            if (mostrarMensajes) showNotification('Error', 'No se encontró el artículo ni en inventario ni en la Base de Códigos', 'error');
+			            return null;
+			        }
+
+			        const itemBase = dataCodigos[0];
+			        item = {
+			            codigo: itemBase.codigo || valorNormalizado,
+			            codigo_barra: itemBase.codigo_barra || '',
+			            proveedor: itemBase.proveedor || '',
+			            descripcion: itemBase.descripcion || '',
+			            inventario_reporteria: 0,
+			            masterpack: Number(itemBase.masterpack || 1),
+			            costo: Number(itemBase.costo || 0)
+			        };
+			        encontradoSoloEnBaseCodigos = true;
+			    }
+
 			    document.getElementById('codigoArticulo').value = item.codigo || '';
 			    document.getElementById('codigoBarra').value = item.codigo_barra || (esBusquedaPorBarra ? valorNormalizado : '');
 			    document.getElementById('proveedor').value = item.proveedor || '';
@@ -1811,6 +1820,8 @@
 			            .limit(1)
 			            .maybeSingle();
 
+			        if (token !== ultimoTokenBusqueda) return null;
+
 			        costo = (!errorCosto && dataCosto?.costo != null)
 			            ? Number(dataCosto.costo)
 			            : costo;
@@ -1818,7 +1829,6 @@
 
 			    window.costoUnitarioActual = costo;
 			    document.getElementById('costoUnitario').value = formatearMoneda(costo);
-
 			    calcularTotalUnidades();
 
 			    if (encontradoSoloEnBaseCodigos) {
@@ -1828,7 +1838,7 @@
 
 			    if (mostrarMensajes) showNotification('Éxito', 'Artículo cargado', 'success');
 			    return item;
-			}
+		}
 
 		function limpiarCamposArticulo() {
     		document.getElementById('proveedor').value = '';
@@ -1898,7 +1908,7 @@
 			        diasvida = Math.round((fechaObjetivo - fechaBase) / (1000 * 60 * 60 * 24));
 			    }
 			
-			    const costoTotal = inventarioReporteria * costoUnitario;
+			    const costoTotal = totalUnidades * costoUnitario;
 			
 			    window.costoTotalActual = costoTotal;
 			
@@ -3816,7 +3826,7 @@ async function guardarJustificacion(id, texto) {
 	    const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
 	    const costoUnitario = Number(window.costoUnitarioActual) || 0;
 	
-	    const costoTotalInventario = inventarioReporteria * costoUnitario;
+	    const costoTotalInventario = totalUnidades * costoUnitario;
 	
 	    window.costoTotalActual = costoTotalInventario;
 	    document.getElementById('costoTotal').value = formatearMoneda(costoTotalInventario);
