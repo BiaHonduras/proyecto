@@ -3188,6 +3188,9 @@ form.querySelector('button[type="reset"]').addEventListener('click', resetUserFo
 		            .from('usuarios')
 		            .select('usuario, nombre_corto, rol, correo')
 		            .order('usuario', { ascending: true });
+
+				console.log('DATA: ', data);
+				console.log('Error: ', error);
 		
 		        if (error) throw error;
 		
