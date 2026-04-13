@@ -2858,38 +2858,50 @@
             };
         }
 
-
         async function validarCredencialesAdministrador(usuario, password) {
-            const { data, error } = await supabase
-                .from('usuarios')
-                .select('usuario, rol')
-                .eq('usuario', usuario)
-                .eq('contraseña', password)
-                .eq('rol', 'admin')
-                .maybeSingle();
-
-            if (error) {
-                console.error(error);
-                throw new Error('No se pudo validar el usuario administrador');
-            }
-
-            return !!data;
-        }
+		    const usuarioIngresado = String(usuario || '').trim();
+		    const passwordIngresado = String(password || '');
+		
+		    const { data, error } = await supabase
+		        .from('usuarios')
+		        .select('usuario, correo, rol, contraseña')
+		        .or(`usuario.eq.${usuarioIngresado},correo.eq.${usuarioIngresado}`);
+		
+		    if (error) {
+		        console.error(error);
+		        throw new Error('No se pudo validar el usuario administrador');
+		    }
+		
+		    const registro = (data || []).find(item => {
+		        const rol = String(item.rol || '').trim().toLowerCase();
+		        const pass = String(item.contraseña || '');
+		        return rol === 'admin' && pass === passwordIngresado;
+		    });
+		
+		    return !!registro;
+		}
 
         async function solicitarAutorizacionAdmin() {
-            const credenciales = await abrirModalAuth();
-            if (!credenciales) return null;
-
-            const { usuario, password } = credenciales;
-            const credencialesValidas = await validarCredencialesAdministrador(usuario, password);
-
-            if (!credencialesValidas) {
-                showNotification('Error', 'Credenciales inválidas o sin permisos de administrador', 'error');
-                return null;
-            }
-
-            return usuario;
-        }
+		    const rolActual = String(currentUser?.role || currentUser?.rol || '').trim().toLowerCase();
+		    const usuarioActual = currentUser?.username || currentUser?.usuario || currentUser?.email || 'desconocido';
+		
+		    if (rolActual === 'admin') {
+		        return usuarioActual;
+		    }
+		
+		    const credenciales = await abrirModalAuth();
+		    if (!credenciales) return null;
+		
+		    const { usuario, password } = credenciales;
+		    const credencialesValidas = await validarCredencialesAdministrador(usuario, password);
+		
+		    if (!credencialesValidas) {
+		        showNotification('Error', 'Credenciales inválidas o sin permisos de administrador', 'error');
+		        return null;
+		    }
+		
+		    return usuario;
+}
 
         async function eliminarGeneralProtegido() {
 		    const confirmar = confirm(
