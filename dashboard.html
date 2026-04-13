@@ -1131,7 +1131,7 @@
                                         <th class="pb-3 text-left text-sm font-medium text-gray-600">Usuario</th>
                                         <th class="pb-3 text-left text-sm font-medium text-gray-600">Nombre Corto</th>
                                         <th class="pb-3 text-left text-sm font-medium text-gray-600">Rol</th>
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Sede</th>
                                     </tr>
                                 </thead>
                                 <tbody id="usersTableBody">
@@ -3534,9 +3534,7 @@ form.querySelector('button[type="reset"]').addEventListener('click', resetUserFo
 		                <td class="px-4 py-3">${escapeHtml(user.usuario || '')}</td>
 		                <td class="px-4 py-3">${escapeHtml(user.nombre_corto || '')}</td>
 		                <td class="px-4 py-3">${escapeHtml(user.rol || '')}</td>
-		                <td class="px-4 py-3">${escapeHtml(user.correo || '')}</td>
 		                <td class="px-4 py-3">${escapeHtml(user.sede || '')}</td>
-		                <td class="px-4 py-3">${escapeHtml(user.tipo_bodega || '')}</td>
 		            </tr>
 		        `).join('');
 		    } catch (err) {
