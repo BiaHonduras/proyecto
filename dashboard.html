@@ -2627,98 +2627,93 @@
         }
 
         async function importInventory() {
-            showNotification('Bloqueado', 'Importación de inventario deshabilitada temporalmente por seguridad.', 'warning');
-            return;
-
-
-            console.log("Favor confirmar la Importación");
-            const fileInput = document.getElementById('importInventoryFile');
-            const file = fileInput.files[0];
-
-            if (!file) {
-                showNotification('Error', 'Seleccione un archivo CSV', 'error');
-            return;
-         }
-
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-
-        const text = e.target.result;
-        const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
-
-        if (lines.length < 2) {
-            showNotification('Error', 'El archivo no tiene datos', 'error');
-            return;
-        }
-
-        let registros = [];
-
-        for (let i = 1; i < lines.length; i++) {
-		    const values = lines[i].split(',');
+		    console.log("Favor confirmar la Importación");
+		    const fileInput = document.getElementById('importInventoryFile');
+		    const file = fileInput.files[0];
 		
-		    console.log('Fila:', i, values, 'Columnas:', values.length);
-		
-		    if (values.length < 8) {
-		        console.warn('Fila incompleta, se omite:', lines[i]);
-		        continue;
+		    if (!file) {
+		        showNotification('Error', 'Seleccione un archivo CSV', 'error');
+		        return;
 		    }
 		
-		    registros.push({
-		        fecha: limpiarValor(values[0]),
-		        proveedor: limpiarValor(values[1]),
-		        codigo_barra: limpiarValor(values[2]),
-		        codigo: limpiarValor(values[3]),
-		        descripcion: limpiarValor(values[4]),
-		        inventario_reporteria: parseFloat(limpiarValor(values[5])) || 0,
-		        masterpack: parseFloat(limpiarValor(values[6])) || 1,
-		        idBodega: limpiarValor(values[7]) || null
-		    });
+		    const reader = new FileReader();
+		    reader.onload = async function(e) {
+		        const text = e.target.result;
+		        const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+		
+		        if (lines.length < 2) {
+		            showNotification('Error', 'El archivo no tiene datos', 'error');
+		            return;
+		        }
+		
+		        let registros = [];
+		
+		        for (let i = 1; i < lines.length; i++) {
+		            const values = lines[i].split(',');
+		
+		            if (values.length < 8) continue;
+		
+		            registros.push({
+		                fecha: limpiarValor(values[0]),
+		                proveedor: limpiarValor(values[1]),
+		                codigo_barra: limpiarValor(values[2]),
+		                codigo: limpiarValor(values[3]),
+		                descripcion: limpiarValor(values[4]),
+		                inventario_reporteria: parseFloat(limpiarValor(values[5])) || 0,
+		                masterpack: parseFloat(limpiarValor(values[6])) || 1,
+		                idBodega: limpiarValor(values[7]) || null
+		            });
+		        }
+		
+		        if (registros.length === 0) {
+		            showNotification('Error', 'No hay registros válidos para importar', 'error');
+		            return;
+		        }
+		
+		        const { error: deleteError } = await supabase
+		            .from('inventario_reporteria')
+		            .delete()
+		            .not('codigo', 'is', null);
+		
+		        if (deleteError) {
+		            showNotification('Error', deleteError.message, 'error');
+		            return;
+		        }
+		
+		        const { error: insertError } = await supabase
+		            .from('inventario_reporteria')
+		            .insert(registros);
+		
+		        if (insertError) {
+		            showNotification('Error', insertError.message, 'error');
+		            return;
+		        }
+		
+		        const { error: logError } = await supabase
+		            .from('inventario_importaciones')
+		            .insert([{
+		                usuario: currentUser?.username || currentUser?.usuario || 'desconocido',
+		                fecha_importacion: new Date().toISOString(),
+		                cantidad_registros: registros.length,
+		                tipo_importacion: 'inventario'
+		            }]);
+		
+		        if (logError) {
+		            console.error('Error guardando historial:', logError);
+		            showNotification('Advertencia', `Se cargó el inventario, pero no se guardó el historial: ${logError.message}`, 'warning');
+		            return;
+		        }
+		
+		        showNotification('Éxito', 'Inventario de reportería cargado correctamente', 'success');
+		        cargarResumenInventario();
+		
+		        document.getElementById('inventoryPreview').classList.add('hidden');
+		        document.getElementById('confirmImportInventory').disabled = true;
+		        fileInput.value = '';
+		    };
+		
+		    reader.readAsText(file);
 		}
-        
-        const { error: deleteError } = await supabase
-                .from('inventario_reporteria')
-                .delete()
-                .not('codigo','is',null);
-
-            if (deleteError) {
-                console.error(deleteError);
-                showNotification('Error', deleteError.message, 'error');
-            return;
-        }
-
-        // INSERTAR LOS REGISTROS
-                const usuario = currentUser.username;
-                const fecha_importacion = new Date();
-                const cantidad = registros.length;
-
-			await supabase
-    			.from('inventario_importaciones')
-    			.insert([{
-					usuario,
-					fecha_importacion,
-					cantidad_registros: registros.length,
-					tipo_importacion: 'inventario'
-				}])
-        
-        const { error: insertError } = await supabase
-            .from('inventario_reporteria')
-            .insert(registros);
-
-        if (insertError) {
-            console.error(insertError);
-            showNotification('Error', insertError.message, 'error');
-        return;
-    }
-        showNotification('Éxito', 'Inventario de reportería cargado correctamente', 'success');
-		cargarResumenInventario();
-
-        document.getElementById('inventoryPreview').classList.add('hidden');
-        document.getElementById('confirmImportInventory').disabled = true;
-        fileInput.value = '';
-    };
-
-    reader.readAsText(file);
-}
 
         async function cargarResumenInventario() {
 		    const { data, error } = await supabase
@@ -3218,15 +3213,20 @@
 		
 		        console.log('Payload a codigos:', registros);
 
-                const { error } = await supabase
-                    .from('codigos')
-                    .upsert(registros, { onConflict: 'codigo' });
+                const { error: logError } = await supabase
+				    .from('inventario_importaciones')
+				    .insert([{
+				        usuario: currentUser?.username || currentUser?.usuario || 'desconocido',
+				        fecha_importacion: new Date().toISOString(),
+				        cantidad_registros: registros.length,
+				        tipo_importacion: 'codigos'
+				    }]);
 		
-		        if (error) {
-		            console.error(error);
-		            showNotification('Error', `No se pudo importar: ${error.message}`, 'error');
-		            return;
-		        }
+		        if (logError) {
+				    console.error('Error guardando historial de importación:', logError);
+				    showNotification('Advertencia', `Los códigos se importaron, pero no se guardó el historial: ${logError.message}`, 'warning');
+				    return;
+				}
 		
 		        await supabase.from('inventario_importaciones').insert([{
 		            usuario: currentUser?.username || currentUser?.usuario || 'desconocido',
