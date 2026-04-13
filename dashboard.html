@@ -3218,7 +3218,14 @@
 		
 		        const { error } = await supabase
 		            .from('codigos')
+					console.log('Payload a codigos:', registros);
 		            .upsert(registros, { onConflict: 'codigo' });
+
+				const { data: s, error: se } = await supabase.auth.getSession();
+				console.log('SESSION', s, se);
+				
+				const { data: u, error: ue } = await supabase.auth.getUser();
+				console.log('USER', u, ue);
 		
 		        if (error) {
 		            console.error(error);
