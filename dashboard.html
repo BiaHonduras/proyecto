@@ -341,10 +341,6 @@
                     <i class="fas fa-database"></i>
                     Dashboard
                 </a>
-                <a href="#usuarios" class="nav-item" data-section="usuarios">
-                    <i class="fas fa-users-cog"></i>
-                    Gestión de Usuarios
-                </a>
             </nav>
         </div>
     </div>
@@ -1117,118 +1113,6 @@
                     </button>          
                  </div>
         </section>
-
- <!-- Gestión de Usuarios Section -->
-            <section id="usuarios-section" class="section-content hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-6">Gestión de Usuarios</h3>
-                        
-                        <div class="overflow-x-auto mb-6">
-                            <table class="w-full">
-                                <thead>
-                                    <tr class="border-b border-gray-200">
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Usuario</th>
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Nombre Corto</th>
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Rol</th>
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Sede</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="usersTableBody">
-                                    <tr>
-                                        <td colspan="4" class="py-8 text-center text-gray-500">
-                                            <i class="fas fa-users text-3xl mb-2"></i>
-                                            <p>Cargando usuarios...</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-6" id="userFormTitle">Crear Nuevo Usuario</h3>
-                        
-                        <form id="userForm" class="space-y-4">
-                            <input type="hidden" id="userId">
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Usuario *</label>
-                                <input type="text" id="userUsername"
-							       class="input-field w-full px-4 py-3 rounded-lg"
-							       placeholder="nombre.usuario"
-							       autocomplete="username"
-							       required>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Corto *</label>
-                                <input type="text" id="userNombre_corto" 
-                                    class="input-field w-full px-4 py-3 rounded-lg" 
-                                    placeholder="Ej: Juan"
-                                    required>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                <input type="email" id="userEmail"
-							       class="input-field w-full px-4 py-3 rounded-lg"
-							       placeholder="usuario@empresa.com"
-							       autocomplete="email"
-							       required>
-                            </div>
-
-							<div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">DNI *</label>
-                                <input type="text" id="userDNI" 
-                                    class="input-field w-full px-4 py-3 rounded-lg" 
-                                    placeholder="Ej: 0501199001234"
-                                    required>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
-                                <input type="password" id="userPassword"
-							       class="input-field w-full px-4 py-3 rounded-lg"
-							       placeholder="••••••••"
-							       autocomplete="new-password"
-							       required>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña *</label>
-                                <input type="password" id="userConfirmPassword"
-							       class="input-field w-full px-4 py-3 rounded-lg"
-							       placeholder="••••••••"
-							       autocomplete="new-password"
-							       required>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
-                                <select id="userRole" class="input-field w-full px-4 py-3 rounded-lg">
-                                    <option value="usuario">Usuario</option>
-                                    <option value="admin">Administrador</option>
-                                </select>
-                            </div>
-                            
-                            <div class="flex space-x-4 pt-4">
-                                <button type="reset" class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-                                    Cancelar
-                                </button>
-                                <button type="submit" class="btn-primary flex-1 py-3 rounded-lg text-white">
-                                    <i class="fas fa-save mr-2"></i>
-                                    Guardar Usuario
-                                </button>
-								<button type="button" id="btnNuevoUsuario" class="btn-primary flex-1 py-3 rounded-lg text-white">
-								    <i class="fas fa-user-plus mr-2"></i>
-								    Nuevo Usuario
-								</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </section>
         </main>
     </div>
 
@@ -1521,14 +1405,6 @@
 			const nombreCortoEl = document.getElementById('nombreCorto');
             if (nombreCortoEl) nombreCortoEl.textContent = currentUser.nombre_corto || '';
 
-            if(currentUser.role !== 'admin'){
-                document.querySelector('[data-section="usuarios"]').style.display = "none";
-            }
-
-            if(currentUser.role !== 'admin'){
-                document.getElementById('usuarios-section').remove();
-            }
-            
             // Inicializar navegación
             initNavigation();
             cargarResumenCodigos();
@@ -1613,7 +1489,6 @@
             mostrarRecordatorioLunes();
             loadInventory();
             cargarResumenInventario();
-            initUsers(); // Initialize user management
             
             // Configurar formulario de artículo
             document.getElementById('articuloForm').addEventListener('submit', function(e) {
@@ -3409,173 +3284,6 @@
             // Reset to default white background when closed manually
             document.getElementById('notification').querySelector('.rounded-lg').className = 'bg-white rounded-lg shadow-lg p-4 max-w-sm';
         });
-
-        // ===== GESTIÓN DE USUARIOS =====
-
-			function resetUserForm() {
-			    const form = document.getElementById('userForm');
-			
-			    form.reset();
-			    document.getElementById('userId').value = '';
-			
-			    document.getElementById('userUsername').disabled = false;
-			    document.getElementById('userUsername').readOnly = false;
-			
-			    document.getElementById('userNombre_corto').disabled = false;
-			    document.getElementById('userNombre_corto').readOnly = false;
-			
-			    document.getElementById('userEmail').disabled = false;
-			    document.getElementById('userEmail').readOnly = false;
-			
-			    document.getElementById('userPassword').disabled = false;
-			    document.getElementById('userPassword').readOnly = false;
-			
-			    document.getElementById('userConfirmPassword').disabled = false;
-			    document.getElementById('userConfirmPassword').readOnly = false;
-			
-			    document.getElementById('userRole').disabled = false;
-			
-			    document.getElementById('userFormTitle').textContent = 'Crear Nuevo Usuario';
-			}
-		
-	        function initUsers() {
-			    const form = document.getElementById('userForm');
-			    const formTitle = document.getElementById('userFormTitle');
-			    const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
-			    const inputUsername = document.getElementById('userUsername');
-			    const tbody = document.getElementById('usersTableBody');
-			
-			    tbody.addEventListener('click', async (e) => {
-			        const btnDelete = e.target.closest('.btn-delete-user');
-			        if (btnDelete) {
-			            await deleteUser(btnDelete.dataset.username);
-			            return;
-			        }
-			
-			        const btnEdit = e.target.closest('.btn-edit-user');
-			        if (btnEdit) {
-			            editUser(
-			                btnEdit.dataset.username,
-			                btnEdit.dataset.nombre,
-			                btnEdit.dataset.correo,
-			                btnEdit.dataset.rol
-			            );
-			        }
-			    });
-			
-			    form.addEventListener('submit', async function (e) {
-			        e.preventDefault();
-
-                    showNotification('Bloqueado', 'La gestión de usuarios debe migrarse a funciones RPC seguras antes de activarse.', 'warning');
-                    return;
-			    });
-
-form.querySelector('button[type="reset"]').addEventListener('click', resetUserForm);
-			    btnNuevoUsuario.addEventListener('click', resetUserForm);
-			
-			    resetUserForm();
-			    loadUsers();
-			}
-        
-        async function loadUsers() {
-		    const tbody = document.getElementById('usersTableBody');
-		    if (!tbody) return;
-		
-		    const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
-		
-		    if (!currentUser) {
-		        window.location.href = 'index.html';
-		        return;
-		    }
-		
-		    if ((currentUser.role || '').toLowerCase() !== 'admin') {
-		        tbody.innerHTML = `
-		            <tr>
-		                <td colspan="6" class="py-8 text-center text-gray-500">
-		                    <i class="fas fa-lock text-3xl mb-2"></i>
-		                    <p>No tienes permisos para ver este módulo</p>
-		                </td>
-		            </tr>
-		        `;
-		        return;
-		    }
-		
-		    tbody.innerHTML = `
-		        <tr>
-		            <td colspan="6" class="py-8 text-center text-gray-500">
-		                <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
-		                <p>Cargando usuarios...</p>
-		            </td>
-		        </tr>
-		    `;
-		
-		    try {
-		        const { data, error } = await supabase.rpc('listar_usuarios');
-		
-		        console.log('DATA:', data);
-		        console.log('ERROR:', error);
-		
-		        if (error) throw error;
-		
-		        if (!data || data.length === 0) {
-		            tbody.innerHTML = `
-		                <tr>
-		                    <td colspan="6" class="py-8 text-center text-gray-500">
-		                        <i class="fas fa-users-slash text-3xl mb-2"></i>
-		                        <p>No hay usuarios registrados</p>
-		                    </td>
-		                </tr>
-		            `;
-		            return;
-		        }
-		
-		        tbody.innerHTML = data.map(user => `
-		            <tr class="border-b border-gray-200 hover:bg-gray-50">
-		                <td class="px-4 py-3">${escapeHtml(user.usuario || '')}</td>
-		                <td class="px-4 py-3">${escapeHtml(user.nombre_corto || '')}</td>
-		                <td class="px-4 py-3">${escapeHtml(user.rol || '')}</td>
-		                <td class="px-4 py-3">${escapeHtml(user.sede || '')}</td>
-		            </tr>
-		        `).join('');
-		    } catch (err) {
-		        console.error(err);
-		
-		        tbody.innerHTML = `
-		            <tr>
-		                <td colspan="6" class="py-8 text-center text-red-500">
-		                    <i class="fas fa-exclamation-triangle text-3xl mb-2"></i>
-		                    <p>${escapeHtml(err.message || 'Error al cargar usuarios')}</p>
-		                </td>
-		            </tr>
-		        `;
-		    }
-		}
-		
-		function escapeHtml(value) {
-		    return String(value)
-		        .replace(/&/g, '&amp;')
-		        .replace(/</g, '&lt;')
-		        .replace(/>/g, '&gt;')
-		        .replace(/"/g, '&quot;')
-		        .replace(/'/g, '&#039;');
-		}
-		
-		function escapeHtml(value) {
-		    return String(value)
-		        .replace(/&/g, '&amp;')
-		        .replace(/</g, '&lt;')
-		        .replace(/>/g, '&gt;')
-		        .replace(/"/g, '&quot;')
-		        .replace(/'/g, '&#039;');
-		}
-
-        function editUser() {
-            showNotification('Bloqueado', 'La gestión de usuarios debe migrarse a funciones RPC seguras antes de activarse.', 'warning');
-        }
-
-        async function deleteUser() {
-            showNotification('Bloqueado', 'La gestión de usuarios debe migrarse a funciones RPC seguras antes de activarse.', 'warning');
-        }
 
         // ===== RESUMEN IMPORTACIONES =====
         // ===== RESUMEN IMPORTACIONES =====
