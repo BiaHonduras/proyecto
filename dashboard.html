@@ -1232,6 +1232,49 @@
         </main>
     </div>
 
+
+    <div id="modalExportarCSV" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[9999]">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+            <h3 class="text-lg font-semibold mb-4">Filtros para exportar</h3>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Sede</label>
+                    <select id="modalFiltroSedeExport" class="input-field w-full px-4 py-3 rounded-lg">
+                        <option value="Todas">Todas las sedes</option>
+                        <option value="Amarateca">Amarateca</option>
+                        <option value="La Ceiba">La Ceiba</option>
+                        <option value="San Pedro Sula">San Pedro Sula</option>
+                        <option value="Santa Rosa de Copan">Santa Rosa de Copan</option>
+                        <option value="Tegucigalpa">Tegucigalpa</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Bodega</label>
+                    <select id="modalFiltroTipoBodegaExport" class="input-field w-full px-4 py-3 rounded-lg">
+                        <option value="Todas">Todas las bodegas</option>
+                        <option value="Principal">Principal</option>
+                        <option value="PPV">PPV</option>
+                        <option value="PFN">PFN</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button type="button" id="btnCancelarModalExport"
+                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancelar
+                </button>
+
+                <button type="button" id="btnConfirmarModalExport"
+                    class="flex-1 btn-primary px-4 py-3 rounded-lg text-white">
+                    Descargar CSV
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification Toast -->
     <div id="notification" class="notification hidden">
         <div class="bg-white rounded-lg shadow-lg p-4 max-w-sm">
@@ -1337,6 +1380,49 @@
 
                 return true;
             });
+        }
+
+        function filtrarInventarioParaExportacion(data = [], sede = 'Todas', tipoBodega = 'Todas') {
+            return (data || []).filter(item => {
+                if (sede !== 'Todas' && item.sede !== sede) {
+                    return false;
+                }
+
+                if (tipoBodega !== 'Todas') {
+                    const tipo = obtenerTipoBodegaDesdeId(item.idBodega || item.idbodega);
+                    if (tipo !== tipoBodega) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+        }
+
+        function construirClaveVencimiento(item) {
+            return `${String(item.sede || '').trim()}__${String(item.idBodega || item.idbodega || '').trim()}__${String(item.codigo || '').trim()}`;
+        }
+
+        function abrirModalExportarCSV() {
+            const modal = document.getElementById('modalExportarCSV');
+            const sede = document.getElementById('modalFiltroSedeExport');
+            const tipo = document.getElementById('modalFiltroTipoBodegaExport');
+
+            if (!modal || !sede || !tipo) return;
+
+            sede.value = filtrosGlobales?.sede || 'Todas';
+            tipo.value = filtrosGlobales?.tipoBodega || 'Todas';
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function cerrarModalExportarCSV() {
+            const modal = document.getElementById('modalExportarCSV');
+            if (!modal) return;
+
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
 
         function actualizarLabelFiltrosActivos() {
@@ -1522,7 +1608,16 @@
             });
             
             // Configurar exportación CSV
-            document.getElementById('exportCSV').addEventListener('click', exportToCSV);
+            document.getElementById('exportCSV').addEventListener('click', abrirModalExportarCSV);
+
+            document.getElementById('btnCancelarModalExport').addEventListener('click', cerrarModalExportarCSV);
+
+            document.getElementById('btnConfirmarModalExport').addEventListener('click', async function() {
+                const sede = document.getElementById('modalFiltroSedeExport').value;
+                const tipoBodega = document.getElementById('modalFiltroTipoBodegaExport').value;
+
+                await exportToCSV(sede, tipoBodega);
+            });
 
             // Set current date for inventory
             const today = new Date();
@@ -2017,10 +2112,6 @@
 			
 			        showNotification('Éxito', 'Guardado correctamente', 'success');
 			    }
-
-				if (checkActivo && fechaVenc && esLunes(fecha)) {
-				    await guardarEnVencimientosSemanales(payload, currentUser);
-				}
 			
 			    document.getElementById('btnGuardarArticulo').innerHTML = `
 			        <i class="fas fa-plus-circle mr-2"></i>
@@ -2460,136 +2551,149 @@
 }
 
         // ===== EXPORTAR CSV =====
-        async function exportToCSV() {
-		    const { data, error } = await supabase
-		        .from('inventarios_diarios')
-		        .select('*');
-		
-		    const inventario = aplicarFiltrosGlobales(data);
-		
-		    if (error) {
-		        console.error(error);
-		        showNotification('Error', 'No se pudo obtener datos de inventario', 'error');
-		        return;
-		    }
-		
-		    if (!inventario || inventario.length === 0) {
-		        showNotification('Advertencia', 'No hay datos para exportar', 'warning');
-		        return;
-		    }
-		
-		    const idsInventario = inventario.map(item => item.id).filter(Boolean);
-		
-		    let mapaJustificaciones = {};
-		
-		    if (idsInventario.length > 0) {
-		        const { data: justificaciones, error: errorJust } = await supabase
-		            .from('inventario_justificaciones')
-		            .select('id, codigo, justificacion, cantidad_justificada, usuario, fecha_modificacion')
-		            .in('id', idsInventario);
-		
-		        if (errorJust) {
-		            console.error(errorJust);
-		            showNotification('Error', 'No se pudieron cargar las justificaciones', 'error');
-		            return;
-		        }
-		
-		        (justificaciones || []).forEach(j => {
-		            mapaJustificaciones[j.id] = j;
-		        });
-		    }
-		
-		    const selectedFields = Array.from(
-		        document.querySelectorAll('input[name="exportFields"]:checked')
-		    ).map(checkbox => checkbox.value);
-		
-		    const headersMap = {
-		        idBodega: 'Bodega',
-		        fecha: 'Fecha Actual',
-		        fecha_vencimiento: 'Fecha Vencimiento',
-		        codigo: 'Codigo Articulo',
-		        codigo_barra: 'Codigo Barra',
-		        proveedor: 'Proveedor',
-		        descripcion: 'Descripcion',
-		        inventarioReporteria: 'Inventario Reporteria',
-		        masterpack: 'Masterpack',
-		        cajasFardos: 'Cajas/Fardos',
-		        unidades: 'Unidades',
-		        total: 'Total',
-		        diferencia: 'Diferencia',
-		        validacion: 'Validacion',
-		        diasvida: 'Dias de Vida',
-		        cantidad_justificada: 'Cantidad Justificada',
-		        justificacion: 'Justificacion',
-		        usuario_justificacion: 'Usuario Justificacion',
-		        fecha_modificacion_justificacion: 'Fecha Modificacion Justificacion'
-		    };
-		
-		    const headers = selectedFields.map(field => headersMap[field]);
-		
-		    const csvContent = inventario.map(item => {
-		        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-		        const diferencia = Number(item.inventario_reporteria || 0) - total;
-		
-		        let validacion = '';
-		        if (diferencia === 0) validacion = 'OK';
-		        else if (diferencia < 0) validacion = 'VAL+';
-		        else validacion = 'VAL-';
-		
-		        let diasvida = '';
-		        if (item.fecha_vencimiento) {
-		            const hoy = new Date(item.fecha);
-		            const venc = new Date(item.fecha_vencimiento);
-		            const diffTime = venc - hoy;
-		            diasvida = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-		        }
-		
-		        const justificacionData = mapaJustificaciones[item.id] || {};
-		
-		        const rowData = {
-		            idBodega: item.idBodega || '',
-		            fecha: item.fecha || '',
-		            fecha_vencimiento: item.fecha_vencimiento || '',
-		            codigo: item.codigo || '',
-		            codigo_barra: item.codigo_barra || '',
-		            proveedor: item.proveedor || '',
-		            descripcion: item.descripcion || '',
-		            inventarioReporteria: item.inventario_reporteria ?? '',
-		            masterpack: item.masterpack ?? '',
-		            cajasFardos: item.cajas_fardos ?? 0,
-		            unidades: item.unidades ?? '',
-		            total: total.toFixed(2),
-		            diferencia: diferencia.toFixed(2),
-		            validacion: validacion,
-		            diasvida: diasvida,
-		            cantidad_justificada: justificacionData.cantidad_justificada ?? '',
-		            justificacion: justificacionData.justificacion || '',
-		            usuario_justificacion: justificacionData.usuario || '',
-		            fecha_modificacion_justificacion: justificacionData.fecha_modificacion || ''
-		        };
-		
-		        return selectedFields.map(field => {
-		            const valor = rowData[field] ?? '';
-		            return `"${String(valor).replace(/"/g, '""')}"`;
-		        }).join(',');
-		    }).join('\n');
-		
-		    const csv = headers.join(',') + '\n' + csvContent;
-		
-		    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-		    const link = document.createElement('a');
-		    const url = URL.createObjectURL(blob);
-		
-		    link.setAttribute('href', url);
-		    link.setAttribute('download', `inventario_${new Date().toISOString().split('T')[0]}.csv`);
-		    link.style.visibility = 'hidden';
-		
-		    document.body.appendChild(link);
-		    link.click();
-		    document.body.removeChild(link);
-		
-		    showNotification('Éxito', 'CSV exportado con justificaciones', 'success');
-		}
+        async function exportToCSV(sedeFiltro = 'Todas', tipoBodegaFiltro = 'Todas') {
+            const { data, error } = await supabase
+                .from('inventarios_diarios')
+                .select('*');
+
+            if (error) {
+                console.error(error);
+                showNotification('Error', 'No se pudo obtener datos de inventario', 'error');
+                return;
+            }
+
+            const inventario = filtrarInventarioParaExportacion(data, sedeFiltro, tipoBodegaFiltro);
+
+            if (!inventario || inventario.length === 0) {
+                showNotification('Advertencia', 'No hay datos para exportar con esos filtros', 'warning');
+                return;
+            }
+
+            const { data: justificaciones, error: errorJust } = await supabase
+                .from('inventario_justificaciones')
+                .select('id, codigo, justificacion, cantidad_justificada, usuario, fecha_modificacion');
+
+            if (errorJust) {
+                console.error(errorJust);
+                showNotification('Error', 'No se pudieron cargar las justificaciones', 'error');
+                return;
+            }
+
+            const { data: vencimientos, error: errorVenc } = await supabase
+                .from('vencimientos_semanales')
+                .select('sede, idbodega, codigo, fecha_vencimiento, diasvida');
+
+            if (errorVenc) {
+                console.error(errorVenc);
+                showNotification('Error', 'No se pudieron cargar los vencimientos semanales', 'error');
+                return;
+            }
+
+            const mapaJustificaciones = {};
+            (justificaciones || []).forEach(j => {
+                mapaJustificaciones[j.id] = j;
+            });
+
+            const mapaVencimientos = {};
+            (vencimientos || []).forEach(v => {
+                const key = construirClaveVencimiento(v);
+                mapaVencimientos[key] = v;
+            });
+
+            const selectedFields = Array.from(
+                document.querySelectorAll('input[name="exportFields"]:checked')
+            ).map(checkbox => checkbox.value);
+
+            const headersMap = {
+                idBodega: 'Bodega',
+                fecha: 'Fecha Actual',
+                fecha_vencimiento: 'Fecha Vencimiento',
+                codigo: 'Codigo Articulo',
+                codigo_barra: 'Codigo Barra',
+                proveedor: 'Proveedor',
+                descripcion: 'Descripcion',
+                inventarioReporteria: 'Inventario Reporteria',
+                masterpack: 'Masterpack',
+                cajasFardos: 'Cajas/Fardos',
+                unidades: 'Unidades',
+                total: 'Total',
+                diferencia: 'Diferencia',
+                validacion: 'Validacion',
+                diasvida: 'Dias de Vida',
+                cantidad_justificada: 'Cantidad Justificada',
+                justificacion: 'Justificacion',
+                usuario_justificacion: 'Usuario Justificacion',
+                fecha_modificacion_justificacion: 'Fecha Modificacion Justificacion'
+            };
+
+            const headers = selectedFields.map(field => headersMap[field]);
+
+            const csvContent = inventario.map(item => {
+                const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
+                const diferencia = Number(item.inventario_reporteria || 0) - total;
+
+                let validacion = '';
+                if (diferencia === 0) validacion = 'OK';
+                else if (diferencia < 0) validacion = 'VAL+';
+                else validacion = 'VAL-';
+
+                const justificacionData = mapaJustificaciones[item.id] || {};
+                const keyVencimiento = construirClaveVencimiento(item);
+                const vencimientoSemanal = mapaVencimientos[keyVencimiento] || {};
+
+                const fechaVencimiento = vencimientoSemanal.fecha_vencimiento || '';
+                const diasvida = vencimientoSemanal.diasvida ?? '';
+
+                const rowData = {
+                    idBodega: item.idBodega || '',
+                    fecha: item.fecha || '',
+                    fecha_vencimiento: fechaVencimiento,
+                    codigo: item.codigo || '',
+                    codigo_barra: item.codigo_barra || '',
+                    proveedor: item.proveedor || '',
+                    descripcion: item.descripcion || '',
+                    inventarioReporteria: item.inventario_reporteria ?? '',
+                    masterpack: item.masterpack ?? '',
+                    cajasFardos: item.cajas_fardos ?? 0,
+                    unidades: item.unidades ?? '',
+                    total: total.toFixed(2),
+                    diferencia: diferencia.toFixed(2),
+                    validacion: validacion,
+                    diasvida: diasvida,
+                    cantidad_justificada: justificacionData.cantidad_justificada ?? '',
+                    justificacion: justificacionData.justificacion || '',
+                    usuario_justificacion: justificacionData.usuario || '',
+                    fecha_modificacion_justificacion: justificacionData.fecha_modificacion || ''
+                };
+
+                return selectedFields.map(field => {
+                    const valor = rowData[field] ?? '';
+                    return `"${String(valor).replace(/"/g, '""')}"`;
+                }).join(',');
+            }).join('
+');
+
+            const csv = headers.join(',') + '
+' + csvContent;
+
+            const nombreSede = sedeFiltro === 'Todas' ? 'todas_sedes' : sedeFiltro.toLowerCase().replace(/\s+/g, '_');
+            const nombreBodega = tipoBodegaFiltro === 'Todas' ? 'todas_bodegas' : tipoBodegaFiltro.toLowerCase();
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', `inventario_${nombreSede}_${nombreBodega}_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            cerrarModalExportarCSV();
+            showNotification('Éxito', 'CSV exportado correctamente', 'success');
+        }
 
         // ===== IMPORTAR DATOS =====
         function previewInventoryFile(input) {
@@ -4053,8 +4157,8 @@ async function guardarJustificacion(id, texto) {
 
         async function loadVencimientosData() {
             const { data, error } = await supabase
-                .from('vencimientos_semanales')
-                .select('*');
+                .from('inventarios_diarios')
+                .select('id, idBodega, codigo, descripcion, fecha, fecha_vencimiento, diasvida, sede');
 
             const filtrados = aplicarFiltrosGlobales(data);
 
@@ -4264,124 +4368,6 @@ function confirmarAuth() {
     resolveAuth({ usuario, password });
     resolveAuth = null;
   }
-}
-
-function esLunes(fechaStr) {
-    if (!fechaStr) return false;
-    const fecha = new Date(`${fechaStr}T00:00:00`);
-    return fecha.getDay() === 1;
-}
-
-function obtenerLunesDeLaSemana(fechaStr) {
-    const fecha = new Date(`${fechaStr}T00:00:00`);
-    const dia = fecha.getDay();
-    const ajuste = dia === 0 ? -6 : 1 - dia;
-    fecha.setDate(fecha.getDate() + ajuste);
-    return fecha.toISOString().split('T')[0];
-}
-
-async function respaldarYPrepararVencimientosSemanales(semanaReferencia) {
-    const { data: existentes, error: errorConsulta } = await supabase
-        .from('vencimientos_semanales')
-        .select('*')
-        .eq('semana_referencia', semanaReferencia);
-
-    if (errorConsulta) throw errorConsulta;
-
-    if (existentes && existentes.length > 0) {
-        return;
-    }
-
-    const { data: semanaAnterior, error: errorAnterior } = await supabase
-        .from('vencimientos_semanales')
-        .select('*');
-
-    if (errorAnterior) throw errorAnterior;
-
-    if (semanaAnterior && semanaAnterior.length > 0) {
-        const respaldo = semanaAnterior.map(row => ({
-            semana_referencia: row.semana_referencia,
-            sede: row.sede,
-            idbodega: row.idbodega,
-            codigo: row.codigo,
-            codigo_barra: row.codigo_barra,
-            proveedor: row.proveedor,
-            descripcion: row.descripcion,
-            inventario_reporteria: row.inventario_reporteria,
-            masterpack: row.masterpack,
-            cajas_fardos: row.cajas_fardos,
-            unidades: row.unidades,
-            fecha_vencimiento: row.fecha_vencimiento,
-            diasvida: row.diasvida,
-            costo_unitario: row.costo_unitario,
-            costototal: row.costototal,
-            usuario: row.usuario
-        }));
-
-        const { error: errorHistorial } = await supabase
-            .from('vencimientos_semanales_historial')
-            .insert(respaldo);
-
-        if (errorHistorial) throw errorHistorial;
-
-        const { error: errorDelete } = await supabase
-            .from('vencimientos_semanales')
-            .delete()
-            .neq('id', '00000000-0000-0000-0000-000000000000');
-
-        if (errorDelete) throw errorDelete;
-    }
-}
-
-async function guardarEnVencimientosSemanales(payload, currentUser) {
-    const semanaReferencia = obtenerLunesDeLaSemana(payload.fecha);
-
-    await respaldarYPrepararVencimientosSemanales(semanaReferencia);
-
-    const payloadSemanal = {
-        semana_referencia: semanaReferencia,
-        fecha_captura: payload.fecha,
-        sede: payload.sede,
-        idbodega: payload.idBodega,
-        codigo: payload.codigo,
-        codigo_barra: payload.codigo_barra || null,
-        proveedor: payload.proveedor,
-        descripcion: payload.descripcion,
-        inventario_reporteria: payload.inventario_reporteria,
-        masterpack: payload.masterpack,
-        cajas_fardos: payload.cajas_fardos,
-        unidades: payload.unidades,
-        fecha_vencimiento: payload.fecha_vencimiento,
-        diasvida: payload.diasvida,
-        costo_unitario: payload.costo_unitario,
-        costototal: payload.costoTotal,
-        usuario: currentUser?.username || currentUser?.email || 'desconocido'
-    };
-
-    const { data: existente, error: errorBusca } = await supabase
-        .from('vencimientos_semanales')
-        .select('id')
-        .eq('semana_referencia', semanaReferencia)
-        .eq('idbodega', payload.idBodega)
-        .eq('codigo', payload.codigo)
-        .maybeSingle();
-
-    if (errorBusca) throw errorBusca;
-
-    if (existente?.id) {
-        const { error: errorUpdate } = await supabase
-            .from('vencimientos_semanales')
-            .update(payloadSemanal)
-            .eq('id', existente.id);
-
-        if (errorUpdate) throw errorUpdate;
-    } else {
-        const { error: errorInsert } = await supabase
-            .from('vencimientos_semanales')
-            .insert([payloadSemanal]);
-
-        if (errorInsert) throw errorInsert;
-    }
 }
 
 </script>
