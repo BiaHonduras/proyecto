@@ -3107,10 +3107,7 @@
 		
 		    showNotification('Proceso', 'Respaldo completado. Eliminando base de códigos...', 'warning');
 		
-		    const { error } = await supabase
-		        .from('codigos')
-		        .delete()
-		        .not('codigo', 'is', null);
+		    const { error } = await supabase.rpc('eliminar_base_codigos_completa');
 		
 		    if (error) {
 		        console.error(error);
