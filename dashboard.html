@@ -1546,10 +1546,10 @@
 			}
 
             const btnEliminarBaseCodigos = document.getElementById('btnEliminarBaseCodigos');
-            if (btnEliminarBaseCodigos) {
-                btnEliminarBaseCodigos.addEventListener('click', eliminarBaseCodigosProtegida);
-                btnEliminarBaseCodigos.title = 'Deshabilitado temporalmente por seguridad';
-            }
+			if (btnEliminarBaseCodigos) {
+			    btnEliminarBaseCodigos.addEventListener('click', eliminarBaseCodigosProtegida);
+			    btnEliminarBaseCodigos.title = 'Realiza respaldo completo antes de eliminar';
+			}
 
             const btnImportInv = document.getElementById('confirmImportInventory');
             if (btnImportInv) btnImportInv.title = 'Deshabilitado temporalmente por seguridad';
@@ -3017,74 +3017,130 @@
 		}
 
         async function eliminarBaseCodigosProtegida() {
-            showNotification('Bloqueado', 'Eliminación de base de códigos deshabilitada temporalmente por seguridad.', 'warning');
-            return;
-
-            const confirmar = confirm('¿Estás seguro que deseas eliminar todos los registros de la Base de Códigos?');
-            if (!confirmar) return;
-
-            const adminAutorizador = await solicitarAutorizacionAdmin();
-            if (!adminAutorizador) return;
-
-            const { data: codigos, error: errorConsulta } = await supabase
-                .from('codigos')
-                .select('*');
-
-            if (errorConsulta) {
-                console.error(errorConsulta);
-                showNotification('Error', 'No se pudo generar el respaldo de la base de códigos', 'error');
-                return;
-            }
-
-            const payloadRespaldo = {
-                tipo_respaldo: 'eliminacion_base_codigos',
-                fecha_generacion: new Date().toISOString(),
-                ejecutado_por: currentUser?.username || currentUser?.usuario || 'desconocido',
-                autorizado_por: adminAutorizador,
-                tablas: {
-                    codigos: codigos || []
-                },
-                resumen: {
-                    codigos: (codigos || []).length
-                },
-                version_esquema: 1
-            };
-
-            let respaldoStorage;
-            try {
-                respaldoStorage = await subirRespaldoASupabase(
-                    'respaldo_base_codigos',
-                    payloadRespaldo,
-                    {
-                        tipo_respaldo: 'eliminacion_base_codigos',
-                        autorizado_por: adminAutorizador,
-                        tablas_incluidas: ['codigos'],
-                        totales_registros: payloadRespaldo.resumen
-                    }
-                );
-            } catch (errorRespaldo) {
-                showNotification('Error', errorRespaldo.message, 'error');
-                return;
-            }
-
-            const { error } = await supabase
-                .from('codigos')
-                .delete()
-                .not('codigo', 'is', null);
-
-            if (error) {
-                console.error(error);
-                showNotification('Error', 'El respaldo se guardó, pero no se pudo eliminar la base de códigos', 'error');
-                return;
-            }
-
-            showNotification(
-                'Éxito',
-                `Respaldo guardado en Storage: ${respaldoStorage.path}. Luego se eliminó la base de códigos.`,
-                'success'
-            );
-            cargarResumenCodigos();
-        }
+		    const confirmar = confirm(
+		        '¿Estás seguro que deseas eliminar todos los registros de la Base de Códigos?\n\n' +
+		        'Antes de eliminar se generará un respaldo completo de las bases SQL.'
+		    );
+		    if (!confirmar) return;
+		
+		    const adminAutorizador = await solicitarAutorizacionAdmin();
+		    if (!adminAutorizador) return;
+		
+		    showNotification('Proceso', 'Generando respaldo completo antes de eliminar base de códigos...', 'warning');
+		
+		    const [
+		        inventariosRes,
+		        justificacionesRes,
+		        reporteriaRes,
+		        codigosRes,
+		        usuariosRes
+		    ] = await Promise.all([
+		        supabase.from('inventarios_diarios').select('*'),
+		        supabase.from('inventario_justificaciones').select('*'),
+		        supabase.from('inventario_reporteria').select('*'),
+		        supabase.from('codigos').select('*'),
+		        supabase.from('usuarios').select('*')
+		    ]);
+		
+		    const erroresConsulta = [
+		        inventariosRes.error,
+		        justificacionesRes.error,
+		        reporteriaRes.error,
+		        codigosRes.error,
+		        usuariosRes.error
+		    ].filter(Boolean);
+		
+		    if (erroresConsulta.length > 0) {
+		        console.error('Error consultando tablas para respaldo:', erroresConsulta);
+		        showNotification('Error', 'No se pudo generar el respaldo completo antes de eliminar la base de códigos', 'error');
+		        return;
+		    }
+		
+		    const payloadRespaldo = {
+		        tipo_respaldo: 'eliminacion_base_codigos_con_respaldo_completo',
+		        fecha_generacion: new Date().toISOString(),
+		        ejecutado_por: currentUser?.username || currentUser?.usuario || 'desconocido',
+		        autorizado_por: adminAutorizador,
+		        tablas: {
+		            inventarios_diarios: inventariosRes.data || [],
+		            inventario_justificaciones: justificacionesRes.data || [],
+		            inventario_reporteria: reporteriaRes.data || [],
+		            codigos: codigosRes.data || [],
+		            usuarios: usuariosRes.data || []
+		        },
+		        resumen: {
+		            inventarios_diarios: (inventariosRes.data || []).length,
+		            inventario_justificaciones: (justificacionesRes.data || []).length,
+		            inventario_reporteria: (reporteriaRes.data || []).length,
+		            codigos: (codigosRes.data || []).length,
+		            usuarios: (usuariosRes.data || []).length
+		        },
+		        version_esquema: 2
+		    };
+		
+		    let respaldoStorage;
+		    try {
+		        respaldoStorage = await subirRespaldoASupabase(
+		            'respaldo_completo_previo_eliminacion_base_codigos',
+		            payloadRespaldo,
+		            {
+		                tipo_respaldo: 'eliminacion_base_codigos',
+		                autorizado_por: adminAutorizador,
+		                tablas_incluidas: [
+		                    'inventarios_diarios',
+		                    'inventario_justificaciones',
+		                    'inventario_reporteria',
+		                    'codigos',
+		                    'usuarios'
+		                ],
+		                totales_registros: payloadRespaldo.resumen,
+		                observaciones: 'Respaldo completo previo a eliminación de la base de códigos'
+		            }
+		        );
+		    } catch (errorRespaldo) {
+		        console.error('Error generando respaldo:', errorRespaldo);
+		        showNotification('Error', errorRespaldo.message || 'Falló el respaldo previo a la eliminación', 'error');
+		        return;
+		    }
+		
+		    showNotification('Proceso', 'Respaldo completado. Eliminando base de códigos...', 'warning');
+		
+		    const { error } = await supabase
+		        .from('codigos')
+		        .delete()
+		        .not('codigo', 'is', null);
+		
+		    if (error) {
+		        console.error(error);
+		        showNotification(
+		            'Error',
+		            `El respaldo fue guardado correctamente en ${respaldoStorage.path}, pero no se pudo eliminar la base de códigos.`,
+		            'error'
+		        );
+		        return;
+		    }
+		
+		    showNotification(
+		        'Éxito',
+		        `Respaldo completo guardado en ${respaldoStorage.path}. Luego se eliminó la base de códigos.`,
+		        'success',
+		        9000
+		    );
+		
+		    cargarResumenCodigos();
+		
+		    const codesPreview = document.getElementById('codesPreview');
+		    const codesPreviewHead = document.getElementById('codesPreviewHead');
+		    const codesPreviewBody = document.getElementById('codesPreviewBody');
+		    const importCodesFile = document.getElementById('importCodesFile');
+		    const confirmImportCodes = document.getElementById('confirmImportCodes');
+		
+		    if (codesPreview) codesPreview.classList.add('hidden');
+		    if (codesPreviewHead) codesPreviewHead.innerHTML = '';
+		    if (codesPreviewBody) codesPreviewBody.innerHTML = '';
+		    if (importCodesFile) importCodesFile.value = '';
+		    if (confirmImportCodes) confirmImportCodes.disabled = true;
+		}
 
         function previewCodesFile(input) {
             const file = input.files[0];
