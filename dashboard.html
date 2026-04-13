@@ -1398,9 +1398,23 @@
                 return true;
             });
         }
-
         function construirClaveVencimiento(item) {
-            return `${String(item.sede || '').trim()}__${String(item.idBodega || item.idbodega || '').trim()}__${String(item.codigo || '').trim()}`;
+            const sede = String(item?.sede || '').trim();
+            const bodega = String(item?.idBodega || item?.idbodega || '').trim();
+            const codigo = String(item?.codigo || '').trim();
+            return `${sede}__${bodega}__${codigo}`;
+        }
+
+        function normalizarRegistroVencimiento(item = {}) {
+            return {
+                ...item,
+                sede: String(item.sede || '').trim(),
+                idBodega: String(item.idBodega || item.idbodega || '').trim(),
+                codigo: String(item.codigo || '').trim(),
+                fecha_vencimiento: item.fecha_vencimiento || null,
+                diasvida: item.diasvida ?? null,
+                descripcion: item.descripcion || ''
+            };
         }
 
         function abrirModalExportarCSV() {
@@ -2596,13 +2610,19 @@
 
             const mapaVencimientos = {};
             (vencimientos || []).forEach(v => {
-                const key = construirClaveVencimiento(v);
-                mapaVencimientos[key] = v;
+                const normalizado = normalizarRegistroVencimiento(v);
+                const key = construirClaveVencimiento(normalizado);
+                mapaVencimientos[key] = normalizado;
             });
 
             const selectedFields = Array.from(
                 document.querySelectorAll('input[name="exportFields"]:checked')
             ).map(checkbox => checkbox.value);
+
+            if (!selectedFields.length) {
+                showNotification('Advertencia', 'Seleccione al menos un campo para exportar', 'warning');
+                return;
+            }
 
             const headersMap = {
                 idBodega: 'Bodega',
@@ -2626,19 +2646,23 @@
                 fecha_modificacion_justificacion: 'Fecha Modificacion Justificacion'
             };
 
-            const headers = selectedFields.map(field => headersMap[field]);
+            const headers = selectedFields.map(field => headersMap[field] || field);
 
             const csvContent = inventario.map(item => {
                 const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-                const diferencia = Number(item.inventario_reporteria || 0) - total;
+                const diferencia = total - Number(item.inventario_reporteria || 0);
 
                 let validacion = '';
                 if (diferencia === 0) validacion = 'OK';
-                else if (diferencia < 0) validacion = 'VAL+';
-                else validacion = 'VAL-';
+                else if (diferencia < 0) validacion = 'VAL-';
+                else validacion = 'VAL+';
 
                 const justificacionData = mapaJustificaciones[item.id] || {};
-                const keyVencimiento = construirClaveVencimiento(item);
+                const keyVencimiento = construirClaveVencimiento({
+                    sede: item.sede,
+                    idBodega: item.idBodega,
+                    codigo: item.codigo
+                });
                 const vencimientoSemanal = mapaVencimientos[keyVencimiento] || {};
 
                 const fechaVencimiento = vencimientoSemanal.fecha_vencimiento || '';
@@ -2670,11 +2694,9 @@
                     const valor = rowData[field] ?? '';
                     return `"${String(valor).replace(/"/g, '""')}"`;
                 }).join(',');
-            }).join('
-');
+            }).join('\n');
 
-            const csv = headers.join(',') + '
-' + csvContent;
+            const csv = headers.join(',') + '\n' + csvContent;
 
             const nombreSede = sedeFiltro === 'Todas' ? 'todas_sedes' : sedeFiltro.toLowerCase().replace(/\s+/g, '_');
             const nombreBodega = tipoBodegaFiltro === 'Todas' ? 'todas_bodegas' : tipoBodegaFiltro.toLowerCase();
@@ -2690,12 +2712,12 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
 
             cerrarModalExportarCSV();
             showNotification('Éxito', 'CSV exportado correctamente', 'success');
         }
 
-        // ===== IMPORTAR DATOS =====
         function previewInventoryFile(input) {
             const file = input.files[0];
             const previewDiv = document.getElementById('inventoryPreview');
@@ -4154,13 +4176,10 @@ async function guardarJustificacion(id, texto) {
             const [y, m, d] = String(fechaStr).split('-');
             return `${d}/${m}/${String(y).slice(-2)}`;
         }
-
         async function loadVencimientosData() {
             const { data, error } = await supabase
-                .from('inventarios_diarios')
-                .select('id, idBodega, codigo, descripcion, fecha, fecha_vencimiento, diasvida, sede');
-
-            const filtrados = aplicarFiltrosGlobales(data);
+                .from('vencimientos_semanales')
+                .select('sede, idbodega, codigo, descripcion, fecha_vencimiento, diasvida');
 
             if (error) {
                 console.error(error);
@@ -4168,11 +4187,14 @@ async function guardarJustificacion(id, texto) {
                 return;
             }
 
+            const normalizados = (data || []).map(item => normalizarRegistroVencimiento(item));
+            const filtrados = aplicarFiltrosGlobales(normalizados);
+
             const hoy = new Date();
             const registrosConFecha = [];
             const registrosSinFecha = [];
 
-            (filtrados || []).forEach(item => {
+            filtrados.forEach(item => {
                 if (!item.fecha_vencimiento) {
                     registrosSinFecha.push(item);
                     return;
