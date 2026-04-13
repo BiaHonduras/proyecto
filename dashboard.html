@@ -3464,13 +3464,46 @@
 			    });
 			
 			    form.addEventListener('submit', async function (e) {
-			        e.preventDefault();
+				    e.preventDefault();
+				
+				    const usuario = document.getElementById('userUsername').value.trim().toLowerCase();
+				    const nombre_corto = document.getElementById('userNombre_corto').value.trim();
+				    const correo = document.getElementById('userEmail').value.trim().toLowerCase();
+				    const dni = document.getElementById('userDNI').value.trim();
+				    const password = document.getElementById('userPassword').value;
+				    const confirmPassword = document.getElementById('userConfirmPassword').value;
+				    const rol = document.getElementById('userRole').value;
+				
+				    if (!usuario || !nombre_corto || !correo || !dni || !password || !confirmPassword) {
+				        showNotification('Error', 'Complete todos los campos requeridos', 'error');
+				        return;
+				    }
+				
+				    if (password !== confirmPassword) {
+				        showNotification('Error', 'Las contraseñas no coinciden', 'error');
+				        return;
+				    }
+				
+				    try {
+				        await llamarFuncionSegura('admin-create-user', {
+				            usuario,
+				            nombre_corto,
+				            correo,
+				            dni,
+				            password,
+				            rol
+				        });
+				
+				        showNotification('Éxito', 'Usuario creado correctamente', 'success');
+				        resetUserForm();
+				        await loadUsers();
+				    } catch (error) {
+				        console.error(error);
+				        showNotification('Error', error.message || 'No se pudo crear el usuario', 'error');
+				    }
+				});
 
-                    showNotification('Bloqueado', 'La gestión de usuarios debe migrarse a funciones RPC seguras antes de activarse.', 'warning');
-                    return;
-			    });
-
-form.querySelector('button[type="reset"]').addEventListener('click', resetUserForm);
+				form.querySelector('button[type="reset"]').addEventListener('click', resetUserForm);
 			    btnNuevoUsuario.addEventListener('click', resetUserForm);
 			
 			    resetUserForm();
@@ -4388,6 +4421,37 @@ function confirmarAuth() {
     resolveAuth({ usuario, password });
     resolveAuth = null;
   }
+}
+
+async function obtenerAccessToken() {
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error || !data?.session?.access_token) {
+        throw new Error('No se pudo obtener la sesión actual');
+    }
+
+    return data.session.access_token;
+}
+
+async function llamarFuncionSegura(nombreFuncion, payload) {
+    const token = await obtenerAccessToken();
+
+    const resp = await fetch(`${supabase.supabaseUrl}/functions/v1/${nombreFuncion}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const result = await resp.json().catch(() => ({}));
+
+    if (!resp.ok || !result.ok) {
+        throw new Error(result.message || `Error en ${nombreFuncion}`);
+    }
+
+    return result;
 }
 
 </script>
