@@ -2017,6 +2017,10 @@
 			
 			        showNotification('Éxito', 'Guardado correctamente', 'success');
 			    }
+
+				if (checkActivo && fechaVenc && esLunes(fecha)) {
+				    await guardarEnVencimientosSemanales(payload, currentUser);
+				}
 			
 			    document.getElementById('btnGuardarArticulo').innerHTML = `
 			        <i class="fas fa-plus-circle mr-2"></i>
@@ -4049,8 +4053,8 @@ async function guardarJustificacion(id, texto) {
 
         async function loadVencimientosData() {
             const { data, error } = await supabase
-                .from('inventarios_diarios')
-                .select('id, idBodega, codigo, descripcion, fecha, fecha_vencimiento, diasvida, sede');
+                .from('vencimientos_semanales')
+                .select('*');
 
             const filtrados = aplicarFiltrosGlobales(data);
 
@@ -4260,6 +4264,124 @@ function confirmarAuth() {
     resolveAuth({ usuario, password });
     resolveAuth = null;
   }
+}
+
+function esLunes(fechaStr) {
+    if (!fechaStr) return false;
+    const fecha = new Date(`${fechaStr}T00:00:00`);
+    return fecha.getDay() === 1;
+}
+
+function obtenerLunesDeLaSemana(fechaStr) {
+    const fecha = new Date(`${fechaStr}T00:00:00`);
+    const dia = fecha.getDay();
+    const ajuste = dia === 0 ? -6 : 1 - dia;
+    fecha.setDate(fecha.getDate() + ajuste);
+    return fecha.toISOString().split('T')[0];
+}
+
+async function respaldarYPrepararVencimientosSemanales(semanaReferencia) {
+    const { data: existentes, error: errorConsulta } = await supabase
+        .from('vencimientos_semanales')
+        .select('*')
+        .eq('semana_referencia', semanaReferencia);
+
+    if (errorConsulta) throw errorConsulta;
+
+    if (existentes && existentes.length > 0) {
+        return;
+    }
+
+    const { data: semanaAnterior, error: errorAnterior } = await supabase
+        .from('vencimientos_semanales')
+        .select('*');
+
+    if (errorAnterior) throw errorAnterior;
+
+    if (semanaAnterior && semanaAnterior.length > 0) {
+        const respaldo = semanaAnterior.map(row => ({
+            semana_referencia: row.semana_referencia,
+            sede: row.sede,
+            idbodega: row.idbodega,
+            codigo: row.codigo,
+            codigo_barra: row.codigo_barra,
+            proveedor: row.proveedor,
+            descripcion: row.descripcion,
+            inventario_reporteria: row.inventario_reporteria,
+            masterpack: row.masterpack,
+            cajas_fardos: row.cajas_fardos,
+            unidades: row.unidades,
+            fecha_vencimiento: row.fecha_vencimiento,
+            diasvida: row.diasvida,
+            costo_unitario: row.costo_unitario,
+            costototal: row.costototal,
+            usuario: row.usuario
+        }));
+
+        const { error: errorHistorial } = await supabase
+            .from('vencimientos_semanales_historial')
+            .insert(respaldo);
+
+        if (errorHistorial) throw errorHistorial;
+
+        const { error: errorDelete } = await supabase
+            .from('vencimientos_semanales')
+            .delete()
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+
+        if (errorDelete) throw errorDelete;
+    }
+}
+
+async function guardarEnVencimientosSemanales(payload, currentUser) {
+    const semanaReferencia = obtenerLunesDeLaSemana(payload.fecha);
+
+    await respaldarYPrepararVencimientosSemanales(semanaReferencia);
+
+    const payloadSemanal = {
+        semana_referencia: semanaReferencia,
+        fecha_captura: payload.fecha,
+        sede: payload.sede,
+        idbodega: payload.idBodega,
+        codigo: payload.codigo,
+        codigo_barra: payload.codigo_barra || null,
+        proveedor: payload.proveedor,
+        descripcion: payload.descripcion,
+        inventario_reporteria: payload.inventario_reporteria,
+        masterpack: payload.masterpack,
+        cajas_fardos: payload.cajas_fardos,
+        unidades: payload.unidades,
+        fecha_vencimiento: payload.fecha_vencimiento,
+        diasvida: payload.diasvida,
+        costo_unitario: payload.costo_unitario,
+        costototal: payload.costoTotal,
+        usuario: currentUser?.username || currentUser?.email || 'desconocido'
+    };
+
+    const { data: existente, error: errorBusca } = await supabase
+        .from('vencimientos_semanales')
+        .select('id')
+        .eq('semana_referencia', semanaReferencia)
+        .eq('idbodega', payload.idBodega)
+        .eq('codigo', payload.codigo)
+        .maybeSingle();
+
+    if (errorBusca) throw errorBusca;
+
+    if (existente?.id) {
+        const { error: errorUpdate } = await supabase
+            .from('vencimientos_semanales')
+            .update(payloadSemanal)
+            .eq('id', existente.id);
+
+        if (errorUpdate) throw errorUpdate;
+    } else {
+        const { error: errorInsert } = await supabase
+            .from('vencimientos_semanales')
+            .insert([payloadSemanal]);
+
+        if (errorInsert) throw errorInsert;
+    }
 }
 
 </script>
