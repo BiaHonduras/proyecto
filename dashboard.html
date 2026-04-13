@@ -2992,17 +2992,13 @@
 		
 		    showNotification('Proceso', 'Respaldo completado. Iniciando eliminación...', 'warning');
 		
-		    const [deleteInventarios, deleteJustificaciones, deleteReporteria] = await Promise.all([
-		        supabase.from('inventarios_diarios').delete().not('id', 'is', null),
-		        supabase.from('inventario_justificaciones').delete().not('id', 'is', null),
-		        supabase.from('inventario_reporteria').delete().not('id', 'is', null)
-		    ]);
-		
-		    const erroresDelete = [
-		        deleteInventarios.error,
-		        deleteJustificaciones.error,
-		        deleteReporteria.error
-		    ].filter(Boolean);
+		    const { error: errorDelete } = await supabase.rpc('eliminar_inventarios_completo');
+
+				if (errorDelete) {
+				    console.error(errorDelete);
+				    showNotification('Error', 'El respaldo se guardó, pero ocurrió un error al eliminar los registros', 'error');
+				    return;
+				}
 		
 		    if (erroresDelete.length > 0) {
 		        console.error('Error eliminando registros:', erroresDelete);
