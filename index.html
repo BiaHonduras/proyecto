@@ -8,8 +8,9 @@
     <link rel="icon" href="https://raw.githubusercontent.com/BiaHonduras/proyecto/main/favicon.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <script type="module">
+    <script type="module" defer>
         import { supabase, iniciarSesion, cerrarSesion } from './supabase-config.js';
+    
         window.supabase = supabase;
         window.iniciarSesionSupabase = iniciarSesion;
         window.cerrarSesionSupabase = cerrarSesion;
@@ -154,7 +155,7 @@
         </div>
     </div>
 
-<script>
+<script defer>
     const DNI_REGEX = /^\d{4}-\d{4}-\d{5}$/;
     const loginForm = document.getElementById('loginForm');
     const recoveryForm = document.getElementById('recoveryForm');
