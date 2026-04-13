@@ -1538,11 +1538,12 @@
             // Import buttons
             document.getElementById('confirmImportInventory').addEventListener('click', importInventory);
             document.getElementById('confirmImportCodes').addEventListener('click', importCodes);
+			
             const btnEliminarGeneral = document.getElementById('btnEliminarGeneral');
-            if (btnEliminarGeneral) {
-                btnEliminarGeneral.addEventListener('click', eliminarGeneralProtegido);
-                btnEliminarGeneral.title = 'Deshabilitado temporalmente por seguridad';
-            }
+			if (btnEliminarGeneral) {
+			    btnEliminarGeneral.addEventListener('click', eliminarGeneralProtegido);
+			    btnEliminarGeneral.title = 'Realiza respaldo completo antes de eliminar';
+			}
 
             const btnEliminarBaseCodigos = document.getElementById('btnEliminarBaseCodigos');
             if (btnEliminarBaseCodigos) {
@@ -2891,88 +2892,129 @@
         }
 
         async function eliminarGeneralProtegido() {
-            showNotification('Bloqueado', 'Eliminación masiva deshabilitada temporalmente por seguridad.', 'warning');
-            return;
-
-            const confirmar = confirm('¿Estás seguro que deseas eliminar todos los registros de Inventarios, Justificaciones y Reportería?');
-            if (!confirmar) return;
-
-            const adminAutorizador = await solicitarAutorizacionAdmin();
-            if (!adminAutorizador) return;
-
-            const [inventariosRes, justificacionesRes, reporteriaRes] = await Promise.all([
-                supabase.from('inventarios_diarios').select('*'),
-                supabase.from('inventario_justificaciones').select('*'),
-                supabase.from('inventario_reporteria').select('*')
-            ]);
-
-            const erroresConsulta = [inventariosRes.error, justificacionesRes.error, reporteriaRes.error].filter(Boolean);
-            if (erroresConsulta.length > 0) {
-                console.error(erroresConsulta);
-                showNotification('Error', 'No se pudo generar el respaldo antes de eliminar', 'error');
-                return;
-            }
-
-            const payloadRespaldo = {
-                tipo_respaldo: 'eliminacion_inventarios_justificaciones_reporteria',
-                fecha_generacion: new Date().toISOString(),
-                ejecutado_por: currentUser?.username || currentUser?.usuario || 'desconocido',
-                autorizado_por: adminAutorizador,
-                tablas: {
-                    inventarios_diarios: inventariosRes.data || [],
-                    inventario_justificaciones: justificacionesRes.data || [],
-                    inventario_reporteria: reporteriaRes.data || []
-                },
-                resumen: {
-                    inventarios_diarios: (inventariosRes.data || []).length,
-                    inventario_justificaciones: (justificacionesRes.data || []).length,
-                    inventario_reporteria: (reporteriaRes.data || []).length
-                },
-                version_esquema: 1
-            };
-
-            let respaldoStorage;
-            try {
-                respaldoStorage = await subirRespaldoASupabase(
-				    'respaldo_inventarios_justificaciones_reporteria',
-				    payloadRespaldo,
-				    {
-				        tipo_respaldo: 'eliminacion_general',
-				        autorizado_por: adminAutorizador,
-				        tablas_incluidas: ['inventarios_diarios', 'inventario_justificaciones', 'inventario_reporteria'],
-				        totales_registros: payloadRespaldo.resumen,
-				        observaciones: 'Respaldo previo a eliminación general de inventarios, justificaciones y reportería'
-				    }
-				);
-            } catch (errorRespaldo) {
-                showNotification('Error', errorRespaldo.message, 'error');
-                return;
-            }
-
-            const [deleteInventarios, deleteJustificaciones, deleteReporteria] = await Promise.all([
-                supabase.from('inventarios_diarios').delete().not('id', 'is', null),
-                supabase.from('inventario_justificaciones').delete().not('id', 'is', null),
-                supabase.from('inventario_reporteria').delete().not('id', 'is', null)
-            ]);
-
-            const erroresDelete = [deleteInventarios.error, deleteJustificaciones.error, deleteReporteria.error].filter(Boolean);
-            if (erroresDelete.length > 0) {
-                console.error(erroresDelete);
-                showNotification('Error', 'El respaldo se guardó, pero ocurrió un error al eliminar los registros', 'error');
-                return;
-            }
-
-            showNotification(
-                'Éxito',
-                `Respaldo guardado en Storage: ${respaldoStorage.path}. Luego se eliminaron Inventarios, Justificaciones y Reportería.`,
-                'success'
-            );
-
-            loadInventory();
-            loadDashboardData();
-            loadVencimientosData();
-            loadTransitos();
-        }
+		    const confirmar = confirm(
+		        '¿Estás seguro que deseas eliminar todos los registros de Inventarios, Justificaciones y Reportería?\n\n' +
+		        'Antes de eliminar se generará un respaldo completo de las bases SQL.'
+		    );
+		    if (!confirmar) return;
+		
+		    const adminAutorizador = await solicitarAutorizacionAdmin();
+		    if (!adminAutorizador) return;
+		
+		    showNotification('Proceso', 'Generando respaldo completo antes de eliminar...', 'warning');
+		
+		    const [
+		        inventariosRes,
+		        justificacionesRes,
+		        reporteriaRes,
+		        codigosRes,
+		        usuariosRes
+		    ] = await Promise.all([
+		        supabase.from('inventarios_diarios').select('*'),
+		        supabase.from('inventario_justificaciones').select('*'),
+		        supabase.from('inventario_reporteria').select('*'),
+		        supabase.from('codigos').select('*'),
+		        supabase.from('usuarios').select('*')
+		    ]);
+		
+		    const erroresConsulta = [
+		        inventariosRes.error,
+		        justificacionesRes.error,
+		        reporteriaRes.error,
+		        codigosRes.error,
+		        usuariosRes.error
+		    ].filter(Boolean);
+		
+		    if (erroresConsulta.length > 0) {
+		        console.error('Error consultando tablas para respaldo:', erroresConsulta);
+		        showNotification('Error', 'No se pudo generar el respaldo completo antes de eliminar', 'error');
+		        return;
+		    }
+		
+		    const payloadRespaldo = {
+		        tipo_respaldo: 'eliminacion_general_con_respaldo_completo',
+		        fecha_generacion: new Date().toISOString(),
+		        ejecutado_por: currentUser?.username || currentUser?.usuario || 'desconocido',
+		        autorizado_por: adminAutorizador,
+		        tablas: {
+		            inventarios_diarios: inventariosRes.data || [],
+		            inventario_justificaciones: justificacionesRes.data || [],
+		            inventario_reporteria: reporteriaRes.data || [],
+		            codigos: codigosRes.data || [],
+		            usuarios: usuariosRes.data || []
+		        },
+		        resumen: {
+		            inventarios_diarios: (inventariosRes.data || []).length,
+		            inventario_justificaciones: (justificacionesRes.data || []).length,
+		            inventario_reporteria: (reporteriaRes.data || []).length,
+		            codigos: (codigosRes.data || []).length,
+		            usuarios: (usuariosRes.data || []).length
+		        },
+		        version_esquema: 2
+		    };
+		
+		    let respaldoStorage;
+		    try {
+		        respaldoStorage = await subirRespaldoASupabase(
+		            'respaldo_completo_previo_eliminacion_general',
+		            payloadRespaldo,
+		            {
+		                tipo_respaldo: 'eliminacion_general',
+		                autorizado_por: adminAutorizador,
+		                tablas_incluidas: [
+		                    'inventarios_diarios',
+		                    'inventario_justificaciones',
+		                    'inventario_reporteria',
+		                    'codigos',
+		                    'usuarios'
+		                ],
+		                totales_registros: payloadRespaldo.resumen,
+		                observaciones: 'Respaldo completo previo a eliminación general desde Inventarios Diarios'
+		            }
+		        );
+		    } catch (errorRespaldo) {
+		        console.error('Error generando respaldo:', errorRespaldo);
+		        showNotification('Error', errorRespaldo.message || 'Falló el respaldo previo a la eliminación', 'error');
+		        return;
+		    }
+		
+		    showNotification('Proceso', 'Respaldo completado. Iniciando eliminación...', 'warning');
+		
+		    const [deleteInventarios, deleteJustificaciones, deleteReporteria] = await Promise.all([
+		        supabase.from('inventarios_diarios').delete().not('id', 'is', null),
+		        supabase.from('inventario_justificaciones').delete().not('id', 'is', null),
+		        supabase.from('inventario_reporteria').delete().not('id', 'is', null)
+		    ]);
+		
+		    const erroresDelete = [
+		        deleteInventarios.error,
+		        deleteJustificaciones.error,
+		        deleteReporteria.error
+		    ].filter(Boolean);
+		
+		    if (erroresDelete.length > 0) {
+		        console.error('Error eliminando registros:', erroresDelete);
+		        showNotification(
+		            'Error',
+		            `El respaldo fue guardado correctamente en ${respaldoStorage.path}, pero ocurrió un error durante la eliminación.`,
+		            'error'
+		        );
+		        return;
+		    }
+		
+		    showNotification(
+		        'Éxito',
+		        `Respaldo completo guardado en ${respaldoStorage.path}. Luego se eliminaron Inventarios, Justificaciones y Reportería.`,
+		        'success',
+		        9000
+		    );
+		
+		    limpiarFormulario();
+		    loadInventory();
+		    loadDashboardData();
+		    loadVencimientosData();
+		    loadTransitos();
+		}
 
         async function eliminarBaseCodigosProtegida() {
             showNotification('Bloqueado', 'Eliminación de base de códigos deshabilitada temporalmente por seguridad.', 'warning');
