@@ -9,8 +9,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script type="module">
-        import { supabase } from './supabase-config.js';
+        import { supabase, iniciarSesion, cerrarSesion } from './supabase-config.js';
         window.supabase = supabase;
+        window.iniciarSesionSupabase = iniciarSesion;
+        window.cerrarSesionSupabase = cerrarSesion;
     </script>
 
     <style>
@@ -229,6 +231,15 @@
                 throw new Error(row?.mensaje || 'Usuario o contraseña incorrectos.');
             }
 
+            if (!row.correo) {
+                throw new Error('El usuario no tiene un correo configurado para iniciar sesión en Supabase Auth.');
+            }
+
+            const authResult = await window.iniciarSesionSupabase(row.correo, password);
+            if (!authResult?.ok) {
+                throw new Error(authResult?.error || 'No fue posible iniciar la sesión real en Supabase Auth.');
+            }
+
             const currentUser = {
                 username: row.usuario,
                 nombre_corto: row.nombre_corto,
@@ -351,6 +362,13 @@
                 sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
             }
 
+            if (currentUser?.correo) {
+                const authResult = await window.iniciarSesionSupabase(currentUser.correo, nueva);
+                if (!authResult?.ok) {
+                    throw new Error(authResult?.error || 'La contraseña local cambió, pero no se pudo abrir la sesión en Supabase Auth.');
+                }
+            }
+
             mostrarExito('Contraseña actualizada correctamente.');
             closeChangePasswordModal();
             window.location.href = 'dashboard.html';
@@ -451,10 +469,22 @@
 
     function setLoading(button, isLoading, text) {
         button.disabled = isLoading;
+
+        const icon = button.dataset.icon || '';
+        if (!button.dataset.originalText) {
+            button.dataset.originalText = button.textContent.trim();
+        }
+
         button.innerHTML = isLoading
             ? `<i class="fas fa-spinner fa-spin"></i><span>${text}</span>`
-            : `<span>${text}</span>`;
+            : `${icon}<span>${text}</span>`;
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loginButton.dataset.icon = '<i class="fas fa-sign-in-alt"></i>';
+        recoveryButton.dataset.icon = '';
+        changePasswordButton.dataset.icon = '';
+    });
 </script>
 </body>
 </html>
