@@ -2996,32 +2996,26 @@
 
 				if (errorDelete) {
 				    console.error(errorDelete);
-				    showNotification('Error', 'El respaldo se guardó, pero ocurrió un error al eliminar los registros', 'error');
+				    showNotification(
+				        'Error',
+				        `El respaldo fue guardado correctamente en ${respaldoStorage.path}, pero ocurrió un error durante la eliminación.`,
+				        'error'
+				    );
 				    return;
 				}
-		
-		    if (erroresDelete.length > 0) {
-		        console.error('Error eliminando registros:', erroresDelete);
-		        showNotification(
-		            'Error',
-		            `El respaldo fue guardado correctamente en ${respaldoStorage.path}, pero ocurrió un error durante la eliminación.`,
-		            'error'
-		        );
-		        return;
-		    }
-		
-		    showNotification(
-		        'Éxito',
-		        `Respaldo completo guardado en ${respaldoStorage.path}. Luego se eliminaron Inventarios, Justificaciones y Reportería.`,
-		        'success',
-		        9000
-		    );
-		
-		    limpiarFormulario();
-		    loadInventory();
-		    loadDashboardData();
-		    loadVencimientosData();
-		    loadTransitos();
+				
+				showNotification(
+				    'Éxito',
+				    `Respaldo completo guardado en ${respaldoStorage.path}. Luego se eliminaron Inventarios, Justificaciones y Reportería.`,
+				    'success',
+				    9000
+				);
+				
+				limpiarFormulario();
+				loadInventory();
+				loadDashboardData();
+				loadVencimientosData();
+				loadTransitos();
 		}
 
         async function eliminarBaseCodigosProtegida() {
