@@ -3216,16 +3216,11 @@
 		            return;
 		        }
 		
-		        const { error } = await supabase
-		            .from('codigos')
-					console.log('Payload a codigos:', registros);
-		            .upsert(registros, { onConflict: 'codigo' });
+		        console.log('Payload a codigos:', registros);
 
-				const { data: s, error: se } = await supabase.auth.getSession();
-				console.log('SESSION', s, se);
-				
-				const { data: u, error: ue } = await supabase.auth.getUser();
-				console.log('USER', u, ue);
+                const { error } = await supabase
+                    .from('codigos')
+                    .upsert(registros, { onConflict: 'codigo' });
 		
 		        if (error) {
 		            console.error(error);
