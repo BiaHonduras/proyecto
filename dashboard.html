@@ -3186,67 +3186,94 @@
 		    const reader = new FileReader();
 		
 		    reader.onload = async function (e) {
-		        const text = e.target.result;
-		        const lines = text.split('\n').filter(line => line.trim() !== '');
+		        try {
+		            const text = e.target.result;
+		            const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
 		
-		        let registros = [];
+		            let registros = [];
 		
-		        for (let i = 1; i < lines.length; i++) {
-		            const values = lines[i].split(',');
+		            for (let i = 1; i < lines.length; i++) {
+		                const values = lines[i].split(',');
 		
-		            if (values.length < 6) continue;
+		                if (values.length < 6) continue;
 		
-		            registros.push({
-		                codigo: limpiarValor(values[0]),
-		                descripcion: limpiarValor(values[1]),
-		                proveedor: limpiarValor(values[2]),
-		                masterpack: parseFloat(limpiarValor(values[3])) || 1,
-		                codigo_barra: limpiarValor(values[4]),
-		                costo: parseFloat(limpiarValor(values[5])) || 0
-		            });
+		                const codigo = limpiarValor(values[0]);
+		                const descripcion = limpiarValor(values[1]);
+		                const proveedor = limpiarValor(values[2]);
+		                const masterpack = parseFloat(limpiarValor(values[3])) || 1;
+		                const codigo_barra = limpiarValor(values[4]);
+		                const costo = parseFloat(limpiarValor(values[5])) || 0;
+		
+		                if (!codigo) continue;
+		
+		                registros.push({
+		                    codigo,
+		                    descripcion,
+		                    proveedor,
+		                    masterpack,
+		                    codigo_barra,
+		                    costo
+		                });
+		            }
+		
+		            if (registros.length === 0) {
+		                showNotification('Error', 'No hay registros válidos para importar', 'error');
+		                return;
+		            }
+		
+		            console.log('Payload a codigos:', registros);
+		
+		            const { error: codigosError } = await supabase
+		                .from('codigos')
+		                .upsert(registros, { onConflict: 'codigo' });
+		
+		            if (codigosError) {
+		                console.error('Error insertando en codigos:', codigosError);
+		                showNotification(
+		                    'Error',
+		                    `No se pudo importar la base de códigos: ${codigosError.message}`,
+		                    'error'
+		                );
+		                return;
+		            }
+		
+		            const { error: logError } = await supabase
+		                .from('inventario_importaciones')
+		                .insert([{
+		                    usuario: currentUser?.username || currentUser?.usuario || 'desconocido',
+		                    fecha_importacion: new Date().toISOString(),
+		                    cantidad_registros: registros.length,
+		                    tipo_importacion: 'codigos'
+		                }]);
+		
+		            if (logError) {
+		                console.error('Error guardando historial de importación:', logError);
+		                showNotification(
+		                    'Advertencia',
+		                    `Los códigos se importaron, pero no se guardó el historial: ${logError.message}`,
+		                    'warning'
+		                );
+		                return;
+		            }
+		
+		            showNotification('Éxito', `${registros.length} códigos importados correctamente`, 'success');
+		
+		            document.getElementById('codesPreview').classList.add('hidden');
+		            document.getElementById('codesPreviewHead').innerHTML = '';
+		            document.getElementById('codesPreviewBody').innerHTML = '';
+		            document.getElementById('importCodesFile').value = '';
+		            document.getElementById('confirmImportCodes').disabled = true;
+		
+		            cargarResumenCodigos();
+		        } catch (error) {
+		            console.error('Error general importCodes:', error);
+		            showNotification('Error', error.message || 'Ocurrió un error al importar códigos', 'error');
 		        }
-		
-		        if (registros.length === 0) {
-		            showNotification('Error', 'No hay registros válidos para importar', 'error');
-		            return;
-		        }
-		
-		        console.log('Payload a codigos:', registros);
-
-                const { error: logError } = await supabase
-				    .from('inventario_importaciones')
-				    .insert([{
-				        usuario: currentUser?.username || currentUser?.usuario || 'desconocido',
-				        fecha_importacion: new Date().toISOString(),
-				        cantidad_registros: registros.length,
-				        tipo_importacion: 'codigos'
-				    }]);
-		
-		        if (logError) {
-				    console.error('Error guardando historial de importación:', logError);
-				    showNotification('Advertencia', `Los códigos se importaron, pero no se guardó el historial: ${logError.message}`, 'warning');
-				    return;
-				}
-		
-		        await supabase.from('inventario_importaciones').insert([{
-		            usuario: currentUser?.username || currentUser?.usuario || 'desconocido',
-		            cantidad_registros: registros.length,
-		            tipo_importacion: 'codigos'
-		        }]);
-		
-		        showNotification('Éxito', `${registros.length} códigos importados correctamente`, 'success');
-		
-		        document.getElementById('codesPreview').classList.add('hidden');
-		        document.getElementById('codesPreviewHead').innerHTML = '';
-		        document.getElementById('codesPreviewBody').innerHTML = '';
-		        document.getElementById('importCodesFile').value = '';
-		        document.getElementById('confirmImportCodes').disabled = true;
-		
-		        cargarResumenCodigos();
 		    };
 		
 		    reader.readAsText(file);
 		}
+		
         document.getElementById('closeNotification').addEventListener('click', function() {
             document.getElementById('notification').classList.add('hidden');
             // Reset to default white background when closed manually
