@@ -3218,7 +3218,7 @@
 		
 		        const { error } = await supabase
 		            .from('codigos')
-		            .insert(registros);
+		            .upsert(registros, { onConflict: 'codigo' });
 		
 		        if (error) {
 		            console.error(error);
