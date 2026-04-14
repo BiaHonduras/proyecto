@@ -256,8 +256,7 @@
 
             if (currentUser.must_change_password) {
                 pendingUserForPasswordChange = currentUser.username;
-                document.getElementById('currentTempPassword').value = password;
-                openChangePasswordModal();
+                openChangePasswordModal(password);
                 mostrarExito('Debes cambiar tu contraseña temporal antes de continuar.');
                 return;
             }
@@ -412,11 +411,12 @@
         recoveryModal.classList.remove('flex');
     }
 
-    function openChangePasswordModal() {
+    function openChangePasswordModal(tempPassword = '') {
         clearChangePasswordMessage();
         changePasswordForm.reset();
         changePasswordModal.classList.remove('hidden');
         changePasswordModal.classList.add('flex');
+        document.getElementById('currentTempPassword').value = tempPassword;
         document.getElementById('currentTempPassword').focus();
     }
 
