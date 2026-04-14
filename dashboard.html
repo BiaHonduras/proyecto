@@ -4424,26 +4424,13 @@ function confirmarAuth() {
 }
 
 async function obtenerAccessToken() {
-    let { data, error } = await supabase.auth.getSession();
+    const { data: { session }, error } = await supabase.auth.getSession();
 
-    if (error) {
-        throw new Error(`No se pudo obtener la sesión actual: ${error.message}`);
+    if (error || !session) {
+        throw new Error('Sesión inválida o expirada. Debe iniciar sesión nuevamente.');
     }
 
-    let token = data?.session?.access_token;
-    if (token) return token;
-
-    const refresh = await supabase.auth.refreshSession();
-    if (refresh.error) {
-        throw new Error(`No se pudo refrescar la sesión: ${refresh.error.message}`);
-    }
-
-    token = refresh.data?.session?.access_token;
-    if (!token) {
-        throw new Error('No hay una sesión válida en Supabase Auth');
-    }
-
-    return token;
+    return session.access_token;
 }
 
 async function llamarFuncionSegura(nombreFuncion, payload) {
