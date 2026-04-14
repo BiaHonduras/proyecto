@@ -4424,7 +4424,8 @@ function confirmarAuth() {
 }
 
 async function obtenerAccessToken() {
-    const { data, error } = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
+	const token = session?.access_token;
 
     if (error || !data?.session?.access_token) {
         throw new Error('No se pudo obtener la sesión actual');
