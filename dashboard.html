@@ -1843,11 +1843,11 @@
     			document.getElementById('totalProveedores').textContent = proveedores.size;
 
     		const last = inventario.reduce((max, item) => {
-        		return new Date(item.fecha) > new Date(max.fecha) ? item : max;
+        		return String(item.fecha || '') > String(max.fecha || '') ? item : max;
     			});
 
     		document.getElementById('ultimaActualizacion').textContent =
-        		new Date(last.fecha).toLocaleDateString();
+        		formatearFecha(last.fecha);
 
     	cargarArticulosRecientes();
     	cargarGraficoProveedores();
@@ -1855,7 +1855,8 @@
 
         // === FORMATO DE FECHA ====
         function formatearFecha(fechaISO) {
-        const [año, mes, día] = fechaISO.split("-");
+        if (!fechaISO || !String(fechaISO).includes('-')) return '-';
+        const [año, mes, día] = String(fechaISO).split("-");
         return `${día}/${mes}/${año}`;
         }
 
@@ -3412,38 +3413,33 @@
 
         // ===== GESTIÓN DE USUARIOS =====
 
+			function bloquearFormularioUsuarios() {
+			    const form = document.getElementById('userForm');
+			    if (!form) return;
+
+			    form.querySelectorAll('input, select, button').forEach(el => {
+			        if (el.id === 'userId') return;
+			        el.disabled = true;
+			        el.readOnly = true;
+			        if (el.classList.contains('input-field')) {
+			            el.classList.add('input-disabled');
+			        }
+			    });
+			}
+
 			function resetUserForm() {
 			    const form = document.getElementById('userForm');
 			
 			    form.reset();
 			    document.getElementById('userId').value = '';
-			
-			    document.getElementById('userUsername').disabled = false;
-			    document.getElementById('userUsername').readOnly = false;
-			
-			    document.getElementById('userNombre_corto').disabled = false;
-			    document.getElementById('userNombre_corto').readOnly = false;
-			
-			    document.getElementById('userEmail').disabled = false;
-			    document.getElementById('userEmail').readOnly = false;
-			
-			    document.getElementById('userPassword').disabled = false;
-			    document.getElementById('userPassword').readOnly = false;
-			
-			    document.getElementById('userConfirmPassword').disabled = false;
-			    document.getElementById('userConfirmPassword').readOnly = false;
-			
-			    document.getElementById('userRole').disabled = false;
-			
 			    document.getElementById('userFormTitle').textContent = 'Crear Nuevo Usuario';
+			    bloquearFormularioUsuarios();
 			}
 		
 	        function initUsers() {
 			    const form = document.getElementById('userForm');
-			    const formTitle = document.getElementById('userFormTitle');
-			    const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
-			    const inputUsername = document.getElementById('userUsername');
-			    const tbody = document.getElementById('usersTableBody');
+			    			    const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
+			    			    const tbody = document.getElementById('usersTableBody');
 			
 			    tbody.addEventListener('click', async (e) => {
 			        const btnDelete = e.target.closest('.btn-delete-user');
