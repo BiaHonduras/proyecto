@@ -2622,9 +2622,10 @@
             }
 
             const mapaJustificaciones = {};
-            (justificaciones || []).forEach(j => {
-                mapaJustificaciones[j.id] = j;
-            });
+			(justificaciones || []).forEach(j => {
+			    const codigo = String(j.codigo || '').trim();
+			    if (codigo) mapaJustificaciones[codigo] = j;
+			});
 
             const mapaVencimientos = {};
             (vencimientos || []).forEach(v => {
@@ -2675,14 +2676,15 @@
                 else if (diferencia < 0) validacion = 'VAL-';
                 else validacion = 'VAL+';
 
-                const justificacionData = mapaJustificaciones[item.id] || {};
+                const codigoItem = String(item.codigo || '').trim();
+				const justificacionData = mapaJustificaciones[codigoItem] || {};
                 const keyVencimiento = construirClaveVencimiento({
                     sede: item.sede,
                     idBodega: item.idBodega,
                     codigo: item.codigo
                 });
+				
                 const vencimientoSemanal = mapaVencimientos[keyVencimiento] || {};
-
                 const fechaVencimiento = vencimientoSemanal.fecha_vencimiento || '';
                 const diasvida = vencimientoSemanal.diasvida ?? '';
 
