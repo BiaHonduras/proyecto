@@ -4146,7 +4146,7 @@ async function guardarJustificacion(id, texto) {
 		
 		    const { error } = await supabase
 		        .from('inventario_justificaciones')
-		        .upsert(registros, { onConflict: 'codigo' });
+		        .upsert(registros, { onConflict: 'codigo,sede' });
 		
 		    if (error) {
 		        console.error(error);
