@@ -4081,6 +4081,8 @@ async function guardarJustificacion(id, texto) {
 		        const diferencia = parseInt(fila.querySelector('.diferencia')?.textContent.trim() || '0', 10);
 		        const justificacion = (inputJustificacion.value || '').trim();
 		        const valorCantidad = (inputCantidad?.value || '').trim();
+		        const fechaRegistroExistente = fila.dataset.fechaRegistro || '';
+		        const costoUnitario = Number(fila.dataset.costoUnitario || 0);
 		
 		        if (!justificacion) {
 		            showNotification('Error', 'No puedes guardar con justificaciones vacías', 'error');
@@ -4089,24 +4091,25 @@ async function guardarJustificacion(id, texto) {
 		        }
 		
 		        if (!/^-?\d+$/.test(valorCantidad)) {
-				    showNotification('Error', 'La Cantidad Justificada solo permite enteros positivos o negativos', 'error');
-				    inputCantidad.focus();
-				    return;
-				}
-
+		            showNotification('Error', 'La Cantidad Justificada solo permite enteros positivos o negativos', 'error');
+		            inputCantidad.focus();
+		            return;
+		        }
+		
 		        const cantidadJustificada = parseInt(valorCantidad, 10);
-		        const fechaRegistroExistente = fila.dataset.fechaRegistro || '';
-		        const costoUnitario = Number(fila.dataset.costoUnitario || 0);
-						
-				if (cantidadJustificada !== cantidadEsperada) {
-				    showNotification(
-				        'Error',
-				        `Para el código ${codigo}, la Cantidad Justificada debe ser ${cantidadEsperada}. La diferencia actual es ${diferencia} y el saldo quedaría en ${saldoFinal}.`,
-				        'error'
-				    );
-				    inputCantidad.focus();
-				    return;
-				}
+		
+		        const cantidadEsperada = diferencia * -1;
+		        const saldoFinal = diferencia + cantidadJustificada;
+		
+		        if (cantidadJustificada !== cantidadEsperada) {
+		            showNotification(
+		                'Error',
+		                `Para el código ${codigo}, la Cantidad Justificada debe ser ${cantidadEsperada}. La diferencia actual es ${diferencia} y el saldo quedaría en ${saldoFinal}.`,
+		                'error'
+		            );
+		            inputCantidad.focus();
+		            return;
+		        }
 		
 		        const registro = {
 		            sede,
