@@ -4424,8 +4424,26 @@ function confirmarAuth() {
 }
 
 async function obtenerAccessToken() {
-    const { data } = await supabase.auth.getSession();
-    return data?.session?.access_token || null;
+    let { data, error } = await supabase.auth.getSession();
+
+    if (error) {
+        throw new Error(`No se pudo obtener la sesión actual: ${error.message}`);
+    }
+
+    let token = data?.session?.access_token;
+    if (token) return token;
+
+    const refresh = await supabase.auth.refreshSession();
+    if (refresh.error) {
+        throw new Error(`No se pudo refrescar la sesión: ${refresh.error.message}`);
+    }
+
+    token = refresh.data?.session?.access_token;
+    if (!token) {
+        throw new Error('No hay una sesión válida en Supabase Auth');
+    }
+
+    return token;
 }
 
 async function llamarFuncionSegura(nombreFuncion, payload) {
@@ -4442,7 +4460,11 @@ async function llamarFuncionSegura(nombreFuncion, payload) {
 
     const result = await resp.json().catch(() => ({}));
 
-    if (!resp.ok || !result.ok) {
+    if (!resp.ok) {
+        throw new Error(result.message || result.error || `Error HTTP ${resp.status} en ${nombreFuncion}`);
+    }
+
+    if (result.ok === false) {
         throw new Error(result.message || `Error en ${nombreFuncion}`);
     }
 
