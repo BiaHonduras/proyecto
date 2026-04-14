@@ -3933,10 +3933,10 @@ async function cargarGraficoProveedores() {
 			        .map(item => item.id)
 			        .filter(Boolean);
 			
-			    const { data: justificaciones, error: errorJust } = await supabase
-			        .from('inventario_justificaciones')
-			        .select('*')
-			        .in('id', idsInventario);
+				const { data: justificaciones, error: errorJust } = await supabase
+				    .from('inventario_justificaciones')
+				    .select('*')
+				    .in('inventario_id', idsInventario);
 			
 			    if (errorJust) {
 			        console.error('Error inventario_justificaciones:', errorJust);
@@ -3945,9 +3945,9 @@ async function cargarGraficoProveedores() {
 			    }
 			
 			    const mapaJustificaciones = {};
-			    (justificaciones || []).forEach(j => {
-			        if (j.id) mapaJustificaciones[j.id] = j;
-			    });
+				(justificaciones || []).forEach(j => {
+				    if (j.inventario_id) mapaJustificaciones[j.inventario_id] = j;
+				});
 			
 			    const filtrados = inventario
 			        .filter(item => {
@@ -3963,50 +3963,52 @@ async function cargarGraficoProveedores() {
 			    }
 			
 			    tbody.innerHTML = filtrados.map(item => {
-			        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-			        const diferencia = total - Number(item.inventario_reporteria || 0);
-			
-			        const justificacionGuardada = mapaJustificaciones[item.id]?.justificacion || '';
-			        const cantidadJustificada = mapaJustificaciones[item.id]?.cantidad_justificada ?? '';
-			        const fechaRegistro = mapaJustificaciones[item.id]?.fecha_registro || '';
-			        const costoUnitario = Number(item.costo_unitario || 0);
-			
-			        return `
-			            <tr class="border-b hover:bg-gray-50"
-			                data-id="${item.id}"
-			                data-codigo="${item.codigo || ''}"
-			                data-sede="${item.sede || ''}"
-			                data-fecha-registro="${fechaRegistro}"
-			                data-costo-unitario="${costoUnitario}">
-			                <td class="py-3">${item.idBodega || ''}</td>
-			                <td class="py-3 codigo">${item.codigo || ''}</td>
-			                <td class="py-3 descripcion">${item.descripcion || ''}</td>
-			                <td class="py-3 font-bold diferencia">${diferencia}</td>
-			                <td class="py-3">
-			                    <input
-			                        type="number"
-			                        class="cantidad-justificada input-field w-full px-2 py-1 rounded input-disabled"
-			                        value="${cantidadJustificada}"
-			                        disabled
-			                    >
-			                </td>
-			                <td class="py-3">
-			                    <select
-			                        class="justificacion input-field w-full px-2 py-1 rounded input-disabled"
-			                        data-id="${item.id}"
-			                        disabled>
-			                        ${construirOpcionesJustificacion(justificacionGuardada)}
-			                    </select>
-			                </td>
-			                <td class="py-3">
-			                    <button type="button"
-			                        class="btnEditarFila px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
-			                        Editar
-			                    </button>
-			                </td>
-			            </tr>
-			        `;
-			    }).join('');
+				    const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
+				    const diferencia = total - Number(item.inventario_reporteria || 0);
+				
+				    const justificacionRow = mapaJustificaciones[item.id] || null;
+				    const justificacionGuardada = justificacionRow?.justificacion || '';
+				    const cantidadJustificada = justificacionRow?.cantidad_justificada ?? '';
+				    const fechaRegistro = justificacionRow?.fecha_registro || '';
+				    const costoUnitario = Number(item.costo_unitario || 0);
+				
+				    return `
+				        <tr class="border-b hover:bg-gray-50"
+				            data-inventario-id="${item.id || ''}"
+				            data-justificacion-id="${justificacionRow?.id || ''}"
+				            data-codigo="${item.codigo || ''}"
+				            data-sede="${item.sede || ''}"
+				            data-id-bodega="${item.idBodega || ''}"
+				            data-fecha-registro="${fechaRegistro}"
+				            data-costo-unitario="${costoUnitario}">
+				            <td class="py-3">${item.idBodega || ''}</td>
+				            <td class="py-3 codigo">${item.codigo || ''}</td>
+				            <td class="py-3 descripcion">${item.descripcion || ''}</td>
+				            <td class="py-3 font-bold diferencia">${diferencia}</td>
+				            <td class="py-3">
+				                <input
+				                    type="number"
+				                    class="cantidad-justificada input-field w-full px-2 py-1 rounded input-disabled"
+				                    value="${cantidadJustificada}"
+				                    disabled
+				                >
+				            </td>
+				            <td class="py-3">
+				                <select
+				                    class="justificacion input-field w-full px-2 py-1 rounded input-disabled"
+				                    disabled>
+				                    ${construirOpcionesJustificacion(justificacionGuardada)}
+				                </select>
+				            </td>
+				            <td class="py-3">
+				                <button type="button"
+				                    class="btnEditarFila px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+				                    Editar
+				                </button>
+				            </td>
+				        </tr>
+				    `;
+				}).join('');
 			}
 
 async function guardarJustificacion(id, texto) {
@@ -4073,7 +4075,8 @@ async function guardarJustificacion(id, texto) {
 		
 		        const inputCantidad = fila.querySelector('.cantidad-justificada');
 		
-		        const id = inputJustificacion.dataset.id || fila.dataset.id || null;
+		        const inventarioId = fila.dataset.inventarioId || null;
+		        const justificacionId = fila.dataset.justificacionId || null;
 		        const sede = fila.dataset.sede || '';
 		        const idBodega = fila.dataset.idBodega || '';
 		        const codigo = fila.querySelector('.codigo')?.textContent.trim() || '';
@@ -4097,7 +4100,6 @@ async function guardarJustificacion(id, texto) {
 		        }
 		
 		        const cantidadJustificada = parseInt(valorCantidad, 10);
-		
 		        const cantidadEsperada = diferencia * -1;
 		        const saldoFinal = diferencia + cantidadJustificada;
 		
@@ -4112,9 +4114,10 @@ async function guardarJustificacion(id, texto) {
 		        }
 		
 		        const registro = {
+		            inventario_id: inventarioId,
 		            sede,
 		            idBodega,
-		            usuario: currentUser?.username || '',
+		            usuario: currentUser?.username || currentUser?.usuario || '',
 		            codigo,
 		            descripcion,
 		            diferencia,
@@ -4124,12 +4127,16 @@ async function guardarJustificacion(id, texto) {
 		            fecha_modificacion: new Date().toISOString()
 		        };
 		
-		        if (id) {
-		            registro.id = id;
-		            registrosActualizar.push(registro);
+		        if (justificacionId) {
+		            registrosActualizar.push({
+		                id: justificacionId,
+		                ...registro
+		            });
 		        } else {
-		            registro.fecha_registro = fechaRegistroExistente || new Date().toISOString();
-		            registrosInsertar.push(registro);
+		            registrosInsertar.push({
+		                ...registro,
+		                fecha_registro: fechaRegistroExistente || new Date().toISOString()
+		            });
 		        }
 		    }
 		
@@ -4138,20 +4145,18 @@ async function guardarJustificacion(id, texto) {
 		        return;
 		    }
 		
-		    if (registrosActualizar.length > 0) {
-		        for (const registro of registrosActualizar) {
-		            const { id, ...payload } = registro;
+		    for (const registro of registrosActualizar) {
+		        const { id, ...payload } = registro;
 		
-		            const { error } = await supabase
-		                .from('inventario_justificaciones')
-		                .update(payload)
-		                .eq('id', id);
+		        const { error } = await supabase
+		            .from('inventario_justificaciones')
+		            .update(payload)
+		            .eq('id', id);
 		
-		            if (error) {
-		                console.error(error);
-		                showNotification('Error', `Falló la actualización: ${error.message}`, 'error');
-		                return;
-		            }
+		        if (error) {
+		            console.error(error);
+		            showNotification('Error', `Falló la actualización: ${error.message}`, 'error');
+		            return;
 		        }
 		    }
 		
@@ -4168,7 +4173,7 @@ async function guardarJustificacion(id, texto) {
 		    }
 		
 		    showNotification('Éxito', 'Registros actualizados correctamente', 'success');
-		    loadTransitos();
+		    await loadTransitos();
 		}
 		
 	function formatearMoneda(valor) {
