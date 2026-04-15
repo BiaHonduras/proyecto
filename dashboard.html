@@ -4968,30 +4968,40 @@ async function obtenerAccessToken() {
     return session.access_token;
 }
 
-async function llamarFuncionSegura(nombreFuncion, payload) {
-    const token = await obtenerAccessToken();
-
-    const resp = await fetch(`${supabase.supabaseUrl}/functions/v1/${nombreFuncion}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-    });
-
-    const result = await resp.json().catch(() => ({}));
-
-    if (!resp.ok) {
-        throw new Error(result.message || result.error || `Error HTTP ${resp.status} en ${nombreFuncion}`);
-    }
-
-    if (result.ok === false) {
-        throw new Error(result.message || `Error en ${nombreFuncion}`);
-    }
-
-    return result;
-}
+		async function llamarFuncionSegura(nombreFuncion, payload) {
+		    const token = await obtenerAccessToken();
+		
+		    console.log('TOKEN:', token);
+		
+		    try {
+		        const [header] = token.split('.');
+		        const decodedHeader = JSON.parse(atob(header.replace(/-/g, '+').replace(/_/g, '/')));
+		        console.log('JWT header:', decodedHeader);
+		    } catch (e) {
+		        console.error('No se pudo leer el header del JWT', e);
+		    }
+		
+		    const resp = await fetch(`${supabase.supabaseUrl}/functions/v1/${nombreFuncion}`, {
+		        method: 'POST',
+		        headers: {
+		            'Content-Type': 'application/json',
+		            'Authorization': `Bearer ${token}`
+		        },
+		        body: JSON.stringify(payload)
+		    });
+		
+		    const result = await resp.json().catch(() => ({}));
+		
+		    if (!resp.ok) {
+		        throw new Error(result.message || result.error || `Error HTTP ${resp.status} en ${nombreFuncion}`);
+		    }
+		
+		    if (result.ok === false) {
+		        throw new Error(result.message || `Error en ${nombreFuncion}`);
+		    }
+		
+		    return result;
+		}
 
 </script>
 
