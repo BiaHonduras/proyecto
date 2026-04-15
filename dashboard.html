@@ -3997,15 +3997,15 @@ Prueba con temas como:
 				    }
 				
 				    try {
-				        await llamarFuncionSegura('admin-create-user', {
-				            usuario,
-				            nombre_corto,
-				            correo,
-				            dni,
-				            password,
-				            rol
-				        });
-				
+				        await llamarFuncionSegura({
+						  usuario,
+						  nombre_corto,
+						  correo,
+						  dni,
+						  password,
+						  rol
+						});
+										
 				        showNotification('Éxito', 'Usuario creado correctamente', 'success');
 				        resetUserForm();
 				        await loadUsers();
@@ -4970,45 +4970,44 @@ async function obtenerAccessToken() {
 }
 
 		async function llamarFuncionSegura(datosUsuario) {
-		  const { data, error } = await supabase.auth.getSession()
-		
-		  console.log('getSession error:', error)
-		  console.log('session:', data?.session)
-		  console.log('access_token:', data?.session?.access_token)
-		
-		  const token = data?.session?.access_token
-		
-		  if (!token) {
-		    throw new Error('No hay sesión activa')
-		  }
-		
-		  const resp = await fetch(
-		    'https://czxzghhwgfciyrgmgtai.supabase.co/functions/v1/admin-create-user',
-		    {
-		      method: 'POST',
-		      headers: {
-		        'Content-Type': 'application/json',
-		        'Authorization': `Bearer ${token}`,
-		      },
-		      body: JSON.stringify(datosUsuario),
-		    }
-		  )
-		
-		  const texto = await resp.text()
-		  console.log('status:', resp.status)
-		  console.log('respuesta cruda:', texto)
-		
-		  let resultado = {}
-		  try {
-		    resultado = JSON.parse(texto)
-		  } catch {}
-		
-		  if (!resp.ok) {
-		    throw new Error(resultado.error || texto || 'Error al crear usuario')
-		  }
-		
-		  return resultado
-		}
+			  const { data, error } = await supabase.auth.getSession();
+			
+			  console.log("getSession error:", error);
+			  console.log("session:", data?.session);
+			  console.log("access_token:", data?.session?.access_token);
+			
+			  const token = data?.session?.access_token;
+			  if (!token) throw new Error("No hay sesión activa");
+			
+			  const resp = await fetch(
+			    "https://czxzghhwgfciyrgmgtai.supabase.co/functions/v1/admin-create-user",
+			    {
+			      method: "POST",
+			      headers: {
+			        "Content-Type": "application/json",
+			        "Authorization": `Bearer ${token}`
+			      },
+			      body: JSON.stringify(datosUsuario)
+			    }
+			  );
+			
+			  const texto = await resp.text();
+			  console.log("status:", resp.status);
+			  console.log("respuesta cruda:", texto);
+			
+			  let json = {};
+			  try {
+			    json = texto ? JSON.parse(texto) : {};
+			  } catch {
+			    json = { error: texto || "Respuesta no válida del servidor" };
+			  }
+			
+			  if (!resp.ok) {
+			    throw new Error(json.error || json.detalle || "Error al crear usuario");
+			  }
+			
+			  return json;
+			}
 
 </script>
 
