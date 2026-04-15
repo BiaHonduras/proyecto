@@ -25,7 +25,7 @@
         window.verificarConexion = verificarConexion;
 
 
-        function initAssistant() {
+        window.initAssistant = function() {
             const fab = document.getElementById('assistantFab');
             const panel = document.getElementById('assistantPanel');
             const closeBtn = document.getElementById('assistantClose');
@@ -1994,6 +1994,7 @@ Prueba con temas como:
             loadInventory();
             cargarResumenInventario();
             initUsers(); // Initialize user management
+			initAssistant();
             
             // Configurar formulario de artículo
             document.getElementById('articuloForm').addEventListener('submit', function(e) {
@@ -2099,8 +2100,6 @@ Prueba con temas como:
         			fechaVencimiento.value = '';
     			}
 			});
-
-            initAssistant();
         });
 
         // ===== NAVEGACIÓN =====
