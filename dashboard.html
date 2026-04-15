@@ -5003,7 +5003,7 @@ async function obtenerAccessToken() {
 			  }
 			
 			  if (!resp.ok) {
-			    throw new Error(json.error || json.detalle || "Error al crear usuario");
+			    throw new Error(json.detalle || json.error || "Error al crear usuario");
 			  }
 			
 			  return json;
