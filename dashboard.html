@@ -4970,7 +4970,12 @@ async function obtenerAccessToken() {
 }
 
 		async function llamarFuncionSegura(datosUsuario) {
-		  const { data } = await supabase.auth.getSession()
+		  const { data, error } = await supabase.auth.getSession()
+		
+		  console.log('getSession error:', error)
+		  console.log('session:', data?.session)
+		  console.log('access_token:', data?.session?.access_token)
+		
 		  const token = data?.session?.access_token
 		
 		  if (!token) {
@@ -4989,10 +4994,17 @@ async function obtenerAccessToken() {
 		    }
 		  )
 		
-		  const resultado = await resp.json()
+		  const texto = await resp.text()
+		  console.log('status:', resp.status)
+		  console.log('respuesta cruda:', texto)
+		
+		  let resultado = {}
+		  try {
+		    resultado = JSON.parse(texto)
+		  } catch {}
 		
 		  if (!resp.ok) {
-		    throw new Error(resultado.error || 'Error al crear usuario')
+		    throw new Error(resultado.error || texto || 'Error al crear usuario')
 		  }
 		
 		  return resultado
