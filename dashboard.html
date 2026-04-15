@@ -1749,6 +1749,35 @@ Prueba con temas como:
 
         const DNI_REGEX = /^\d{4}-\d{4}-\d{5}$/;
 
+        function obtenerUsuarioActualNormalizado(user = currentUser) {
+            return String(
+                user?.username ||
+                user?.usuario ||
+                user?.user_username ||
+                user?.email ||
+                ''
+            ).trim().toLowerCase();
+        }
+
+        function usuarioPuedeGestionarUsuarios(user = currentUser) {
+            return obtenerUsuarioActualNormalizado(user) === 'verificadorsps';
+        }
+
+        function aplicarRestriccionGestionUsuarios() {
+            const navUsuarios = document.querySelector('[data-section="usuarios"]');
+            const seccionUsuarios = document.getElementById('usuarios-section');
+
+            if (usuarioPuedeGestionarUsuarios()) return;
+
+            if (navUsuarios) {
+                navUsuarios.style.display = 'none';
+            }
+
+            if (seccionUsuarios) {
+                seccionUsuarios.remove();
+            }
+        }
+
         function formatearDNI(valor = '') {
             const digits = String(valor).replace(/\D/g, '').slice(0, 13);
             const parts = [];
@@ -1963,13 +1992,7 @@ Prueba con temas como:
 			const nombreCortoEl = document.getElementById('nombreCorto');
             if (nombreCortoEl) nombreCortoEl.textContent = currentUser.nombre_corto || '';
 
-            if(currentUser.role !== 'admin'){
-                document.querySelector('[data-section="usuarios"]').style.display = "none";
-            }
-
-            if(currentUser.role !== 'admin'){
-                document.getElementById('usuarios-section').remove();
-            }
+            aplicarRestriccionGestionUsuarios();
             
             // Inicializar navegación
             initNavigation();
@@ -3924,7 +3947,12 @@ Prueba con temas como:
 			    form.addEventListener('submit', async function (e) {
 				    e.preventDefault();
 				
-				    const usuario = document.getElementById('userUsername').value.trim().toLowerCase();
+				    if (!usuarioPuedeGestionarUsuarios()) {
+			        showNotification('Error', 'No tienes permisos para crear usuarios', 'error');
+			        return;
+			    }
+
+			    const usuario = document.getElementById('userUsername').value.trim().toLowerCase();
 				    const nombre_corto = document.getElementById('userNombre_corto').value.trim();
 				    const correo = document.getElementById('userEmail').value.trim().toLowerCase();
 				    const dni = document.getElementById('userDNI').value.trim();
@@ -3979,7 +4007,7 @@ Prueba con temas como:
 		        return;
 		    }
 		
-		    if ((currentUser.role || '').toLowerCase() !== 'admin') {
+		    if (!usuarioPuedeGestionarUsuarios(currentUser)) {
 		        tbody.innerHTML = `
 		            <tr>
 		                <td colspan="6" class="py-8 text-center text-gray-500">
