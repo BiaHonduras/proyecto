@@ -2855,7 +2855,6 @@ Prueba con temas como:
         });
 
         alert("Archivo de Reportería importado correctamente.");
-        console.log("Datos de Reportería:", datosReporteria);
     };
     lector.readAsArrayBuffer(archivo);
 }
@@ -2866,17 +2865,10 @@ Prueba con temas como:
 		    const searchInput = document.getElementById('searchInventory');
 		    const searchTerm = (searchInput?.value || '').trim().toLowerCase();
 		
-		    console.log('=== loadInventory INICIO ===');
-		    console.log('currentUser:', currentUser);
-		    console.log('filtrosGlobales:', filtrosGlobales);
-		
 		    const { data, error } = await supabase
 		        .from('inventarios_diarios')
 		        .select('*')
 		        .order('fecha', { ascending: false });
-		
-		    console.log('SQL inventarios_diarios total:', data?.length || 0);
-		    console.log('SQL error:', error);
 		
 		    if (error) {
 		        console.error('Error real loadInventory:', error);
@@ -2903,7 +2895,6 @@ Prueba con temas como:
 		    }
 		
 		    if (searchTerm) {
-		        console.log('Aplicando búsqueda local:', searchTerm);
 		
 		        inventario = inventario.filter(item => {
 		            const bodega = String(item.idBodega || '').toLowerCase();
@@ -2980,8 +2971,6 @@ Prueba con temas como:
 		            </tr>
 		        `;
 		    }).join('');
-		
-		    console.log('=== loadInventory FIN ===');
 		}
 
         async function editarArticulo(id) {
@@ -3243,7 +3232,6 @@ Prueba con temas como:
         }
 
         async function importInventory() {
-		    console.log("Favor confirmar la Importación");
 		    const fileInput = document.getElementById('importInventoryFile');
 		    const file = fileInput.files[0];
 		
@@ -3837,8 +3825,6 @@ Prueba con temas como:
 		                return;
 		            }
 		
-		            console.log('Payload a codigos:', registros);
-		
 		            const { error: codigosError } = await supabase
 		                .from('codigos')
 		                .upsert(registros, { onConflict: 'sede,codigo' });
@@ -4056,9 +4042,6 @@ Prueba con temas como:
 		
 		    try {
 		        const { data, error } = await supabase.rpc('listar_usuarios');
-		
-		        console.log('DATA:', data);
-		        console.log('ERROR:', error);
 		
 		        if (error) throw error;
 		
@@ -4972,10 +4955,6 @@ async function obtenerAccessToken() {
 		async function llamarFuncionSegura(datosUsuario) {
 			  const { data, error } = await supabase.auth.getSession();
 			
-			  console.log("getSession error:", error);
-			  console.log("session:", data?.session);
-			  console.log("access_token:", data?.session?.access_token);
-			
 			  const token = data?.session?.access_token;
 			  if (!token) throw new Error("No hay sesión activa");
 			
@@ -4992,8 +4971,6 @@ async function obtenerAccessToken() {
 			  );
 			
 			  const texto = await resp.text();
-			  console.log("status:", resp.status);
-			  console.log("respuesta cruda:", texto);
 			
 			  let json = {};
 			  try {
