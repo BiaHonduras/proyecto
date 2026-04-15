@@ -23,6 +23,185 @@
         import { supabase, verificarConexion } from './supabase-config.js';
         window.supabase = supabase;
         window.verificarConexion = verificarConexion;
+
+
+        function initAssistant() {
+            const fab = document.getElementById('assistantFab');
+            const panel = document.getElementById('assistantPanel');
+            const closeBtn = document.getElementById('assistantClose');
+            const body = document.getElementById('assistantBody');
+            const input = document.getElementById('assistantInput');
+            const sendBtn = document.getElementById('assistantSend');
+
+            if (!fab || !panel || !body || !input || !sendBtn || !closeBtn) return;
+
+            const respuestas = [
+                {
+                    keywords: ['registrar', 'artículo', 'agregar', 'inventario diario'],
+                    answer: `Para registrar un artículo:
+1. Selecciona la sede.
+2. Selecciona la bodega.
+3. Verifica la fecha actual.
+4. Escanea o escribe el código del artículo.
+5. Revisa que se carguen proveedor, descripción y masterpack.
+6. Ingresa cajas/fardos y unidades.
+7. Confirma el total y presiona "Agregar Artículo".`
+                },
+                {
+                    keywords: ['importar', 'códigos', 'base de códigos'],
+                    answer: `Para importar códigos:
+1. Ve a "Importar Códigos".
+2. Carga un archivo CSV.
+3. El formato esperado es:
+Codigo,Descripcion,Proveedor,Masterpack,Código de Barra,Costo
+4. Revisa la vista previa.
+5. Luego usa el botón de importación si está habilitado.`
+                },
+                {
+                    keywords: ['importar', 'inventario', 'reportería', 'archivo de inventario', 'formato inventario'],
+                    answer: `Para importar inventario:
+1. Ve a "Importar Inventario".
+2. Carga un archivo CSV.
+3. El formato esperado es:
+Fecha,Proveedor,Código de Barra, Codigo,Descripcion,Inventario Reporteria,Masterpack,Bodega
+4. Revisa la vista previa antes de importar.`
+                },
+                {
+                    keywords: ['dif', 'diferencia', 'qué significa la diferencia'],
+                    answer: `DIF es la diferencia entre lo esperado en reportería y lo contado físicamente. Sirve para detectar faltantes, sobrantes o pendientes por justificar.`
+                },
+                {
+                    keywords: ['escáner', 'scanner', 'cámara', 'código de barra'],
+                    answer: `Para usar el escáner:
+1. Presiona el botón "Escáner".
+2. Permite acceso a la cámara.
+3. Coloca el código de barras dentro del recuadro.
+4. Cuando el sistema lo detecte, se llenará el campo correspondiente.
+5. Si no funciona, puedes escribir el código manualmente.`
+                },
+                {
+                    keywords: ['csv', 'exportar', 'descargar'],
+                    answer: `Para exportar:
+1. Ve a "Exportar CSV".
+2. Marca los campos que quieres incluir.
+3. Presiona "Exportar a CSV".
+4. Selecciona filtros de sede y tipo de bodega.
+5. Descarga el archivo generado.`
+                },
+                {
+                    keywords: ['justificación', 'justificaciones', 'tránsitos', 'pendientes'],
+                    answer: `En "Justificaciones" puedes editar registros con diferencia para documentar el motivo. La cantidad justificada debe cuadrar con la diferencia para que el sistema permita guardar.`
+                },
+                {
+                    keywords: ['vencimiento', 'vencimientos', 'fecha de vencimiento'],
+                    answer: `La sección de vencimientos clasifica productos por días de vida, muestra urgencias y ayuda a detectar inventario próximo a vencer.`
+                },
+                {
+                    keywords: ['bodega', 'sede', 'principal', 'ppv', 'pfn'],
+                    answer: `Las bodegas cambian según la sede seleccionada. El sistema identifica si una bodega es Principal, PPV o PFN según el código asignado.`
+                }
+            ];
+
+            function scrollAssistantToBottom() {
+                body.scrollTop = body.scrollHeight;
+            }
+
+            function addAssistantMessage(text, sender = 'bot') {
+                const div = document.createElement('div');
+                div.className = `assistant-message ${sender}`;
+                div.textContent = text;
+                body.appendChild(div);
+                scrollAssistantToBottom();
+            }
+
+            function normalizeText(text) {
+                return String(text || '')
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[̀-ͯ]/g, '')
+                    .trim();
+            }
+
+            function getAssistantResponse(question) {
+                const clean = normalizeText(question);
+
+                for (const item of respuestas) {
+                    const ok = item.keywords.some(keyword => clean.includes(normalizeText(keyword)));
+                    if (ok) return item.answer;
+                }
+
+                return `No encontré una respuesta exacta para eso.
+
+Prueba con temas como:
+- registrar artículos
+- importar inventario
+- importar códigos
+- exportar CSV
+- diferencia DIF
+- uso del escáner
+- justificaciones`;
+            }
+
+            function processAssistantQuestion(question) {
+                const texto = String(question || '').trim();
+                if (!texto) return;
+
+                addAssistantMessage(texto, 'user');
+
+                setTimeout(() => {
+                    const response = getAssistantResponse(texto);
+                    addAssistantMessage(response, 'bot');
+                }, 250);
+            }
+
+            function openAssistant() {
+                panel.classList.remove('hidden');
+                panel.setAttribute('aria-hidden', 'false');
+                input.focus();
+            }
+
+            function closeAssistant() {
+                panel.classList.add('hidden');
+                panel.setAttribute('aria-hidden', 'true');
+            }
+
+            fab.addEventListener('click', () => {
+                if (panel.classList.contains('hidden')) {
+                    openAssistant();
+                } else {
+                    closeAssistant();
+                }
+            });
+
+            closeBtn.addEventListener('click', closeAssistant);
+
+            sendBtn.addEventListener('click', () => {
+                processAssistantQuestion(input.value);
+                input.value = '';
+                input.focus();
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    processAssistantQuestion(input.value);
+                    input.value = '';
+                }
+            });
+
+            document.querySelectorAll('.assistant-chip').forEach(chip => {
+                chip.addEventListener('click', function() {
+                    const question = this.dataset.question || this.textContent || '';
+                    processAssistantQuestion(question);
+                });
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !panel.classList.contains('hidden')) {
+                    closeAssistant();
+                }
+            });
+        }
     </script>
     
     <style>
@@ -285,7 +464,208 @@
     		text-overflow: ellipsis;
     		white-space: nowrap;
 		}
-    </style>
+    
+
+/* ===== ASISTENTE FLOTANTE ===== */
+.assistant-fab {
+    position: fixed;
+    right: 24px;
+    bottom: 72px;
+    width: 58px;
+    height: 58px;
+    border: none;
+    border-radius: 999px;
+    background: var(--primary-gradient);
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(62, 39, 35, 0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10020;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.assistant-fab:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 16px 34px rgba(62, 39, 35, 0.34);
+}
+
+.assistant-fab i {
+    font-size: 22px;
+}
+
+.assistant-panel {
+    position: fixed;
+    right: 24px;
+    bottom: 140px;
+    width: 380px;
+    max-width: calc(100vw - 24px);
+    height: 560px;
+    max-height: calc(100vh - 170px);
+    background: #fff;
+    border: 1px solid rgba(111, 78, 55, 0.12);
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(62, 39, 35, 0.22);
+    overflow: hidden;
+    z-index: 10019;
+    display: flex;
+    flex-direction: column;
+}
+
+.assistant-panel.hidden {
+    display: none;
+}
+
+.assistant-header {
+    background: var(--primary-gradient);
+    color: #fff;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.assistant-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.assistant-header p {
+    font-size: 12px;
+    opacity: 0.9;
+    margin: 2px 0 0 0;
+}
+
+.assistant-close {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.assistant-close:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.assistant-body {
+    flex: 1;
+    background: #f8f5f1;
+    padding: 14px;
+    overflow-y: auto;
+}
+
+.assistant-message {
+    max-width: 88%;
+    padding: 12px 14px;
+    border-radius: 16px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    line-height: 1.45;
+    white-space: pre-line;
+}
+
+.assistant-message.bot {
+    background: #fff;
+    color: #2d2d2d;
+    border: 1px solid rgba(111, 78, 55, 0.08);
+    border-top-left-radius: 6px;
+}
+
+.assistant-message.user {
+    background: #6f4e37;
+    color: #fff;
+    margin-left: auto;
+    border-top-right-radius: 6px;
+}
+
+.assistant-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.assistant-chip {
+    border: 1px solid rgba(111, 78, 55, 0.18);
+    background: #fff;
+    color: #4b342b;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.assistant-chip:hover {
+    background: #f1e7dc;
+    border-color: rgba(111, 78, 55, 0.28);
+}
+
+.assistant-footer {
+    padding: 12px;
+    border-top: 1px solid rgba(111, 78, 55, 0.1);
+    background: #fff;
+}
+
+.assistant-input-wrap {
+    display: flex;
+    gap: 8px;
+}
+
+.assistant-input {
+    flex: 1;
+    border: 1px solid #d7ccc8;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    outline: none;
+}
+
+.assistant-input:focus {
+    border-color: var(--coffee-accent);
+    box-shadow: 0 0 0 3px rgba(199, 161, 122, 0.20);
+}
+
+.assistant-send {
+    min-width: 46px;
+    height: 46px;
+    border: none;
+    border-radius: 12px;
+    background: var(--primary-gradient);
+    color: #fff;
+    cursor: pointer;
+}
+
+.assistant-empty-note {
+    font-size: 12px;
+    color: #7b6a61;
+    margin-top: 8px;
+    padding-left: 4px;
+}
+
+@media (max-width: 768px) {
+    .assistant-fab {
+        right: 16px;
+        bottom: 82px;
+    }
+
+    .assistant-panel {
+        right: 12px;
+        left: 12px;
+        bottom: 150px;
+        width: auto;
+        height: 70vh;
+        max-height: 70vh;
+    }
+}
+
+</style>
 </head>
 	
 <body>
@@ -1719,6 +2099,8 @@
         			fechaVencimiento.value = '';
     			}
 			});
+
+            initAssistant();
         });
 
         // ===== NAVEGACIÓN =====
@@ -4553,6 +4935,59 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
   }
 });
 </script>
+
+
+
+    <!-- ===== ASISTENTE FLOTANTE ===== -->
+    <button id="assistantFab" class="assistant-fab" type="button" aria-label="Abrir asistente">
+        <i class="fas fa-comments"></i>
+    </button>
+
+    <div id="assistantPanel" class="assistant-panel hidden" aria-hidden="true">
+        <div class="assistant-header">
+            <div>
+                <h3>Asistente de ayuda</h3>
+                <p>Consultas rápidas del sistema</p>
+            </div>
+            <button id="assistantClose" class="assistant-close" type="button" aria-label="Cerrar asistente">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div id="assistantBody" class="assistant-body">
+            <div class="assistant-message bot">
+                Hola. Puedo ayudarte con consultas básicas del sistema.
+            </div>
+
+            <div class="assistant-message bot">
+                Puedes preguntarme cosas como:
+                <div class="assistant-quick-actions">
+                    <button class="assistant-chip" type="button" data-question="¿Cómo registrar un artículo?">Registrar artículo</button>
+                    <button class="assistant-chip" type="button" data-question="¿Cómo importar códigos?">Importar códigos</button>
+                    <button class="assistant-chip" type="button" data-question="¿Qué significa la diferencia DIF?">Qué es DIF</button>
+                    <button class="assistant-chip" type="button" data-question="¿Cómo usar el escáner?">Usar escáner</button>
+                    <button class="assistant-chip" type="button" data-question="¿Cómo exportar a CSV?">Exportar CSV</button>
+                    <button class="assistant-chip" type="button" data-question="¿Qué formato debe tener el archivo de inventario?">Formato inventario</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="assistant-footer">
+            <div class="assistant-input-wrap">
+                <input
+                    id="assistantInput"
+                    class="assistant-input"
+                    type="text"
+                    placeholder="Escribe tu consulta..."
+                    autocomplete="off"
+                >
+                <button id="assistantSend" class="assistant-send" type="button" aria-label="Enviar">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="assistant-empty-note">Responde consultas básicas del sistema.</div>
+        </div>
+    </div>
 
 </body>
 </html>
