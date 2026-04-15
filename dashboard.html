@@ -4969,39 +4969,33 @@ async function obtenerAccessToken() {
     return data.session.access_token;
 }
 
-		async function llamarFuncionSegura(nombreFuncion, payload) {
-		    const token = await obtenerAccessToken();
+		async function llamarFuncionSegura(datosUsuario) {
+		  const { data } = await supabase.auth.getSession()
+		  const token = data?.session?.access_token
 		
-		    console.log('TOKEN:', token);
+		  if (!token) {
+		    throw new Error('No hay sesión activa')
+		  }
 		
-		    try {
-		        const [header] = token.split('.');
-		        const decodedHeader = JSON.parse(atob(header.replace(/-/g, '+').replace(/_/g, '/')));
-		        console.log('JWT header:', decodedHeader);
-		    } catch (e) {
-		        console.error('No se pudo leer el header del JWT', e);
+		  const resp = await fetch(
+		    'https://czxzghhwgfciyrgmgtai.supabase.co/functions/v1/admin-create-user',
+		    {
+		      method: 'POST',
+		      headers: {
+		        'Content-Type': 'application/json',
+		        'Authorization': `Bearer ${token}`,
+		      },
+		      body: JSON.stringify(datosUsuario),
 		    }
+		  )
 		
-		    const resp = await fetch(`${supabase.supabaseUrl}/functions/v1/${nombreFuncion}`, {
-		        method: 'POST',
-		        headers: {
-		            'Content-Type': 'application/json',
-		            'Authorization': `Bearer ${token}`
-		        },
-		        body: JSON.stringify(payload)
-		    });
+		  const resultado = await resp.json()
 		
-		    const result = await resp.json().catch(() => ({}));
+		  if (!resp.ok) {
+		    throw new Error(resultado.error || 'Error al crear usuario')
+		  }
 		
-		    if (!resp.ok) {
-		        throw new Error(result.message || result.error || `Error HTTP ${resp.status} en ${nombreFuncion}`);
-		    }
-		
-		    if (result.ok === false) {
-		        throw new Error(result.message || `Error en ${nombreFuncion}`);
-		    }
-		
-		    return result;
+		  return resultado
 		}
 
 </script>
