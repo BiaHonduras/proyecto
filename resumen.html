@@ -634,7 +634,7 @@
 
                 const justificacionesFiltradas = (data || []).filter(item => {
                     const j = String(item.justificacion_final || '').trim().toLowerCase();
-                    return j.includes('sobrante') || j.includes('faltante');
+                    return j === 'sobrante' || j === 'faltante';
                 });
 
                 const total = justificacionesFiltradas.reduce((acc, item) => {
@@ -689,11 +689,11 @@
                 }
 
                 const sobrantes = (justificaciones || []).filter(item =>
-                    String(item.justificacion_final || '').toLowerCase().includes('sobrante')
+                    String(item.justificacion_final || '').trim().toLowerCase() === 'sobrante'
                 );
 
                 const faltantes = (justificaciones || []).filter(item =>
-                    String(item.justificacion_final || '').toLowerCase().includes('faltante')
+                    String(item.justificacion_final || '').trim().toLowerCase() === 'faltante'
                 );
 
                 const tabla = [
