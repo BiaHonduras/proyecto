@@ -4743,20 +4743,8 @@ async function guardarJustificacion(id, texto) {
 		            inputCantidad.focus();
 		            return;
 		        }
-		
-		        const cantidadJustificada = parseInt(valorCantidad, 10);
-		        const cantidadEsperada = diferencia * -1;
-		        const saldoFinal = diferencia + cantidadJustificada;
-		
-		        if (cantidadJustificada !== cantidadEsperada) {
-		            showNotification(
-		                'Error',
-		                `Para el código ${codigo}, la Cantidad Justificada debe ser ${cantidadEsperada}. La diferencia actual es ${diferencia} y el saldo quedaría en ${saldoFinal}.`,
-		                'error'
-		            );
-		            inputCantidad.focus();
-		            return;
-		        }
+                const cantidadJustificada = parseInt(valorCantidad, 10);
+                const saldoFinal = diferencia + cantidadJustificada;
 		
 		        const fechaRegistroExistente = fila.dataset.fechaRegistro || '';
 		        const costoUnitario = Number(fila.dataset.costoUnitario || 0);
