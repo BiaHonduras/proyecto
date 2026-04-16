@@ -623,7 +623,7 @@
 
                 const { data, error } = await supabase
                     .from('inventario_justificaciones')
-                    .select('costo_total, codigo, justificacion')
+                    .select('costo_sf, codigo, justificacion_final')
                     .in('codigo', codigos);
 
                 if (error) {
@@ -633,12 +633,12 @@
                 }
 
                 const justificacionesFiltradas = (data || []).filter(item => {
-                    const j = String(item.justificacion || '').trim().toLowerCase();
+                    const j = String(item.justificacion_final || '').trim().toLowerCase();
                     return j.includes('sobrante') || j.includes('faltante');
                 });
 
                 const total = justificacionesFiltradas.reduce((acc, item) => {
-                    return acc + Number(item.costo_total || 0);
+                    return acc + Number(item.costo_sf || 0);
                 }, 0);
 
                 document.getElementById('valor-diferencias').textContent = formatearMoneda(total);
@@ -677,7 +677,7 @@
 
                 const { data: justificaciones, error: errorJustificaciones } = await supabase
                     .from('inventario_justificaciones')
-                    .select('codigo, costo_total, justificacion')
+                    .select('codigo, costo_sf, justificacion_final')
                     .in('codigo', codigos);
 
                 if (errorJustificaciones) {
@@ -689,11 +689,11 @@
                 }
 
                 const sobrantes = (justificaciones || []).filter(item =>
-                    String(item.justificacion || '').toLowerCase().includes('sobrante')
+                    String(item.justificacion_final || '').toLowerCase().includes('sobrante')
                 );
 
                 const faltantes = (justificaciones || []).filter(item =>
-                    String(item.justificacion || '').toLowerCase().includes('faltante')
+                    String(item.justificacion_final || '').toLowerCase().includes('faltante')
                 );
 
                 const tabla = [
@@ -733,7 +733,7 @@
             }
 
             data.forEach(item => {
-                const valor = Number(item.costo_total || 0);
+                const valor = Number(item.costo_sf || 0);
                 const valorFormateado = formatearMoneda(valor);
 
                 const fila = `
@@ -753,7 +753,7 @@
 
             const ctx = canvas.getContext('2d');
             const labels = data.map(item => item.codigo);
-            const valores = data.map(item => Number(item.costo_total || 0));
+            const valores = data.map(item => Number(item.costo_sf || 0));
 
             if (sobrantesChartInstance) {
                 sobrantesChartInstance.destroy();
@@ -814,7 +814,7 @@
 
             const ctx = canvas.getContext('2d');
             const labels = data.map(item => item.codigo);
-            const valores = data.map(item => Math.abs(Number(item.costo_total || 0)));
+            const valores = data.map(item => Math.abs(Number(item.costo_sf || 0)));
 
             if (faltantesChartInstance) {
                 faltantesChartInstance.destroy();
@@ -873,7 +873,7 @@
             const ctx = document.getElementById('diferenciasChart').getContext('2d');
 
             const labels = data.map(item => item.codigo);
-            const valores = data.map(item => Number(item.costo_total || 0));
+            const valores = data.map(item => Number(item.costo_sf || 0));
 
             if (diferenciasChartInstance) {
                 diferenciasChartInstance.destroy();
