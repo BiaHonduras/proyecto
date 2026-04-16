@@ -1351,6 +1351,7 @@ header.sticky {
 	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Bodega</th>
 	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Código</th>
 	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Descripción</th>
+	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Costo</th>
 	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Total</th>
 	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Diferencia</th>
 							<th class="pb-3 text-left text-sm font-medium text-gray-600">Cantidad Justificada</th>
@@ -1360,7 +1361,7 @@ header.sticky {
 	                </thead>
 	                <tbody id="transitosTableBody">
 	                    <tr>
-	                        <td colspan="8" class="py-8 text-center text-gray-500">
+	                        <td colspan="9" class="py-8 text-center text-gray-500">
 	                            Sin datos
 	                        </td>
 	                    </tr>
@@ -4549,7 +4550,7 @@ async function cargarGraficoProveedores() {
 			
 			    if (errorInventario) {
 			        console.error('Error inventarios_diarios:', errorInventario);
-			        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-gray-500">Error cargando datos</td></tr>`;
+			        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-gray-500">Error cargando datos</td></tr>`;
 			        return;
 			    }
 			
@@ -4561,7 +4562,7 @@ async function cargarGraficoProveedores() {
 			    }
 			
 			    if (!inventario.length) {
-			        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6">Sin datos</td></tr>`;
+			        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6">Sin datos</td></tr>`;
 			        return;
 			    }
 			
@@ -4576,7 +4577,7 @@ async function cargarGraficoProveedores() {
 			
 			    if (errorJust) {
 			        console.error('Error inventario_justificaciones:', errorJust);
-			        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-gray-500">Error cargando justificaciones</td></tr>`;
+			        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-gray-500">Error cargando justificaciones</td></tr>`;
 			        return;
 			    }
 			
@@ -4596,7 +4597,7 @@ async function cargarGraficoProveedores() {
 			        .sort((a, b) => Number(a.codigo || 0) - Number(b.codigo || 0));
 			
 			    if (!filtrados.length) {
-			        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6">Sin diferencias ni justificaciones guardadas</td></tr>`;
+			        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6">Sin diferencias ni justificaciones guardadas</td></tr>`;
 			        return;
 			    }
 			
@@ -4622,6 +4623,7 @@ async function cargarGraficoProveedores() {
 			                <td class="py-3">${escapeHtml(item.idBodega || '')}</td>
 			                <td class="py-3 codigo">${codigo}</td>
 			                <td class="py-3 descripcion">${escapeHtml(item.descripcion || '')}</td>
+			                <td class="py-3 costo">${formatearMoneda(costoUnitario)}</td>
 			                <td class="py-3 reporteria">${Number(item.inventario_reporteria || 0)}</td>
 			                <td class="py-3 font-bold diferencia">${diferencia}</td>
 			                <td class="py-3">
@@ -4757,6 +4759,7 @@ async function guardarJustificacion(id, texto) {
 		            descripcion,
 		            diferencia,
 		            cantidad_justificada: cantidadJustificada,
+		            costo_unitario: costoUnitario,
 		            costo_total: cantidadJustificada * costoUnitario,
 		            justificacion,
 		            fecha_modificacion: new Date().toISOString(),
