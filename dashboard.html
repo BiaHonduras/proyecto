@@ -1305,7 +1305,7 @@ header.sticky {
 										<th class="pb-3 text-left text-sm font-medium text-gray-600">Factor</th>
 										<th class="pb-3 text-left text-sm font-medium text-gray-600">C/F</th>
 										<th class="pb-3 text-left text-sm font-medium text-gray-600">Und</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-600">Total</th>
+										<th class="pb-3 text-left text-sm font-medium text-gray-600">Reportería</th>
 										<th class="pb-3 text-left text-sm font-medium text-gray-600">DIF</th>
 										<th class="pb-3 text-left text-sm font-medium text-gray-600">VAL</th>
 										<th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
@@ -4622,7 +4622,7 @@ async function cargarGraficoProveedores() {
 			                <td class="py-3">${escapeHtml(item.idBodega || '')}</td>
 			                <td class="py-3 codigo">${codigo}</td>
 			                <td class="py-3 descripcion">${escapeHtml(item.descripcion || '')}</td>
-			                <td class="py-3 total">${total}</td>
+			                <td class="py-3 reporteria">${Number(item.inventario_reporteria || 0)}</td>
 			                <td class="py-3 font-bold diferencia">${diferencia}</td>
 			                <td class="py-3">
 			                    <input
