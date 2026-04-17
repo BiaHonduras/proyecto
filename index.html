@@ -173,6 +173,7 @@
     const changePasswordMessage = document.getElementById('changePasswordMessage');
 
     let pendingUserForPasswordChange = null;
+    let pendingCurrentPassword = null;
 
     document.getElementById('forgotPasswordLink').addEventListener('click', openRecoveryModal);
     document.getElementById('closeRecoveryBtn').addEventListener('click', closeRecoveryModal);
@@ -289,25 +290,28 @@
         setLoading(recoveryButton, true, 'Procesando...');
 
         try {
-            const { data, error } = await supabase.rpc('recuperar_password_temporal', {
-                p_usuario: usuario,
-                p_dni: dni,
-                p_correo: correo
+            const { data, error } = await supabase.functions.invoke('recuperar-password-auth', {
+                body: {
+                    usuario,
+                    dni,
+                    correo
+                }
             });
 
-            if (error) throw new Error(error.message || 'No fue posible completar la solicitud.');
+            if (error) {
+                throw new Error(error.message || 'No fue posible completar la solicitud.');
+            }
 
-            const row = normalizeRpcRow(data);
-            if (!row || !row.ok) {
-                mostrarRecoveryMessage(row?.mensaje || 'Los datos ingresados no coinciden con ningún registro válido.', false);
+            if (!data?.ok) {
+                mostrarRecoveryMessage(data?.mensaje || 'Los datos ingresados no coinciden con ningún registro válido.', false);
                 return;
             }
 
-            mostrarRecoveryMessage(
-                'Su contraseña ha sido cambiada a una temporal, por favor solicitar al administrador el cambio de contraseña de manera inmediata.',
-                true
-            );
+            const mensajeExito = data?.temporary_password
+                ? `Contraseña temporal generada correctamente: ${data.temporary_password}`
+                : (data?.mensaje || 'Contraseña temporal generada correctamente.');
 
+            mostrarRecoveryMessage(mensajeExito, true);
             recoveryForm.reset();
         } catch (err) {
             mostrarRecoveryMessage(err.message || 'Error inesperado al recuperar la contraseña.', false);
@@ -319,13 +323,19 @@
     async function handleForcedPasswordChange() {
         clearChangePasswordMessage();
 
-        const usuario = pendingUserForPasswordChange || JSON.parse(sessionStorage.getItem('currentUser') || 'null')?.username;
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+        const usuario = pendingUserForPasswordChange || currentUser?.username;
         const actual = document.getElementById('currentTempPassword').value;
         const nueva = document.getElementById('newPassword').value;
         const confirmar = document.getElementById('confirmNewPassword').value;
 
         if (!usuario || !actual || !nueva || !confirmar) {
             mostrarChangePasswordMessage('Completa todos los campos.', false);
+            return;
+        }
+
+        if (pendingCurrentPassword && actual !== pendingCurrentPassword) {
+            mostrarChangePasswordMessage('La contraseña actual no coincide con la utilizada para iniciar sesión.', false);
             return;
         }
 
@@ -339,36 +349,41 @@
             return;
         }
 
+        if (actual === nueva) {
+            mostrarChangePasswordMessage('La nueva contraseña debe ser distinta a la actual.', false);
+            return;
+        }
+
         setLoading(changePasswordButton, true, 'Actualizando...');
 
         try {
-            const { data, error } = await supabase.rpc('cambiar_password_por_usuario', {
-                p_usuario: usuario,
-                p_actual: actual,
-                p_nueva: nueva
+            const { error: authError } = await window.supabase.auth.updateUser({
+                password: nueva
             });
 
-            if (error) throw new Error(error.message || 'No fue posible actualizar la contraseña.');
-
-            const row = normalizeRpcRow(data);
-            if (!row || !row.ok) {
-                mostrarChangePasswordMessage(row?.mensaje || 'No fue posible actualizar la contraseña.', false);
-                return;
+            if (authError) {
+                throw new Error(authError.message || 'No fue posible actualizar la contraseña en Auth.');
             }
 
-            const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+            const { error: profileError } = await window.supabase
+                .from('usuarios')
+                .update({
+                    must_change_password: false,
+                    temporal_password: false,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('usuario', usuario);
+
+            if (profileError) {
+                throw new Error(profileError.message || 'La contraseña se actualizó en Auth, pero no fue posible actualizar las banderas del usuario.');
+            }
+
             if (currentUser) {
                 currentUser.must_change_password = false;
                 sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
             }
 
-            if (currentUser?.correo) {
-                const authResult = await window.iniciarSesionSupabase(currentUser.correo, nueva);
-                if (!authResult?.ok) {
-                    throw new Error(authResult?.error || 'La contraseña local cambió, pero no se pudo abrir la sesión en Supabase Auth.');
-                }
-            }
-
+            pendingCurrentPassword = null;
             mostrarExito('Contraseña actualizada correctamente.');
             closeChangePasswordModal();
             window.location.href = 'dashboard.html';
@@ -412,11 +427,11 @@
     }
 
     function openChangePasswordModal(tempPassword = '') {
+        pendingCurrentPassword = tempPassword || pendingCurrentPassword || '';
         clearChangePasswordMessage();
         changePasswordForm.reset();
         changePasswordModal.classList.remove('hidden');
         changePasswordModal.classList.add('flex');
-        document.getElementById('currentTempPassword').value = tempPassword;
         document.getElementById('currentTempPassword').focus();
     }
 
@@ -481,10 +496,16 @@
             : `${icon}<span>${text}</span>`;
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         loginButton.dataset.icon = '<i class="fas fa-sign-in-alt"></i>';
         recoveryButton.dataset.icon = '';
         changePasswordButton.dataset.icon = '';
+
+        try {
+            await window.cerrarSesionSupabase?.();
+        } catch (err) {
+            console.warn('No se pudo cerrar la sesión previa de Supabase Auth:', err);
+        }
     });
 </script>
 </body>
