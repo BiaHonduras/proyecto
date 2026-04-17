@@ -2126,11 +2126,27 @@ header.sticky {
         }
 
         // ===== INICIALIZACIÓN =====
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             
 			// Verificar autenticación
             const userData = sessionStorage.getItem('currentUser');
             if (!userData) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                const { data: authData, error: authError } = await window.supabase.auth.getUser();
+                if (authError || !authData?.user) {
+                    sessionStorage.removeItem('currentUser');
+                    window.currentUser = null;
+                    window.location.href = 'index.html';
+                    return;
+                }
+            } catch (err) {
+                console.error('No fue posible validar la sesión activa en Supabase Auth:', err);
+                sessionStorage.removeItem('currentUser');
+                window.currentUser = null;
                 window.location.href = 'index.html';
                 return;
             }
@@ -2140,8 +2156,13 @@ header.sticky {
 
             if (currentUser.must_change_password) {
                 alert('Debe cambiar su contraseña antes de continuar.');
+                try {
+                    await window.supabase.auth.signOut();
+                } catch (err) {
+                    console.warn('No se pudo cerrar la sesión al forzar cambio de contraseña:', err);
+                }
                 sessionStorage.removeItem('currentUser');
-                    window.currentUser = null;
+                window.currentUser = null;
                 window.location.href = 'index.html';
                 return;
             }
@@ -4680,13 +4701,18 @@ async function guardarJustificacion(id, texto) {
 
 	const logoutBtnBottom = document.getElementById('logoutBtnBottom');
 		if (logoutBtnBottom) {
-    		logoutBtnBottom.addEventListener('click', function() {
-        		sessionStorage.removeItem('currentUser');
-        		window.location.href = 'index.html';
+    		logoutBtnBottom.addEventListener('click', async function() {
+                await logout();
     		});
 		}
-	function logout() {
+	async function logout() {
+	    try {
+                await window.supabase.auth.signOut();
+            } catch (err) {
+                console.warn('No se pudo cerrar la sesión en Supabase Auth:', err);
+            }
 	    sessionStorage.removeItem('currentUser');
+            window.currentUser = null;
 	    window.location.href = 'index.html';
 		}
 		
