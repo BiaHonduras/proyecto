@@ -799,6 +799,13 @@ header.sticky {
     40% { transform: scale(1); opacity: 1; }
 }
 
+
+.cantidad-columna {
+    width: 96px;
+    min-width: 96px;
+    max-width: 96px;
+}
+
 </style>
 </head>
 	
@@ -1354,7 +1361,7 @@ header.sticky {
 	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Costo</th>
 	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Total</th>
 	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Diferencia</th>
-							<th class="pb-3 text-left text-sm font-medium text-gray-600">Cantidad Justificada</th>
+							<th class="pb-3 text-left text-sm font-medium text-gray-600 cantidad-columna">Cantidad</th>
 	                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Justificación</th>
 							<th class="pb-3 text-left text-sm font-medium text-gray-600">Acciones</th>
 	                    </tr>
@@ -4629,7 +4636,7 @@ async function cargarGraficoProveedores() {
 			                <td class="py-3">
 			                    <input
 			                        type="number"
-			                        class="cantidad-justificada input-field w-full px-2 py-1 rounded input-disabled"
+			                        class="cantidad-justificada w-full px-2 py-1 text-sm input-field w-full px-2 py-1 rounded input-disabled"
 			                        value="${cantidadJustificada}"
 			                        disabled
 			                    >
