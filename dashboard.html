@@ -1078,7 +1078,7 @@ header.sticky {
                                 </thead>
                                 <tbody id="tablaVencimientosUrgentes">
                                     <tr>
-                                        <td colspan="7" class="py-8 text-center text-gray-500">
+                                        <td colspan="5" class="py-8 text-center text-gray-500">
                                             <i class="fas fa-inbox text-3xl mb-2"></i>
                                             <p>No hay datos de vencimiento</p>
                                         </td>
@@ -5168,11 +5168,12 @@ async function guardarJustificacion(id, texto) {
 		        .slice(0, 10);
 		
 		    const tbody = document.getElementById('tablaVencimientosUrgentes');
+		    if (!tbody) return;
 		
 		    if (!urgentes.length) {
 		        tbody.innerHTML = `
 		            <tr>
-		                <td colspan="7" class="py-8 text-center text-gray-500">
+		                <td colspan="5" class="py-8 text-center text-gray-500">
 		                    <i class="fas fa-inbox text-3xl mb-2"></i>
 		                    <p>No hay datos de vencimiento</p>
 		                </td>
@@ -5194,9 +5195,18 @@ async function guardarJustificacion(id, texto) {
 		    `).join('');
 		}
 
-        function renderVencimientosChart(labels, data) {
+        function renderVencimientosChart(resumen) {
             const contenedor = document.getElementById('vencimientosChartContainer');
             if (!contenedor) return;
+
+            const labels = ['-60 Días', '61 a 90', '91 a 120', '+121 Días', 'Sin Fecha / PFN'];
+            const data = [
+                Number(resumen?.hasta_60 ?? 0),
+                Number(resumen?.de_61_a_90 ?? 0),
+                Number(resumen?.de_91_a_120 ?? 0),
+                Number(resumen?.de_121_mas ?? 0),
+                Number(resumen?.sin_fecha ?? 0)
+            ];
 
             contenedor.innerHTML = `
                 <div class="w-full h-full relative">
@@ -5204,7 +5214,10 @@ async function guardarJustificacion(id, texto) {
                 </div>
             `;
 
-            const ctx = document.getElementById('vencimientosChart').getContext('2d');
+            const canvas = document.getElementById('vencimientosChart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
 
             if (vencimientosChartInstance) {
                 vencimientosChartInstance.destroy();
