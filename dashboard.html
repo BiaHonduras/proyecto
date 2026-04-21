@@ -3218,15 +3218,15 @@ header.sticky {
                         .eq('id', id)
                         .single();
 
-                        if (error || !data) {
-                            showNotification('Error', 'No se pudo cargar el registro', 'error');
+                    if (error || !data) {
+                        showNotification('Error', 'No se pudo cargar el registro', 'error');
                         return;
                     }
 
                     const semanaReferencia = obtenerSemanaReferencia(data.fecha);
-                    let vencimiento = null;
+                    let vencimientoSemanal = null;
 
-                    if (semanaReferencia) {
+                    if (semanaReferencia && !data.fecha_vencimiento) {
                         const { data: dataVencimiento, error: errorVencimiento } = await supabase
                             .from('vencimientos_semanales')
                             .select('fecha_vencimiento, diasvida')
@@ -3239,44 +3239,44 @@ header.sticky {
                         if (errorVencimiento) {
                             console.error('No se pudo cargar vencimiento semanal:', errorVencimiento);
                         } else {
-                            vencimiento = dataVencimiento;
+                            vencimientoSemanal = dataVencimiento;
                         }
                     }
 
-				document.getElementById('sede').value = data.sede || '';
-				actualizarBodegasPorSede();
-				document.getElementById('idBodega').value = data.idBodega || '';
-			
-                document.getElementById('fechaInventario').value = data.fecha;
-                document.getElementById('codigoArticulo').value = data.codigo;
-				document.getElementById('codigoBarra').value = data.codigo_barra || '';
-			
-                await buscarArticulo(data.codigo);
+                    const fechaVencimientoFinal = data.fecha_vencimiento || vencimientoSemanal?.fecha_vencimiento || '';
 
-                document.getElementById('proveedor').value = data.proveedor;
-                document.getElementById('descripcion').value = data.descripcion;
-                document.getElementById('inventarioReporteria').value = data.inventario_reporteria;
-                document.getElementById('masterpack').value = data.masterpack;
-                document.getElementById('cajasFardos').value = data.cajas_fardos;
-                document.getElementById('unidades').value = data.unidades;
-                document.getElementById('checkBodega').checked = !!(vencimiento && vencimiento.fecha_vencimiento);
-                toggleFechaVencimiento();
-                document.getElementById('fechaVencimiento').value = vencimiento?.fecha_vencimiento || '';
+                    document.getElementById('sede').value = data.sede || '';
+                    actualizarBodegasPorSede();
+                    document.getElementById('idBodega').value = data.idBodega || '';
 
-			    calcularTotalUnidades();
-			
-			    // Guardar ID temporal
-			    window.editandoId = id;
-			
-			    // Cambiar vista
-			    document.querySelector('[data-section="inventario-diario"]').click();
-			
-			    // Cambiar texto del botón
-				document.getElementById('btnGuardarArticulo').innerHTML = `
-				    <i class="fas fa-save mr-2"></i>
-				    Guardar Modificaciones
-				`;
-				}
+                    document.getElementById('fechaInventario').value = data.fecha;
+                    document.getElementById('codigoArticulo').value = data.codigo;
+                    document.getElementById('codigoBarra').value = data.codigo_barra || '';
+
+                    await buscarArticulo(data.codigo);
+
+                    document.getElementById('proveedor').value = data.proveedor;
+                    document.getElementById('descripcion').value = data.descripcion;
+                    document.getElementById('inventarioReporteria').value = data.inventario_reporteria;
+                    document.getElementById('masterpack').value = data.masterpack;
+                    document.getElementById('cajasFardos').value = data.cajas_fardos;
+                    document.getElementById('unidades').value = data.unidades;
+
+                    document.getElementById('checkBodega').checked = !!fechaVencimientoFinal;
+                    toggleFechaVencimiento();
+                    document.getElementById('fechaVencimiento').value = fechaVencimientoFinal;
+
+                    calcularTotalUnidades();
+
+                    window.editandoId = id;
+
+                    document.querySelector('[data-section="inventario-diario"]').click();
+
+                    document.getElementById('btnGuardarArticulo').innerHTML = `
+                        <i class="fas fa-save mr-2"></i>
+                        Guardar Modificaciones
+                    `;
+                }
 
         async function eliminarArticulo(id) {
 
