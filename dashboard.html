@@ -2766,10 +2766,10 @@ header.sticky {
 		    const fecha = document.getElementById('fechaInventario').value;
 		    const checkActivo = document.getElementById('checkBodega').checked;
 		    const fechaVenc = document.getElementById('fechaVencimiento').value || null;
-		    const codigo = document.getElementById('codigoArticulo').value.trim();
-		    const codigoBarra = normalizarCodigo(document.getElementById('codigoBarra').value);
-		    const proveedor = document.getElementById('proveedor').value;
-		    const descripcion = document.getElementById('descripcion').value;
+		    const codigo = (document.getElementById('codigoArticulo').value || '').trim();
+		    const codigoBarra = (document.getElementById('codigoBarra').value || '').trim();
+		    const proveedor = document.getElementById('proveedor').value || '';
+		    const descripcion = document.getElementById('descripcion').value || '';
 		    const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
 		    const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
 		    const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
@@ -2781,18 +2781,17 @@ header.sticky {
 		        return;
 		    }
 		
-		    const totalUnidades = (cajas * masterpack) + unidades;
-		    const costoUnitario = Number(window.costoUnitarioActual || 0);
-		
-		    let diasvida = null;
-		    if (checkActivo && fechaVenc) {
-		        const fechaBase = new Date(`${fecha}T00:00:00`);
-		        const fechaObjetivo = new Date(`${fechaVenc}T00:00:00`);
-		        diasvida = Math.round((fechaObjetivo - fechaBase) / (1000 * 60 * 60 * 24));
+		    if (checkActivo && !fechaVenc) {
+		        showNotification('Error', 'Debes ingresar la fecha de vencimiento', 'error');
+		        return;
 		    }
 		
-		    const costoTotal = totalUnidades * costoUnitario;
-            const payloadInventario = {
+		    const total = (cajas * masterpack) + unidades;
+		    const diasVida = (checkActivo && fechaVenc)
+		        ? Math.ceil((new Date(`${fechaVenc}T00:00:00`) - new Date(`${fecha}T00:00:00`)) / 86400000)
+		        : null;
+		
+		    const payloadInventario = {
 		        fecha,
 		        codigo,
 		        codigo_barra: codigoBarra || null,
@@ -2802,146 +2801,83 @@ header.sticky {
 		        masterpack,
 		        cajas_fardos: cajas,
 		        unidades,
+		        total,
 		        idBodega,
 		        sede,
-		        costo_unitario: costoUnitario,
-		        costoTotal: costoTotal
+		        fecha_vencimiento: checkActivo ? fechaVenc : null,
+		        diasvida: checkActivo ? diasVida : null,
+		        costoTotal: window.costoTotalActual || 0,
+		        costo_unitario: window.costoUnitarioActual || 0
 		    };
-
-            const payloadVencimiento = {
-                semana_referencia: obtenerSemanaReferencia(fecha),
-                fecha_captura: fecha,
-                sede,
-                idbodega: idBodega,
-                codigo,
-                codigo_barra: codigoBarra || null,
-                proveedor,
-                descripcion,
-                inventario_reporteria: inventarioReporteria,
-                masterpack,
-                cajas_fardos: cajas,
-                unidades,
-                fecha_vencimiento: checkActivo ? fechaVenc : null,
-                diasvida,
-                costo_unitario: costoUnitario,
-                costototal: costoTotal,
-                usuario: currentUser?.username || currentUser?.usuario || 'desconocido'
-            };
 		
-		    if (window.editandoId) {
-                const { data: registroActual, error: errorRegistroActual } = await supabase
-                    .from('inventarios_diarios')
-                    .select('id, fecha, sede, idBodega, codigo')
-                    .eq('id', window.editandoId)
-                    .single();
-
-                if (errorRegistroActual || !registroActual) {
-                    showNotification('Error', 'No se encontró el registro a editar', 'error');
-                    return;
-                }
-
-		        const { error } = await supabase
-		            .from('inventarios_diarios')
-		            .update(payloadInventario)
-		            .eq('id', window.editandoId);
+		    try {
+		        let idRegistro = window.editandoId || null;
 		
-		        if (error) {
-		            showNotification('Error', error.message, 'error');
-		            return;
+		        if (window.editandoId) {
+		            const { error: errorUpdate } = await supabase
+		                .from('inventarios_diarios')
+		                .update(payloadInventario)
+		                .eq('id', window.editandoId);
+		
+		            if (errorUpdate) throw errorUpdate;
+		        } else {
+		            const { data: inserted, error: errorInsert } = await supabase
+		                .from('inventarios_diarios')
+		                .insert([payloadInventario])
+		                .select('id')
+		                .single();
+		
+		            if (errorInsert) throw errorInsert;
+		            idRegistro = inserted?.id || null;
 		        }
-
-                const claveAnterior = {
-                    fecha: registroActual.fecha,
-                    sede: registroActual.sede,
-                    idBodega: registroActual.idBodega,
-                    codigo: registroActual.codigo
-                };
-
-                const cambioClave =
-                    claveAnterior.fecha !== fecha ||
-                    claveAnterior.sede !== sede ||
-                    claveAnterior.idBodega !== idBodega ||
-                    claveAnterior.codigo !== codigo;
-
-                try {
-                    if (cambioClave) {
-                        await eliminarVencimientoSemanal(claveAnterior);
-                    }
-
-                    if (checkActivo && fechaVenc) {
-                        await guardarVencimientoSemanal(payloadVencimiento);
-                        await registrarImportacionVencimientos(1);
-                    } else {
-                        await eliminarVencimientoSemanal({
-                            fecha,
-                            sede,
-                            idBodega,
-                            codigo
-                        });
-                    }
-                } catch (errorVencimiento) {
-                    showNotification('Error', errorVencimiento.message, 'error');
-                    return;
-                }
+		
+		        if (checkActivo && fechaVenc) {
+		            const semanaReferencia = obtenerSemanaReferencia(fecha);
+		
+		            await guardarVencimientoSemanal({
+		                semana_referencia: semanaReferencia,
+		                fecha: fecha,
+		                fecha_vencimiento: fechaVenc,
+		                diasvida: diasVida,
+		                sede: sede,
+		                idbodega: idBodega,
+		                codigo: codigo,
+		                codigo_barra: codigoBarra || null,
+		                proveedor: proveedor,
+		                descripcion: descripcion,
+		                inventario_reporteria: inventarioReporteria,
+		                masterpack: masterpack,
+		                cajas_fardos: cajas,
+		                unidades: unidades,
+		                total: total,
+		                costoTotal: window.costoTotalActual || 0,
+		                costo_unitario: window.costoUnitarioActual || 0,
+		                inventario_id: idRegistro
+		            });
+		        } else {
+		            await eliminarVencimientoSemanal({
+		                fecha: fecha,
+		                sede: sede,
+		                idBodega: idBodega,
+		                codigo: codigo
+		            });
+		        }
 		
 		        window.editandoId = null;
-		        showNotification('Éxito', 'Registro actualizado', 'success');
 		        limpiarFormulario();
 		        loadInventory();
-                loadDashboardData();
-		        loadTransitos();
-                loadVencimientosData();
-		        return;
-		    }
+		        loadDashboardData();
+		        loadVencimientosData();
 		
-		    const { data: existente, error: errorBusqueda } = await supabase
-		        .from('inventarios_diarios')
-		        .select('id, total, cajas_fardos, unidades')
-		        .eq('fecha', fecha)
-		        .eq('sede', sede)
-		        .eq('idBodega', idBodega)
-		        .eq('codigo', codigo)
-		        .maybeSingle();
-		
-		    if (errorBusqueda) {
-		        showNotification('Error', `No se pudo validar duplicados: ${errorBusqueda.message}`, 'error');
-		        return;
-		    }
-		
-		    if (existente) {
 		        showNotification(
-		            'Error',
-		            'Ese código ya fue inventariado para esa misma fecha, sede y bodega. Debes editar el registro existente.',
-		            'error'
+		            'Éxito',
+		            idRegistro ? 'Artículo guardado correctamente' : 'Registro actualizado correctamente',
+		            'success'
 		        );
-		        return;
+		    } catch (error) {
+		        console.error('Error guardando artículo/vencimiento:', error);
+		        showNotification('Error', error.message || 'No se pudo guardar el registro', 'error');
 		    }
-		
-		    const { error } = await supabase
-		        .from('inventarios_diarios')
-		        .insert([payloadInventario]);
-		
-		    if (error) {
-		        showNotification('Error', error.message, 'error');
-		        return;
-		    }
-
-            if (checkActivo && fechaVenc) {
-                try {
-                    await guardarVencimientoSemanal(payloadVencimiento);
-                    await registrarImportacionVencimientos(1);
-                } catch (errorVencimiento) {
-                    showNotification('Error', errorVencimiento.message, 'error');
-                    return;
-                }
-            }
-		
-		    showNotification('Éxito', 'Guardado correctamente', 'success');
-		    limpiarFormulario();
-		    loadInventory();
-            loadDashboardData();
-		    loadTransitos();
-            loadVencimientosData();
 		}
 
         function validarEAN13(codigo) {
