@@ -179,10 +179,6 @@
     document.getElementById('closeRecoveryBtn').addEventListener('click', closeRecoveryModal);
     document.getElementById('cancelRecoveryBtn').addEventListener('click', closeRecoveryModal);
 
-    document.getElementById('recoveryDni').addEventListener('input', (e) => {
-        e.target.value = formatDNI(e.target.value);
-    });
-
     recoveryModal.addEventListener('click', (e) => {
         if (e.target === recoveryModal) closeRecoveryModal();
     });
