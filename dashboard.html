@@ -5275,6 +5275,21 @@ async function obtenerAccessToken() {
 		    return currentUser?.username || currentUser?.usuario || 'desconocido';
 		}
 
+		function toggleFechaVencimiento() {
+		    const idBodega = document.getElementById('idBodega')?.value;
+		    const fechaInput = document.getElementById('fechaVencimiento');
+		
+		    if (!fechaInput) return;
+		
+		    // PFN = sin fecha
+		    if (idBodega === '095') {
+		        fechaInput.value = '';
+		        fechaInput.disabled = true;
+		    } else {
+		        fechaInput.disabled = false;
+		    }
+		}
+
 </script>
 
 <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
