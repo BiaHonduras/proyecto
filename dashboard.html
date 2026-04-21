@@ -990,7 +990,7 @@ header.sticky {
             </section>
 
             <section id="vencimientos-section" class="section-content hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -2051,6 +2051,7 @@ header.sticky {
                 codigo: String(item.codigo || '').trim(),
                 fecha_vencimiento: item.fecha_vencimiento || null,
                 diasvida: item.diasvida ?? null,
+                rango_diasvida: item.rango_diasvida || item.rangoDiasVida || null,
                 descripcion: item.descripcion || ''
             };
         }
@@ -5031,13 +5032,21 @@ async function guardarJustificacion(id, texto) {
             return `${d}/${m}/${String(y).slice(-2)}`;
         }
         async function loadVencimientosData() {
-            const { data, error } = await supabase
+            let queryResult = await supabase
                 .from('vencimientos_semanales')
                 .select('sede, idbodega, codigo, descripcion, fecha_vencimiento, diasvida, rango_diasvida');
 
+            if (queryResult.error && String(queryResult.error.message || '').toLowerCase().includes('rango_diasvida')) {
+                queryResult = await supabase
+                    .from('vencimientos_semanales')
+                    .select('sede, idbodega, codigo, descripcion, fecha_vencimiento, diasvida');
+            }
+
+            const { data, error } = queryResult;
+
             if (error) {
                 console.error(error);
-                showNotification('Error', 'No se pudo cargar vencimientos', 'error');
+                showNotification('Error', `No se pudo cargar vencimientos: ${error.message || 'error desconocido'}`, 'error');
                 return;
             }
 
