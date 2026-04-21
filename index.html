@@ -214,57 +214,58 @@
         await handleForcedPasswordChange();
     });
 
-    async function secureLogin(usuario, password) {
-        setLoading(loginButton, true, 'Validando...');
-        try {
-            const { data, error } = await supabase.rpc('login_seguro', {
-                p_usuario: usuario,
-                p_password: password
-            });
-
-            if (error) throw new Error(error.message || 'No fue posible iniciar sesión.');
-
-            const row = normalizeRpcRow(data);
-            if (!row || !row.ok) {
-                throw new Error(row?.mensaje || 'Usuario o contraseña incorrectos.');
+        async function secureLogin(usuario, password) {
+            setLoading(loginButton, true, 'Validando...');
+            try {
+                const { data, error } = await supabase.rpc('login_seguro', {
+                    p_usuario: usuario
+                });
+        
+                if (error) {
+                    throw new Error(error.message || 'No fue posible validar el usuario.');
+                }
+        
+                const row = normalizeRpcRow(data);
+                if (!row || !row.ok) {
+                    throw new Error(row?.mensaje || 'Usuario no válido.');
+                }
+        
+                if (!row.correo) {
+                    throw new Error('El usuario no tiene un correo configurado para iniciar sesión.');
+                }
+        
+                const authResult = await window.iniciarSesionSupabase(row.correo, password);
+                if (!authResult?.ok) {
+                    throw new Error(authResult?.error || 'Usuario o contraseña incorrectos.');
+                }
+        
+                const currentUser = {
+                    username: row.usuario,
+                    nombre_corto: row.nombre_corto,
+                    role: row.rol,
+                    correo: row.correo,
+                    sede: row.sede,
+                    tipo_bodega: row.tipo_bodega,
+                    must_change_password: !!row.must_change_password,
+                    last_login_at: new Date().toISOString()
+                };
+        
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+                if (currentUser.must_change_password) {
+                    pendingUserForPasswordChange = currentUser.username;
+                    openChangePasswordModal(password);
+                    mostrarExito('Debes cambiar tu contraseña temporal antes de continuar.');
+                    return;
+                }
+        
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                mostrarError(err.message || 'Error inesperado al iniciar sesión.');
+            } finally {
+                setLoading(loginButton, false, 'Iniciar Sesión');
             }
-
-            if (!row.correo) {
-                throw new Error('El usuario no tiene un correo configurado para iniciar sesión en Supabase Auth.');
-            }
-
-            const authResult = await window.iniciarSesionSupabase(row.correo, password);
-            if (!authResult?.ok) {
-                throw new Error(authResult?.error || 'No fue posible iniciar la sesión real en Supabase Auth.');
-            }
-
-            const currentUser = {
-                username: row.usuario,
-                nombre_corto: row.nombre_corto,
-                role: row.rol,
-                correo: row.correo,
-                sede: row.sede,
-                tipo_bodega: row.tipo_bodega,
-                must_change_password: !!row.must_change_password,
-                last_login_at: new Date().toISOString()
-            };
-
-            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-
-            if (currentUser.must_change_password) {
-                pendingUserForPasswordChange = currentUser.username;
-                openChangePasswordModal(password);
-                mostrarExito('Debes cambiar tu contraseña temporal antes de continuar.');
-                return;
-            }
-
-            window.location.href = 'dashboard.html';
-        } catch (err) {
-            mostrarError(err.message || 'Error inesperado al iniciar sesión.');
-        } finally {
-            setLoading(loginButton, false, 'Iniciar Sesión');
         }
-    }
 
     async function handlePasswordRecovery() {
         clearRecoveryMessage();
