@@ -2702,21 +2702,6 @@ header.sticky {
     		document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
 		}
 
-        function obtenerSemanaReferencia(fechaStr) {
-            if (!fechaStr) return null;
-
-            const fecha = new Date(`${fechaStr}T00:00:00`);
-            const dia = fecha.getDay();
-            const ajuste = dia === 0 ? -6 : 1 - dia;
-            fecha.setDate(fecha.getDate() + ajuste);
-
-            const yyyy = fecha.getFullYear();
-            const mm = String(fecha.getMonth() + 1).padStart(2, '0');
-            const dd = String(fecha.getDate()).padStart(2, '0');
-
-            return `${yyyy}-${mm}-${dd}`;
-        }
-
         async function registrarImportacionVencimientos(cantidadRegistros = 1) {
             const { error } = await supabase
                 .from('inventario_importaciones')
@@ -2736,7 +2721,7 @@ header.sticky {
             const { error } = await supabase
                 .from('vencimientos_semanales')
                 .upsert([payloadVencimiento], {
-                    onConflict: 'semana_referencia,sede,idbodega,codigo'
+                    onConflict: 'fecha_captura,sede,idbodega,codigo'
                 });
 
             if (error) {
