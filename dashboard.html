@@ -2189,6 +2189,10 @@ header.sticky {
             initNavigation();
             cargarResumenCodigos();
 
+			document.addEventListener('DOMContentLoaded', () => {
+				programarActualizacionVencimientos();
+				});
+
 			document.getElementById('btnEditarRegistros').addEventListener('click', () => {
     			activarModoEdicion();
 				});
@@ -2281,9 +2285,7 @@ header.sticky {
             
             // Configurar exportación CSV
             document.getElementById('exportCSV').addEventListener('click', abrirModalExportarCSV);
-
             document.getElementById('btnCancelarModalExport').addEventListener('click', cerrarModalExportarCSV);
-
             document.getElementById('btnConfirmarModalExport').addEventListener('click', async function() {
                 const sede = document.getElementById('modalFiltroSedeExport').value;
                 const tipoBodega = document.getElementById('modalFiltroTipoBodegaExport').value;
@@ -2777,9 +2779,9 @@ header.sticky {
 		    }
 		
 		    const total = (cajas * masterpack) + unidades;
-		    const diasVida = (checkActivo && fechaVenc)
-		        ? Math.ceil((new Date(`${fechaVenc}T00:00:00`) - new Date(`${fecha}T00:00:00`)) / 86400000)
-		        : null;
+		    const diasVida = checkActivo && fechaVenc
+			    ? calcularDiasVidaActual(fechaVenc)
+			    : null;
 		
 		    const payloadInventario = {
 		        fecha,
@@ -5031,127 +5033,166 @@ async function guardarJustificacion(id, texto) {
             const [y, m, d] = String(fechaStr).split('-');
             return `${d}/${m}/${String(y).slice(-2)}`;
         }
+
+		function calcularDiasVidaActual(fechaVencimiento) {
+		    if (!fechaVencimiento) return null;
+		
+		    const hoy = new Date();
+		    const hoyBase = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+		
+		    const venc = normalizarFechaLocal(fechaVencimiento);
+		    if (Number.isNaN(venc.getTime())) return null;
+		
+		    return diferenciaDias(hoyBase, venc);
+		}
+		
+		function obtenerRangoDiasVida(diasvida, fechaVencimiento, idbodega = '') {
+		    const bodega = String(idbodega || '').trim();
+		
+		    if (!fechaVencimiento || bodega === '095') {
+		        return 'sin_fecha';
+		    }
+		
+		    if (diasvida <= 60) return 'hasta_60';
+		    if (diasvida <= 90) return '61_90';
+		    if (diasvida <= 120) return '91_120';
+		    return '121_mas';
+		}
+		
+		function programarActualizacionVencimientos() {
+		    const ahora = new Date();
+		    const proxima = new Date();
+		
+		    proxima.setDate(ahora.getDate() + 1);
+		    proxima.setHours(0, 0, 5, 0);
+		
+		    const msRestantes = proxima.getTime() - ahora.getTime();
+		
+		    setTimeout(() => {
+		        loadVencimientosData();
+		
+		        setInterval(() => {
+		            loadVencimientosData();
+		        }, 24 * 60 * 60 * 1000);
+		
+		    }, msRestantes);
+		}
+		
         async function loadVencimientosData() {
-            let queryResult = await supabase
-                .from('vencimientos_semanales')
-                .select('sede, idbodega, codigo, descripcion, fecha_vencimiento, diasvida, rango_diasvida');
-
-            if (queryResult.error && String(queryResult.error.message || '').toLowerCase().includes('rango_diasvida')) {
-                queryResult = await supabase
-                    .from('vencimientos_semanales')
-                    .select('sede, idbodega, codigo, descripcion, fecha_vencimiento, diasvida');
-            }
-
-            const { data, error } = queryResult;
-
-            if (error) {
-                console.error(error);
-                showNotification('Error', `No se pudo cargar vencimientos: ${error.message || 'error desconocido'}`, 'error');
-                return;
-            }
-
-            const normalizados = (data || []).map(item => normalizarRegistroVencimiento(item));
-            const filtrados = aplicarFiltrosGlobales(normalizados);
-
-            const hoy = new Date();
-            const registrosConFecha = [];
-            const registrosSinFecha = [];
-
-            const conteos = {
-                vida60: 0,
-                vida90: 0,
-                vida120: 0,
-                vida121: 0,
-                sinFecha: 0
-            };
-
-            filtrados.forEach(item => {
-                const tipoBodega = obtenerTipoBodegaDesdeId(item.idBodega);
-                const rangoTexto = String(item.rango_diasvida || '').trim().toLowerCase();
-
-                if (!item.fecha_vencimiento || tipoBodega === 'PFN' || rangoTexto === 'sin fecha / pfn') {
-                    registrosSinFecha.push(item);
-                    conteos.sinFecha += 1;
-                    return;
-                }
-
-                let dias = Number(item.diasvida);
-                if (!Number.isFinite(dias)) {
-                    dias = diferenciaDias(hoy, normalizarFechaLocal(item.fecha_vencimiento));
-                }
-
-                const registro = {
-                    ...item,
-                    dias_restantes: dias
-                };
-
-                registrosConFecha.push(registro);
-
-                if (rangoTexto === '-60 días' || rangoTexto === '-60 dias') {
-                    conteos.vida60 += 1;
-                } else if (rangoTexto === '61 a 90 días' || rangoTexto === '61 a 90 dias') {
-                    conteos.vida90 += 1;
-                } else if (rangoTexto === '91 a 120 días' || rangoTexto === '91 a 120 dias') {
-                    conteos.vida120 += 1;
-                } else if (rangoTexto === 'más de 121 días' || rangoTexto === 'mas de 121 dias' || rangoTexto === '+121 días' || rangoTexto === '+121 dias') {
-                    conteos.vida121 += 1;
-                } else {
-                    if (dias <= 60) conteos.vida60 += 1;
-                    else if (dias <= 90) conteos.vida90 += 1;
-                    else if (dias <= 120) conteos.vida120 += 1;
-                    else conteos.vida121 += 1;
-                }
-            });
-
-            document.getElementById('totalVida60').textContent = conteos.vida60;
-            document.getElementById('totalVida90').textContent = conteos.vida90;
-            document.getElementById('totalVida120').textContent = conteos.vida120;
-            document.getElementById('totalVida121').textContent = conteos.vida121;
-            document.getElementById('totalSinFecha').textContent = conteos.sinFecha;
-
-            const rangos = {
-                '-60 días': conteos.vida60,
-                '61 a 90 días': conteos.vida90,
-                '91 a 120 días': conteos.vida120,
-                '+121 días': conteos.vida121,
-                'Sin Fecha / PFN': conteos.sinFecha
-            };
-
-            renderVencimientosChart(Object.keys(rangos), Object.values(rangos));
-
-            const urgentes = [...registrosConFecha]
-                .sort((a, b) => a.dias_restantes - b.dias_restantes)
-                .slice(0, 15);
-
-            const tbody = document.getElementById('tablaVencimientosUrgentes');
-            if (!urgentes.length) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="py-8 text-center text-gray-500">
-                            <i class="fas fa-inbox text-3xl mb-2"></i>
-                            <p>No hay datos de vencimiento</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            tbody.innerHTML = urgentes.map(item => {
-                let claseDias = 'text-green-600';
-                if (item.dias_restantes <= 60) claseDias = 'text-red-600 font-bold';
-                else if (item.dias_restantes <= 90) claseDias = 'text-orange-600 font-semibold';
-
-                return `
-                    <tr class="border-b border-gray-200 hover:bg-gray-50">
-                        <td class="py-3 px-2">${escapeHtml(item.idBodega || '')}</td>
-                        <td class="py-3 px-2 font-mono">${escapeHtml(item.codigo || '')}</td>
-                        <td class="py-3 px-2">${escapeHtml(item.descripcion || '')}</td>
-                        <td class="py-3 px-2">${formatearFechaCorta(item.fecha_vencimiento)}</td>
-                        <td class="py-3 px-2 ${claseDias}">${item.dias_restantes}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
+		    let queryResult = await supabase
+		        .from('vencimientos_semanales')
+		        .select('sede, idbodega, codigo, descripcion, fecha_vencimiento, diasvida, rango_diasvida');
+		
+		    if (queryResult.error && String(queryResult.error.message || '').toLowerCase().includes('rango_diasvida')) {
+		        queryResult = await supabase
+		            .from('vencimientos_semanales')
+		            .select('sede, idbodega, codigo, descripcion, fecha_vencimiento, diasvida');
+		    }
+		
+		    const { data, error } = queryResult;
+		
+		    if (error) {
+		        console.error(error);
+		        showNotification('Error', `No se pudo cargar vencimientos: ${error.message || 'error desconocido'}`, 'error');
+		        return;
+		    }
+		
+		    const sedeFiltro = document.getElementById('filtroSedeGlobal')?.value || 'Todas';
+		    const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaGlobal')?.value || 'Todas';
+		
+		    const registrosActualizados = (data || []).map(item => {
+		        const diasvidaActual = calcularDiasVidaActual(item.fecha_vencimiento);
+		        const rangoActual = obtenerRangoDiasVida(diasvidaActual, item.fecha_vencimiento, item.idbodega);
+		
+		        return {
+		            ...item,
+		            diasvida: diasvidaActual,
+		            rango_diasvida: rangoActual
+		        };
+		    });
+		
+		    const registrosFiltrados = registrosActualizados.filter(item => {
+		        const cumpleSede = sedeFiltro === 'Todas' || item.sede === sedeFiltro;
+		
+		        let cumpleTipoBodega = true;
+		        if (tipoBodegaFiltro !== 'Todas') {
+		            if (tipoBodegaFiltro === 'Principal') cumpleTipoBodega = item.idbodega === '030';
+		            else if (tipoBodegaFiltro === 'PPV') cumpleTipoBodega = item.idbodega === '033';
+		            else if (tipoBodegaFiltro === 'PFN') cumpleTipoBodega = item.idbodega === '095';
+		        }
+		
+		        return cumpleSede && cumpleTipoBodega;
+		    });
+		
+		    const totalVida60 = registrosFiltrados.filter(item =>
+		        item.rango_diasvida === 'hasta_60'
+		    ).length;
+		
+		    const totalVida90 = registrosFiltrados.filter(item =>
+		        item.rango_diasvida === '61_90'
+		    ).length;
+		
+		    const totalVida120 = registrosFiltrados.filter(item =>
+		        item.rango_diasvida === '91_120'
+		    ).length;
+		
+		    const totalVida121 = registrosFiltrados.filter(item =>
+		        item.rango_diasvida === '121_mas'
+		    ).length;
+		
+		    const totalSinFecha = registrosFiltrados.filter(item =>
+		        item.rango_diasvida === 'sin_fecha'
+		    ).length;
+		
+		    document.getElementById('totalVida60').textContent = formatearNumeroEntero(totalVida60);
+		    document.getElementById('totalVida90').textContent = formatearNumeroEntero(totalVida90);
+		    document.getElementById('totalVida120').textContent = formatearNumeroEntero(totalVida120);
+		    document.getElementById('totalVida121').textContent = formatearNumeroEntero(totalVida121);
+		    document.getElementById('totalSinFecha').textContent = formatearNumeroEntero(totalSinFecha);
+		
+		    renderVencimientosChart({
+		        hasta_60: totalVida60,
+		        de_61_a_90: totalVida90,
+		        de_91_a_120: totalVida120,
+		        de_121_mas: totalVida121,
+		        sin_fecha: totalSinFecha
+		    });
+		
+		    const urgentes = registrosFiltrados
+		        .filter(item => item.fecha_vencimiento)
+		        .sort((a, b) => {
+		            const diasA = a.diasvida ?? 999999;
+		            const diasB = b.diasvida ?? 999999;
+		            return diasA - diasB;
+		        })
+		        .slice(0, 10);
+		
+		    const tbody = document.getElementById('tablaVencimientosUrgentes');
+		
+		    if (!urgentes.length) {
+		        tbody.innerHTML = `
+		            <tr>
+		                <td colspan="7" class="py-8 text-center text-gray-500">
+		                    <i class="fas fa-inbox text-3xl mb-2"></i>
+		                    <p>No hay datos de vencimiento</p>
+		                </td>
+		            </tr>
+		        `;
+		        return;
+		    }
+		
+		    tbody.innerHTML = urgentes.map(item => `
+		        <tr class="border-b border-gray-100">
+		            <td class="py-3">${item.idbodega || ''}</td>
+		            <td class="py-3">${item.codigo || ''}</td>
+		            <td class="py-3">${item.descripcion || ''}</td>
+		            <td class="py-3">${formatearFechaCorta(item.fecha_vencimiento)}</td>
+		            <td class="py-3 font-semibold ${item.diasvida <= 60 ? 'text-red-600' : item.diasvida <= 90 ? 'text-orange-600' : 'text-green-600'}">
+		                ${item.diasvida ?? ''}
+		            </td>
+		        </tr>
+		    `).join('');
+		}
 
         function renderVencimientosChart(labels, data) {
             const contenedor = document.getElementById('vencimientosChartContainer');
@@ -5347,6 +5388,18 @@ async function obtenerAccessToken() {
 		    if (!debeHabilitarse) {
 		        fechaInput.value = '';
 		    }
+		}
+
+		function calcularDiasVidaActual(fechaVencimiento) {
+		    if (!fechaVencimiento) return null;
+		
+		    const hoy = new Date();
+		    const hoyBase = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+		
+		    const venc = new Date(`${fechaVencimiento}T00:00:00`);
+		    const diffMs = venc - hoyBase;
+		
+		    return Math.ceil(diffMs / 86400000);
 		}
 
 </script>
