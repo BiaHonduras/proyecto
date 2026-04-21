@@ -275,6 +275,7 @@
 
         const usuario = sanitizeText(document.getElementById('recoveryUsername').value);
         const dni = document.getElementById('recoveryDni').value.trim();
+        const dniLimpio = dni.replace(/\D/g, '');
         const correo = document.getElementById('recoveryEmail').value.trim().toLowerCase();
 
         if (!usuario || !dni || !correo) {
@@ -293,7 +294,7 @@
             const { data, error } = await supabase.functions.invoke('recuperar-password-auth', {
                 body: {
                     usuario,
-                    dni,
+                    dniLimpio,
                     correo
                 }
             });
