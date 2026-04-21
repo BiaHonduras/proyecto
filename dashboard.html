@@ -2730,7 +2730,7 @@ header.sticky {
         }
 
         async function eliminarVencimientoSemanal(clave = {}) {
-            if (!semanaReferencia || !clave.sede || !clave.idBodega || !clave.codigo) return;
+            if (!clave.sede || !clave.idBodega || !clave.codigo) return;
 
             const { error } = await supabase
                 .from('vencimientos_semanales')
