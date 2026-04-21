@@ -2775,7 +2775,7 @@ header.sticky {
 		    const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
 		    const unidades = parseFloat(document.getElementById('unidades').value) || 0;
 		    const sede = document.getElementById('sede').value;
-		
+
 		    if (!codigo || !fecha || !sede || !idBodega) {
 		        showNotification('Error', 'Código, fecha, sede y bodega son requeridos', 'error');
 		        return;
@@ -2849,7 +2849,7 @@ header.sticky {
 						diasvida: diasVida,
 						costo_unitario: window.costoUnitarioActual || 0,
 		                costototal: window.costoTotalActual || 0,
-						usuario: usuario,
+						usuario: getUsuarioActual(),
 						total: total
 		            });
 		        } else {
@@ -5286,6 +5286,10 @@ async function obtenerAccessToken() {
 			
 			  return json;
 			}
+
+		function getUsuarioActual() {
+		    return currentUser?.username || currentUser?.usuario || 'desconocido';
+		}
 
 </script>
 
