@@ -5033,7 +5033,7 @@ async function guardarJustificacion(id, texto) {
         async function loadVencimientosData() {
             const { data, error } = await supabase
                 .from('vencimientos_semanales')
-                .select('sede, idbodega, codigo, descripcion, fecha_vencimiento, diasvida');
+                .select('sede, idbodega, codigo, descripcion, fecha_vencimiento, diasvida, rango_diasvida');
 
             if (error) {
                 console.error(error);
@@ -5048,9 +5048,21 @@ async function guardarJustificacion(id, texto) {
             const registrosConFecha = [];
             const registrosSinFecha = [];
 
+            const conteos = {
+                vida60: 0,
+                vida90: 0,
+                vida120: 0,
+                vida121: 0,
+                sinFecha: 0
+            };
+
             filtrados.forEach(item => {
-                if (!item.fecha_vencimiento) {
+                const tipoBodega = obtenerTipoBodegaDesdeId(item.idBodega);
+                const rangoTexto = String(item.rango_diasvida || '').trim().toLowerCase();
+
+                if (!item.fecha_vencimiento || tipoBodega === 'PFN' || rangoTexto === 'sin fecha / pfn') {
                     registrosSinFecha.push(item);
+                    conteos.sinFecha += 1;
                     return;
                 }
 
@@ -5059,27 +5071,41 @@ async function guardarJustificacion(id, texto) {
                     dias = diferenciaDias(hoy, normalizarFechaLocal(item.fecha_vencimiento));
                 }
 
-                registrosConFecha.push({
+                const registro = {
                     ...item,
                     dias_restantes: dias
-                });
+                };
+
+                registrosConFecha.push(registro);
+
+                if (rangoTexto === '-60 días' || rangoTexto === '-60 dias') {
+                    conteos.vida60 += 1;
+                } else if (rangoTexto === '61 a 90 días' || rangoTexto === '61 a 90 dias') {
+                    conteos.vida90 += 1;
+                } else if (rangoTexto === '91 a 120 días' || rangoTexto === '91 a 120 dias') {
+                    conteos.vida120 += 1;
+                } else if (rangoTexto === 'más de 121 días' || rangoTexto === 'mas de 121 dias' || rangoTexto === '+121 días' || rangoTexto === '+121 dias') {
+                    conteos.vida121 += 1;
+                } else {
+                    if (dias <= 60) conteos.vida60 += 1;
+                    else if (dias <= 90) conteos.vida90 += 1;
+                    else if (dias <= 120) conteos.vida120 += 1;
+                    else conteos.vida121 += 1;
+                }
             });
 
-            const vida60 = registrosConFecha.filter(x => x.dias_restantes <= 60).length;
-            const vida90 = registrosConFecha.filter(x => x.dias_restantes > 60 && x.dias_restantes <= 90).length;
-            const vida120 = registrosConFecha.filter(x => x.dias_restantes >= 120).length;
-            const sinFecha = registrosSinFecha.length;
-
-            document.getElementById('totalVida60').textContent = vida60;
-            document.getElementById('totalVida90').textContent = vida90;
-            document.getElementById('totalVida120').textContent = vida120;
-            document.getElementById('totalSinFecha').textContent = sinFecha;
+            document.getElementById('totalVida60').textContent = conteos.vida60;
+            document.getElementById('totalVida90').textContent = conteos.vida90;
+            document.getElementById('totalVida120').textContent = conteos.vida120;
+            document.getElementById('totalVida121').textContent = conteos.vida121;
+            document.getElementById('totalSinFecha').textContent = conteos.sinFecha;
 
             const rangos = {
-                '60 días o menos': vida60,
-                '61 a 90 días': vida90,
-                '91 a 119 días': registrosConFecha.filter(x => x.dias_restantes > 90 && x.dias_restantes < 120).length,
-                '120 días o más': vida120
+                '-60 días': conteos.vida60,
+                '61 a 90 días': conteos.vida90,
+                '91 a 120 días': conteos.vida120,
+                '+121 días': conteos.vida121,
+                'Sin Fecha / PFN': conteos.sinFecha
             };
 
             renderVencimientosChart(Object.keys(rangos), Object.values(rangos));
