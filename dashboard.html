@@ -2834,12 +2834,9 @@ header.sticky {
 		            const semanaReferencia = obtenerSemanaReferencia(fecha);
 		
 		            await guardarVencimientoSemanal({
-		                semana_referencia: semanaReferencia,
 		                fecha_captura: fecha,
-		                fecha_vencimiento: fechaVenc,
-		                diasvida: diasVida,
-		                sede: sede,
-		                idbodega: idBodega,
+						sede: sede,
+						idbodega: idBodega,
 		                codigo: codigo,
 		                codigo_barra: codigoBarra || null,
 		                proveedor: proveedor,
@@ -2848,10 +2845,12 @@ header.sticky {
 		                masterpack: masterpack,
 		                cajas_fardos: cajas,
 		                unidades: unidades,
-		                total: total,
+						fecha_vencimiento: fechaVenc,
+						diasvida: diasVida,
+						costo_unitario: window.costoUnitarioActual || 0,
 		                costototal: window.costoTotalActual || 0,
-		                costo_unitario: window.costoUnitarioActual || 0,
-		                inventario_id: idRegistro
+						usuario: usuario,
+						total: total
 		            });
 		        } else {
 		            await eliminarVencimientoSemanal({
