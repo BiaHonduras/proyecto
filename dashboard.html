@@ -2196,6 +2196,7 @@ header.sticky {
 			    limpiarCamposArticulo();
 			    document.getElementById('codigoArticulo').value = '';
 			    document.getElementById('codigoBarra').value = '';
+			    toggleFechaVencimiento();
 			});
 
 			const searchInventory = document.getElementById('searchInventory');
@@ -2350,18 +2351,11 @@ header.sticky {
 			const checkBodega = document.getElementById('checkBodega');
 			const fechaVencimiento = document.getElementById('fechaVencimiento');
 
+			checkBodega.checked = false;
+			toggleFechaVencimiento();
+
 			checkBodega.addEventListener('change', () => {
-    			const activo = checkBodega.checked;
-
-    			fechaVencimiento.disabled = !activo;
-                fechaVencimiento.readOnly = false;
-
-    			if (activo) {
-        			fechaVencimiento.classList.remove('input-disabled', 'bg-gray-100');
-    			} else {
-        			fechaVencimiento.classList.add('bg-gray-100');
-        			fechaVencimiento.value = '';
-    			}
+			    toggleFechaVencimiento();
 			});
         });
 
@@ -3105,7 +3099,7 @@ header.sticky {
 		    const { data, error } = await supabase
 		        .from('inventarios_diarios')
 		        .select('*')
-		        .order('fecha', { ascending: false });
+		        .order('codigo', { ascending: true });
 		
 		    if (error) {
 		        console.error('Error real loadInventory:', error);
@@ -3154,6 +3148,22 @@ header.sticky {
 		        });
 		    }
 		
+
+		    inventario.sort((a, b) => {
+		        const codigoA = String(a?.codigo ?? '').trim();
+		        const codigoB = String(b?.codigo ?? '').trim();
+		        const numeroA = Number(codigoA);
+		        const numeroB = Number(codigoB);
+
+		        const ambosNumericos = !Number.isNaN(numeroA) && !Number.isNaN(numeroB);
+
+		        if (ambosNumericos) {
+		            return numeroA - numeroB;
+		        }
+
+		        return codigoA.localeCompare(codigoB, 'es', { numeric: true, sensitivity: 'base' });
+		    });
+
 		    console.log('Inventario final a renderizar:', inventario.length);
 		
 		    if (!inventario.length) {
@@ -5276,15 +5286,19 @@ async function obtenerAccessToken() {
 		function toggleFechaVencimiento() {
 		    const idBodega = document.getElementById('idBodega')?.value;
 		    const fechaInput = document.getElementById('fechaVencimiento');
+		    const checkBodega = document.getElementById('checkBodega');
+		    const checkActivo = !!checkBodega?.checked;
+		    const debeHabilitarse = idBodega !== '095' && checkActivo;
 		
 		    if (!fechaInput) return;
 		
-		    // PFN = sin fecha
-		    if (idBodega === '095') {
+		    fechaInput.disabled = !debeHabilitarse;
+		    fechaInput.readOnly = !debeHabilitarse;
+		    fechaInput.classList.toggle('bg-gray-100', !debeHabilitarse);
+		    fechaInput.classList.toggle('input-disabled', !debeHabilitarse);
+		
+		    if (!debeHabilitarse) {
 		        fechaInput.value = '';
-		        fechaInput.disabled = true;
-		    } else {
-		        fechaInput.disabled = false;
 		    }
 		}
 
