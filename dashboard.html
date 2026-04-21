@@ -2735,7 +2735,6 @@ header.sticky {
             const { error } = await supabase
                 .from('vencimientos_semanales')
                 .delete()
-                .eq('semana_referencia', semanaReferencia)
                 .eq('sede', clave.sede)
                 .eq('idbodega', clave.idBodega)
                 .eq('codigo', clave.codigo);
