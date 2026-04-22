@@ -3271,14 +3271,14 @@ header.sticky {
                         return;
                     }
 
-                    const semanaReferencia = obtenerSemanaReferencia(data.fecha);
+                    const fechaCapturaVencimiento = data.fecha || null;
                     let vencimientoSemanal = null;
 
-                    if (semanaReferencia && !data.fecha_vencimiento) {
+                    if (fechaCapturaVencimiento && !data.fecha_vencimiento) {
                         const { data: dataVencimiento, error: errorVencimiento } = await supabase
                             .from('vencimientos_semanales')
                             .select('fecha_vencimiento, diasvida')
-                            .eq('semana_referencia', semanaReferencia)
+                            .eq('fecha_captura', fechaCapturaVencimiento)
                             .eq('sede', data.sede || '')
                             .eq('idbodega', data.idBodega || '')
                             .eq('codigo', data.codigo || '')
@@ -5522,7 +5522,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
-            <div class="assistant-empty-note">Asistente IA - Hernán Banegas</div>
+            <div class="assistant-empty-note">Modo local activo, con fallback automático a IA si configuras la función assistant-inventario.</div>
         </div>
     </div>
 
