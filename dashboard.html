@@ -2739,11 +2739,14 @@ header.sticky {
         }
 
         async function eliminarVencimientoSemanal(clave = {}) {
-            if (!clave.sede || !clave.idBodega || !clave.codigo) return;
+            const fechaCaptura = clave.fechaCaptura || clave.fecha || null;
+
+            if (!fechaCaptura || !clave.sede || !clave.idBodega || !clave.codigo) return;
 
             const { error } = await supabase
                 .from('vencimientos_semanales')
                 .delete()
+                .eq('fecha_captura', fechaCaptura)
                 .eq('sede', clave.sede)
                 .eq('idbodega', clave.idBodega)
                 .eq('codigo', clave.codigo);
@@ -2821,7 +2824,6 @@ header.sticky {
 		            if (errorInsert) throw errorInsert;
 		            idRegistro = inserted?.id || null;
 		        }
-		
 		        if (checkActivo && fechaVenc) {
 		
 		            await guardarVencimientoSemanal({
@@ -2842,13 +2844,6 @@ header.sticky {
 		                costototal: window.costoTotalActual || 0,
 						usuario: getUsuarioActual(),
 						total: total
-		            });
-		        } else {
-		            await eliminarVencimientoSemanal({
-		                fecha: fecha,
-		                sede: sede,
-		                idBodega: idBodega,
-		                codigo: codigo
 		            });
 		        }
 		
