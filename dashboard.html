@@ -966,65 +966,6 @@ header.sticky {
                     </div>
                 </div>
 
-                <div id="vencimientosAdminPanel" class="card p-6 mb-6 hidden">
-                    <div class="flex items-start justify-between gap-4 flex-col lg:flex-row">
-                        <div>
-                            <h3 class="text-lg font-semibold mb-2">Carga manual de vencimientos</h3>
-                            <p class="text-sm text-gray-600">
-                                Disponible solo para el usuario verificadorsps. Este bloque permite cargar o recuperar información de vencimientos
-                                directamente en la tabla <code>vencimientos_semanales</code>.
-                            </p>
-                        </div>
-                        <div class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
-                            Al eliminar un registro asociado, primero se copia en <code>vencimientos_backup</code> y luego se borra del origen.
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Archivo CSV de vencimientos</label>
-                            <input type="file" id="importVencimientosFile"
-                                   class="input-field w-full px-4 py-3 rounded-lg"
-                                   accept=".csv"
-                                   onchange="previewVencimientosFile(this)">
-                            <p class="text-xs text-gray-500 mt-2">
-                                Columnas requeridas: fecha_captura, sede, idbodega, codigo, descripcion, fecha_vencimiento.
-                                Columnas opcionales: codigo_barra, proveedor, inventario_reporteria, masterpack, cajas_fardos, unidades, costo_unitario, costototal, total, usuario.
-                            </p>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
-                            <div class="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
-                                fecha_captura,sede,idbodega,codigo,descripcion,fecha_vencimiento,codigo_barra,proveedor,inventario_reporteria,masterpack,cajas_fardos,unidades,costo_unitario,costototal,total,usuario
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="vencimientosPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
-                        <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead id="vencimientosPreviewHead"></thead>
-                                <tbody id="vencimientosPreviewBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-4 mt-6">
-                        <button id="confirmImportVencimientos"
-                            class="btn-primary px-6 py-2 rounded-lg text-white" disabled>
-                            <i class="fas fa-upload mr-2"></i>
-                            Importar Vencimientos
-                        </button>
-
-                        <button id="btnLimpiarImportVencimientos"
-                            class="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
-                            Limpiar
-                        </button>
-                    </div>
-                </div>
-
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="card p-6">
                         <h3 class="text-lg font-semibold mb-4">Artículos Recientes</h3>
@@ -1144,6 +1085,72 @@ header.sticky {
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="bloqueCargaManualBtn" class="mt-4 hidden">
+                    <button id="btnAbrirCargaManual"
+                        class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 text-sm">
+                        Carga Manual
+                    </button>
+                </div>
+
+                <div id="modalCargaManual" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+                    <div class="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">Carga manual de vencimientos</h3>
+                            <button id="cerrarModalCarga" class="w-10 h-10 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <p class="text-sm text-gray-600 mb-4">
+                            Disponible solo para el usuario verificadorsps. La eliminación asociada realiza respaldo automático en <code>vencimientos_backup</code>.
+                        </p>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Archivo CSV de vencimientos</label>
+                                <input type="file" id="importVencimientosFile"
+                                       class="input-field w-full px-4 py-3 rounded-lg"
+                                       accept=".csv"
+                                       onchange="previewVencimientosFile(this)">
+                                <p class="text-xs text-gray-500 mt-2">
+                                    Columnas requeridas: fecha_captura, sede, idbodega, codigo, descripcion, fecha_vencimiento.
+                                    Columnas opcionales: codigo_barra, proveedor, inventario_reporteria, masterpack, cajas_fardos, unidades, costo_unitario, costototal, total, usuario.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
+                                <div class="bg-gray-50 p-4 rounded-lg text-sm text-gray-600 break-all">
+                                    fecha_captura,sede,idbodega,codigo,descripcion,fecha_vencimiento,codigo_barra,proveedor,inventario_reporteria,masterpack,cajas_fardos,unidades,costo_unitario,costototal,total,usuario
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="vencimientosPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
+                            <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead id="vencimientosPreviewHead"></thead>
+                                    <tbody id="vencimientosPreviewBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4 mt-6">
+                            <button id="confirmImportVencimientos"
+                                class="btn-primary px-6 py-2 rounded-lg text-white" disabled>
+                                <i class="fas fa-upload mr-2"></i>
+                                Importar Vencimientos
+                            </button>
+
+                            <button id="btnLimpiarImportVencimientos"
+                                class="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
+                                Limpiar
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -2009,15 +2016,16 @@ header.sticky {
         }
 
         function aplicarRestriccionCargaVencimientos() {
-            const panel = document.getElementById('vencimientosAdminPanel');
-            if (!panel) return;
+            const boton = document.getElementById('bloqueCargaManualBtn');
+            const modal = document.getElementById('modalCargaManual');
 
             if (usuarioPuedeGestionarVencimientos()) {
-                panel.classList.remove('hidden');
+                boton?.classList.remove('hidden');
                 return;
             }
 
-            panel.remove();
+            boton?.remove();
+            modal?.remove();
         }
 
         function formatearDNI(valor = '') {
@@ -2385,6 +2393,27 @@ header.sticky {
             document.getElementById('confirmImportCodes').addEventListener('click', importCodes);
             document.getElementById('confirmImportVencimientos')?.addEventListener('click', importVencimientosManual);
             document.getElementById('btnLimpiarImportVencimientos')?.addEventListener('click', limpiarImportVencimientos);
+
+            const btnAbrirCargaManual = document.getElementById('btnAbrirCargaManual');
+            const modalCargaManual = document.getElementById('modalCargaManual');
+            const cerrarModalCarga = document.getElementById('cerrarModalCarga');
+
+            btnAbrirCargaManual?.addEventListener('click', () => {
+                modalCargaManual?.classList.remove('hidden');
+                modalCargaManual?.classList.add('flex');
+            });
+
+            cerrarModalCarga?.addEventListener('click', () => {
+                modalCargaManual?.classList.add('hidden');
+                modalCargaManual?.classList.remove('flex');
+            });
+
+            modalCargaManual?.addEventListener('click', (e) => {
+                if (e.target === modalCargaManual) {
+                    modalCargaManual.classList.add('hidden');
+                    modalCargaManual.classList.remove('flex');
+                }
+            });
 			
             const btnEliminarGeneral = document.getElementById('btnEliminarGeneral');
 			if (btnEliminarGeneral) {
