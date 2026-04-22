@@ -966,6 +966,65 @@ header.sticky {
                     </div>
                 </div>
 
+                <div id="vencimientosAdminPanel" class="card p-6 mb-6 hidden">
+                    <div class="flex items-start justify-between gap-4 flex-col lg:flex-row">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Carga manual de vencimientos</h3>
+                            <p class="text-sm text-gray-600">
+                                Disponible solo para el usuario verificadorsps. Este bloque permite cargar o recuperar información de vencimientos
+                                directamente en la tabla <code>vencimientos_semanales</code>.
+                            </p>
+                        </div>
+                        <div class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+                            Al eliminar un registro asociado, primero se copia en <code>vencimientos_backup</code> y luego se borra del origen.
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Archivo CSV de vencimientos</label>
+                            <input type="file" id="importVencimientosFile"
+                                   class="input-field w-full px-4 py-3 rounded-lg"
+                                   accept=".csv"
+                                   onchange="previewVencimientosFile(this)">
+                            <p class="text-xs text-gray-500 mt-2">
+                                Columnas requeridas: fecha_captura, sede, idbodega, codigo, descripcion, fecha_vencimiento.
+                                Columnas opcionales: codigo_barra, proveedor, inventario_reporteria, masterpack, cajas_fardos, unidades, costo_unitario, costototal, total, usuario.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
+                            <div class="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
+                                fecha_captura,sede,idbodega,codigo,descripcion,fecha_vencimiento,codigo_barra,proveedor,inventario_reporteria,masterpack,cajas_fardos,unidades,costo_unitario,costototal,total,usuario
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="vencimientosPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
+                        <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead id="vencimientosPreviewHead"></thead>
+                                <tbody id="vencimientosPreviewBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 mt-6">
+                        <button id="confirmImportVencimientos"
+                            class="btn-primary px-6 py-2 rounded-lg text-white" disabled>
+                            <i class="fas fa-upload mr-2"></i>
+                            Importar Vencimientos
+                        </button>
+
+                        <button id="btnLimpiarImportVencimientos"
+                            class="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
+                            Limpiar
+                        </button>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="card p-6">
                         <h3 class="text-lg font-semibold mb-4">Artículos Recientes</h3>
@@ -1945,6 +2004,22 @@ header.sticky {
             }
         }
 
+        function usuarioPuedeGestionarVencimientos(user = currentUser) {
+            return obtenerUsuarioActualNormalizado(user) === 'verificadorsps';
+        }
+
+        function aplicarRestriccionCargaVencimientos() {
+            const panel = document.getElementById('vencimientosAdminPanel');
+            if (!panel) return;
+
+            if (usuarioPuedeGestionarVencimientos()) {
+                panel.classList.remove('hidden');
+                return;
+            }
+
+            panel.remove();
+        }
+
         function formatearDNI(valor = '') {
             const digits = String(valor).replace(/\D/g, '').slice(0, 13);
             const parts = [];
@@ -2184,6 +2259,7 @@ header.sticky {
             if (nombreCortoEl) nombreCortoEl.textContent = currentUser.nombre_corto || '';
 
             aplicarRestriccionGestionUsuarios();
+            aplicarRestriccionCargaVencimientos();
             
             // Inicializar navegación
             initNavigation();
@@ -2307,6 +2383,8 @@ header.sticky {
             // Import buttons
             document.getElementById('confirmImportInventory').addEventListener('click', importInventory);
             document.getElementById('confirmImportCodes').addEventListener('click', importCodes);
+            document.getElementById('confirmImportVencimientos')?.addEventListener('click', importVencimientosManual);
+            document.getElementById('btnLimpiarImportVencimientos')?.addEventListener('click', limpiarImportVencimientos);
 			
             const btnEliminarGeneral = document.getElementById('btnEliminarGeneral');
 			if (btnEliminarGeneral) {
@@ -2743,7 +2821,31 @@ header.sticky {
 
             if (!fechaCaptura || !clave.sede || !clave.idBodega || !clave.codigo) return;
 
-            const { error } = await supabase
+            const { data: registrosOrigen, error: errorConsulta } = await supabase
+                .from('vencimientos_semanales')
+                .select('*')
+                .eq('fecha_captura', fechaCaptura)
+                .eq('sede', clave.sede)
+                .eq('idbodega', clave.idBodega)
+                .eq('codigo', clave.codigo);
+
+            if (errorConsulta) {
+                throw errorConsulta;
+            }
+
+            if (!registrosOrigen || !registrosOrigen.length) {
+                return;
+            }
+
+            const { error: errorBackup } = await supabase
+                .from('vencimientos_backup')
+                .insert(registrosOrigen.map(item => ({ ...item })));
+
+            if (errorBackup) {
+                throw new Error(`No se pudo respaldar en vencimientos_backup: ${errorBackup.message}`);
+            }
+
+            const { error: errorDelete } = await supabase
                 .from('vencimientos_semanales')
                 .delete()
                 .eq('fecha_captura', fechaCaptura)
@@ -2751,8 +2853,8 @@ header.sticky {
                 .eq('idbodega', clave.idBodega)
                 .eq('codigo', clave.codigo);
 
-            if (error) {
-                throw error;
+            if (errorDelete) {
+                throw errorDelete;
             }
         }
 
@@ -3522,6 +3624,189 @@ header.sticky {
 
             cerrarModalExportarCSV();
             showNotification('Éxito', 'CSV exportado correctamente', 'success');
+        }
+
+        function normalizarNombreColumnaCSV(nombre = '') {
+            return String(nombre || '')
+                .trim()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '');
+        }
+
+        function convertirCSVATabla(texto = '') {
+            const lineas = String(texto || '')
+                .split(/\r?\n/)
+                .filter(linea => linea.trim() !== '');
+
+            if (!lineas.length) {
+                return { headers: [], rows: [] };
+            }
+
+            const headers = lineas[0].split(',').map(item => item.trim());
+            const rows = lineas.slice(1).map(linea => linea.split(',').map(item => item.trim()));
+            return { headers, rows };
+        }
+
+        function obtenerMapaIndicesCSV(headers = []) {
+            const mapa = {};
+            headers.forEach((header, index) => {
+                mapa[normalizarNombreColumnaCSV(header)] = index;
+            });
+            return mapa;
+        }
+
+        function valorCSV(values = [], mapa = {}, claves = []) {
+            for (const clave of claves) {
+                const idx = mapa[clave];
+                if (typeof idx === 'number' && idx >= 0 && idx < values.length) {
+                    return limpiarValor(values[idx]);
+                }
+            }
+            return '';
+        }
+
+        function limpiarImportVencimientos() {
+            const preview = document.getElementById('vencimientosPreview');
+            const head = document.getElementById('vencimientosPreviewHead');
+            const body = document.getElementById('vencimientosPreviewBody');
+            const fileInput = document.getElementById('importVencimientosFile');
+            const confirmBtn = document.getElementById('confirmImportVencimientos');
+
+            if (preview) preview.classList.add('hidden');
+            if (head) head.innerHTML = '';
+            if (body) body.innerHTML = '';
+            if (fileInput) fileInput.value = '';
+            if (confirmBtn) confirmBtn.disabled = true;
+        }
+
+        function previewVencimientosFile(input) {
+            const file = input.files?.[0];
+            const previewDiv = document.getElementById('vencimientosPreview');
+            const previewHead = document.getElementById('vencimientosPreviewHead');
+            const previewBody = document.getElementById('vencimientosPreviewBody');
+            const confirmBtn = document.getElementById('confirmImportVencimientos');
+
+            if (!file) {
+                limpiarImportVencimientos();
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const { headers, rows } = convertirCSVATabla(e.target.result);
+                const headersNormalizados = headers.map(normalizarNombreColumnaCSV);
+                const requeridas = ['fecha_captura', 'sede', 'idbodega', 'codigo', 'descripcion', 'fecha_vencimiento'];
+                const faltantes = requeridas.filter(col => !headersNormalizados.includes(col));
+
+                if (faltantes.length) {
+                    previewDiv.classList.add('hidden');
+                    confirmBtn.disabled = true;
+                    showNotification('Error', `Faltan columnas requeridas: ${faltantes.join(', ')}`, 'error');
+                    return;
+                }
+
+                const preview = buildSafeTablePreview(headers, rows.slice(0, 5));
+                previewHead.innerHTML = preview.headHtml;
+                previewBody.innerHTML = preview.bodyHtml;
+                previewDiv.classList.remove('hidden');
+                confirmBtn.disabled = rows.length === 0;
+
+                if (!rows.length) {
+                    showNotification('Advertencia', 'El archivo CSV no contiene filas para importar.', 'warning');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        async function importVencimientosManual() {
+            if (!usuarioPuedeGestionarVencimientos()) {
+                showNotification('Error', 'No tienes permisos para importar vencimientos', 'error');
+                return;
+            }
+
+            const fileInput = document.getElementById('importVencimientosFile');
+            const file = fileInput?.files?.[0];
+
+            if (!file) {
+                showNotification('Error', 'Seleccione un archivo CSV', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const { headers, rows } = convertirCSVATabla(e.target.result);
+                    const mapa = obtenerMapaIndicesCSV(headers);
+
+                    const requeridas = ['fecha_captura', 'sede', 'idbodega', 'codigo', 'descripcion', 'fecha_vencimiento'];
+                    const faltantes = requeridas.filter(col => typeof mapa[col] !== 'number');
+
+                    if (faltantes.length) {
+                        showNotification('Error', `Faltan columnas requeridas: ${faltantes.join(', ')}`, 'error');
+                        return;
+                    }
+
+                    const registros = rows.map(values => {
+                        const fechaVencimiento = valorCSV(values, mapa, ['fecha_vencimiento']);
+                        const diasVidaCalculado = fechaVencimiento ? calcularDiasVidaActual(fechaVencimiento) : null;
+
+                        return {
+                            fecha_captura: valorCSV(values, mapa, ['fecha_captura', 'fecha']),
+                            sede: valorCSV(values, mapa, ['sede']),
+                            idbodega: valorCSV(values, mapa, ['idbodega', 'id_bodega']),
+                            codigo: valorCSV(values, mapa, ['codigo']),
+                            descripcion: valorCSV(values, mapa, ['descripcion']),
+                            fecha_vencimiento: fechaVencimiento || null,
+                            codigo_barra: valorCSV(values, mapa, ['codigo_barra', 'codigobarra']) || null,
+                            proveedor: valorCSV(values, mapa, ['proveedor']) || null,
+                            inventario_reporteria: parseFloat(valorCSV(values, mapa, ['inventario_reporteria', 'inventarioreporteria'])) || 0,
+                            masterpack: parseFloat(valorCSV(values, mapa, ['masterpack'])) || 1,
+                            cajas_fardos: parseFloat(valorCSV(values, mapa, ['cajas_fardos', 'cajasfardos'])) || 0,
+                            unidades: parseFloat(valorCSV(values, mapa, ['unidades'])) || 0,
+                            diasvida: Number.isFinite(diasVidaCalculado) ? diasVidaCalculado : null,
+                            costo_unitario: parseFloat(valorCSV(values, mapa, ['costo_unitario', 'costounitario'])) || 0,
+                            costototal: parseFloat(valorCSV(values, mapa, ['costototal', 'costo_total'])) || 0,
+                            total: parseFloat(valorCSV(values, mapa, ['total'])) || 0,
+                            usuario: valorCSV(values, mapa, ['usuario']) || getUsuarioActual()
+                        };
+                    }).filter(item =>
+                        item.fecha_captura &&
+                        item.sede &&
+                        item.idbodega &&
+                        item.codigo &&
+                        item.descripcion
+                    );
+
+                    if (!registros.length) {
+                        showNotification('Error', 'No hay registros válidos para importar', 'error');
+                        return;
+                    }
+
+                    const { error } = await supabase
+                        .from('vencimientos_semanales')
+                        .upsert(registros, {
+                            onConflict: 'fecha_captura,sede,idbodega,codigo'
+                        });
+
+                    if (error) {
+                        throw error;
+                    }
+
+                    await registrarImportacionVencimientos(registros.length);
+                    limpiarImportVencimientos();
+                    loadVencimientosData();
+
+                    showNotification('Éxito', `${registros.length} registros de vencimientos importados correctamente`, 'success');
+                } catch (error) {
+                    console.error('Error importando vencimientos manuales:', error);
+                    showNotification('Error', error.message || 'No se pudo importar vencimientos', 'error');
+                }
+            };
+
+            reader.readAsText(file);
         }
 
         function previewInventoryFile(input) {
