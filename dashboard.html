@@ -2805,6 +2805,7 @@ header.sticky {
 		    };
 		
 		    try {
+		        const estabaEditando = !!window.editandoId;
 		        let idRegistro = window.editandoId || null;
 		
 		        if (window.editandoId) {
@@ -2855,7 +2856,7 @@ header.sticky {
 		
 		        showNotification(
 		            'Éxito',
-		            idRegistro ? 'Artículo guardado correctamente' : 'Registro actualizado correctamente',
+		            estabaEditando ? 'Registro actualizado correctamente' : 'Artículo guardado correctamente',
 		            'success'
 		        );
 		    } catch (error) {
@@ -3229,6 +3230,33 @@ header.sticky {
 		        `;
 		    }).join('');
 		}
+
+        function obtenerSemanaReferencia(fecha) {
+            if (!fecha) return null;
+
+            const partes = String(fecha).split('-');
+            if (partes.length !== 3) return null;
+
+            const anio = Number(partes[0]);
+            const mes = Number(partes[1]) - 1;
+            const dia = Number(partes[2]);
+
+            const fechaLocal = new Date(anio, mes, dia);
+            if (Number.isNaN(fechaLocal.getTime())) return null;
+
+            const diaSemana = fechaLocal.getDay();
+            const desfaseLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
+
+            const lunes = new Date(fechaLocal);
+            lunes.setHours(0, 0, 0, 0);
+            lunes.setDate(fechaLocal.getDate() + desfaseLunes);
+
+            const yyyy = lunes.getFullYear();
+            const mm = String(lunes.getMonth() + 1).padStart(2, '0');
+            const dd = String(lunes.getDate()).padStart(2, '0');
+
+            return `${yyyy}-${mm}-${dd}`;
+        }
 
         async function editarArticulo(id) {
 
@@ -5494,7 +5522,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
-            <div class="assistant-empty-note">Modo local activo, con fallback automático a IA si configuras la función assistant-inventario.</div>
+            <div class="assistant-empty-note">Asistente IA - Hernán Banegas</div>
         </div>
     </div>
 
