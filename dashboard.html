@@ -3919,15 +3919,13 @@ header.sticky {
 		        }
 		
 		        const { error: deleteError } = await supabase
-		            .from('inventario_reporteria')
-		            .delete()
-		            .neq('codigo', '');
-
-		
-		        if (deleteError) {
-		            showNotification('Error', deleteError.message, 'error');
-		            return;
-		        }
+				  .rpc('limpiar_inventario_reporteria');
+				
+				if (deleteError) {
+				  console.error('Error limpiando inventario_reporteria:', deleteError);
+				  alert('Error limpiando la tabla antes de importar');
+				  return;
+				}
 		
 		        const { error: insertError } = await supabase
 		            .from('inventario_reporteria')
