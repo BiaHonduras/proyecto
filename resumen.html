@@ -425,93 +425,82 @@
             return { sede, bodegas, proveedores };
         }
 
-        function construirQueryBase(columnas) {
+        function construirQueryProveedorVista() {
             const { sede, bodegas, proveedores } = obtenerFiltrosActivos();
 
             let query = supabase
-                .from('inventarios_diarios')
-                .select(columnas);
+                .from('vw_dashboard_proveedores')
+                .select('*');
 
-            if (sede) {
-                query = query.eq('sede', sede);
-            }
+            if (sede) query = query.eq('sede', sede);
+            if (bodegas.length > 0) query = query.in('id_bodega', bodegas);
+            if (proveedores.length > 0) query = query.in('proveedor', proveedores);
 
-            if (bodegas.length > 0) {
-                query = query.in('idBodega', bodegas);
-            }
+            return query;
+        }
 
-            if (proveedores.length > 0) {
-                let orQuery = proveedores
-                    .map(p => `proveedor.ilike.${p}`)
-                    .join(',');
+        function construirQueryTopVista() {
+            const { sede, bodegas, proveedores } = obtenerFiltrosActivos();
 
-                query = query.or(orQuery);
-            }
+            let query = supabase
+                .from('vw_top_skus_inventario_redondeado')
+                .select('*');
+
+            if (sede) query = query.eq('sede', sede);
+            if (bodegas.length > 0) query = query.in('id_bodega', bodegas);
+            if (proveedores.length > 0) query = query.in('proveedor', proveedores);
+
+            return query;
+        }
+
+        function construirQueryDiferenciasVista() {
+            const { sede, bodegas, proveedores } = obtenerFiltrosActivos();
+
+            let query = supabase
+                .from('vw_diferencias_inventario')
+                .select('*');
+
+            if (sede) query = query.eq('sede', sede);
+            if (bodegas.length > 0) query = query.in('id_bodega', bodegas);
+            if (proveedores.length > 0) query = query.in('proveedor', proveedores);
 
             return query;
         }
 
         async function cargarTotalSKUs() {
-            const { data, error } = await construirQueryBase('codigo');
-
+            const { data, error } = await construirQueryTopVista();
             if (error) {
-                console.error('Error cargando SKU:', error);
+                console.error('Error cargando SKU desde vista:', error);
                 return;
             }
-
             const unicos = new Set((data || []).map(item => item.codigo).filter(Boolean));
             document.getElementById('total-skus').textContent = unicos.size;
         }
 
         async function cargarValorInventario() {
-            const { data, error } = await construirQueryBase('costoTotal');
-
+            const { data, error } = await construirQueryTopVista();
             if (error) {
-                console.error('Error cargando valor inventario:', error);
+                console.error('Error cargando valor inventario desde vista:', error);
                 return;
             }
-
-            const total = (data || []).reduce((acc, item) => {
-                return acc + Number(item.costoTotal || 0);
-            }, 0);
-
+            const total = (data || []).reduce((acc, item) => acc + Number(item.valor_inventario || 0), 0);
             document.getElementById('valor-inventario').textContent = formatearMoneda(total);
         }
 
         async function cargarUnidadesPorProveedor() {
-            const { data, error } = await construirQueryBase('proveedor, total, cajas_fardos, masterpack, unidades');
-
+            const { data, error } = await construirQueryProveedorVista();
             if (error) {
-                console.error('Error cargando unidades por proveedor:', error);
+                console.error('Error cargando unidades por proveedor desde vista:', error);
                 return;
             }
 
             const agrupado = {};
-
             (data || []).forEach(item => {
                 const proveedor = item.proveedor || 'Sin proveedor';
-
-                let totalUnidades = 0;
-
-                if (item.total != null && item.total !== '') {
-                    totalUnidades = Number(item.total);
-                } else {
-                    totalUnidades =
-                        (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) +
-                        Number(item.unidades || 0);
-                }
-
-                if (!agrupado[proveedor]) {
-                    agrupado[proveedor] = 0;
-                }
-
-                agrupado[proveedor] += totalUnidades;
+                agrupado[proveedor] = (agrupado[proveedor] || 0) + Number(item.total_unidades || 0);
             });
 
-            const labels = Object.keys(agrupado);
-            const valores = Object.values(agrupado);
-
-            renderChartProveedores(labels, valores);
+            renderChartProveedores(Object.keys(agrupado), Object.values(agrupado));
         }
 
         function renderChartProveedores(labels, data) {
@@ -602,45 +591,13 @@
 
         async function cargarValorDiferencias() {
             try {
-                const { data: inventarioFiltrado, error: errorInventario } = await construirQueryBase('codigo');
-
-                if (errorInventario) {
-                    console.error('Error obteniendo códigos filtrados para diferencias:', errorInventario);
-                    document.getElementById('valor-diferencias').textContent = 'L. 0.00';
-                    return;
-                }
-
-                const codigos = [...new Set(
-                    (inventarioFiltrado || [])
-                        .map(item => String(item.codigo || '').trim())
-                        .filter(codigo => codigo !== '')
-                )];
-
-                if (codigos.length === 0) {
-                    document.getElementById('valor-diferencias').textContent = 'L. 0.00';
-                    return;
-                }
-
-                const { data, error } = await supabase
-                    .from('inventario_justificaciones')
-                    .select('costo_sf, codigo, justificacion_final')
-                    .in('codigo', codigos);
-
+                const { data, error } = await construirQueryDiferenciasVista();
                 if (error) {
-                    console.error('Error cargando justificaciones:', error);
+                    console.error('Error cargando diferencias desde vista:', error);
                     document.getElementById('valor-diferencias').textContent = 'L. 0.00';
                     return;
                 }
-
-                const justificacionesFiltradas = (data || []).filter(item => {
-                    const j = String(item.justificacion_final || '').trim().toLowerCase();
-                    return j === 'sobrante' || j === 'faltante';
-                });
-
-                const total = justificacionesFiltradas.reduce((acc, item) => {
-                    return acc + Number(item.costo_sf || 0);
-                }, 0);
-
+                const total = (data || []).reduce((acc, item) => acc + Math.abs(Number(item.valor_diferencia || 0)), 0);
                 document.getElementById('valor-diferencias').textContent = formatearMoneda(total);
             } catch (error) {
                 console.error('Error inesperado en cargarValorDiferencias:', error);
@@ -650,67 +607,27 @@
 
         async function cargarDiferenciasSeparadas() {
             try {
-                const { data: inventarioFiltrado, error: errorInventario } = await construirQueryBase('codigo');
-
-                if (errorInventario) {
-                    console.error('Error obteniendo códigos filtrados para diferencias:', errorInventario);
+                const { data, error } = await construirQueryDiferenciasVista();
+                if (error) {
+                    console.error('Error cargando diferencias desde vista:', error);
                     renderTablaDiferencias([]);
                     renderGraficoSobrantes([]);
                     renderGraficoFaltantes([]);
                     return;
                 }
 
-                const codigos = [...new Set(
-                    (inventarioFiltrado || [])
-                        .map(item => String(item.codigo || '').trim())
-                        .filter(codigo => codigo !== '')
-                )];
+                const normalizado = (data || []).map(item => ({
+                    codigo: item.codigo,
+                    costo_sf: Number(item.valor_diferencia || 0),
+                    tipo_grupo: item.tipo_diferencia
+                }));
 
-                console.log('Códigos filtrados para tabla y gráficos:', codigos);
+                const sobrantes = normalizado.filter(item => String(item.tipo_grupo || '').toLowerCase() === 'sobrante');
+                const faltantes = normalizado.filter(item => String(item.tipo_grupo || '').toLowerCase() === 'faltante');
 
-                if (codigos.length === 0) {
-                    renderTablaDiferencias([]);
-                    renderGraficoSobrantes([]);
-                    renderGraficoFaltantes([]);
-                    return;
-                }
-
-                const { data: justificaciones, error: errorJustificaciones } = await supabase
-                    .from('inventario_justificaciones')
-                    .select('codigo, costo_sf, justificacion_final')
-                    .in('codigo', codigos);
-
-                if (errorJustificaciones) {
-                    console.error('Error cargando justificaciones filtradas:', errorJustificaciones);
-                    renderTablaDiferencias([]);
-                    renderGraficoSobrantes([]);
-                    renderGraficoFaltantes([]);
-                    return;
-                }
-
-                const sobrantes = (justificaciones || []).filter(item =>
-                    String(item.justificacion_final || '').trim().toLowerCase() === 'sobrante'
-                );
-
-                const faltantes = (justificaciones || []).filter(item =>
-                    String(item.justificacion_final || '').trim().toLowerCase() === 'faltante'
-                );
-
-                const tabla = [
-                    ...sobrantes.map(item => ({
-                        ...item,
-                        tipo_grupo: 'Sobrante'
-                    })),
-                    ...faltantes.map(item => ({
-                        ...item,
-                        tipo_grupo: 'Faltante'
-                    }))
-                ];
-
-                renderTablaDiferencias(tabla);
+                renderTablaDiferencias(normalizado);
                 renderGraficoSobrantes(sobrantes);
                 renderGraficoFaltantes(faltantes);
-
             } catch (err) {
                 console.error('Error inesperado al cargar diferencias:', err);
                 renderTablaDiferencias([]);
@@ -918,37 +835,19 @@
         }
 
         async function cargarTopSKUs() {
-            const { data, error } = await construirQueryBase('codigo, proveedor, total, cajas_fardos, masterpack, unidades');
-
+            const { data, error } = await construirQueryTopVista();
             if (error) {
-                console.error('Error cargando top SKUs:', error);
+                console.error('Error cargando top SKUs desde vista:', error);
                 return;
             }
 
-            const procesado = (data || []).map(item => {
-                let totalUnidades = 0;
+            const procesado = (data || []).map(item => ({
+                codigo: item.codigo,
+                total: Number(item.total_unidades || 0)
+            })).filter(item => item.codigo);
 
-                if (item.total != null && item.total !== '') {
-                    totalUnidades = Number(item.total);
-                } else {
-                    totalUnidades =
-                        (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) +
-                        Number(item.unidades || 0);
-                }
-
-                return {
-                    codigo: item.codigo,
-                    total: totalUnidades
-                };
-            }).filter(item => item.codigo);
-
-            const topHigh = [...procesado]
-                .sort((a, b) => b.total - a.total)
-                .slice(0, 5);
-
-            const topLow = [...procesado]
-                .sort((a, b) => a.total - b.total)
-                .slice(0, 5);
+            const topHigh = [...procesado].sort((a, b) => b.total - a.total).slice(0, 5);
+            const topLow = [...procesado].sort((a, b) => a.total - b.total).slice(0, 5);
 
             renderTopChart('topHigh', topHigh, 'Más inventario', '#6f4e37');
             renderTopChart('topLow', topLow, 'Menos inventario', '#c0392b');
