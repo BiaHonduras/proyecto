@@ -363,17 +363,11 @@
                 throw new Error(authError.message || 'No fue posible actualizar la contraseña en Auth.');
             }
 
-            const { error: profileError } = await window.supabase
-                .from('usuarios')
-                .update({
-                    must_change_password: false,
-                    temporal_password: false,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('usuario', usuario);
+            const { data: profileData, error: profileError } = await window.supabase
+                .rpc('rpc_marcar_password_actualizada');
 
-            if (profileError) {
-                throw new Error(profileError.message || 'La contraseña se actualizó en Auth, pero no fue posible actualizar las banderas del usuario.');
+            if (profileError || !profileData?.ok) {
+                throw new Error(profileData?.mensaje || profileError?.message || 'La contraseña se actualizó en Auth, pero no fue posible actualizar las banderas del usuario.');
             }
 
             if (currentUser) {
