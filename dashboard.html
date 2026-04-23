@@ -3921,7 +3921,8 @@ header.sticky {
 		        const { error: deleteError } = await supabase
 		            .from('inventario_reporteria')
 		            .delete()
-		            .not('codigo', 'is', null);
+		            .neq('codigo', '');
+
 		
 		        if (deleteError) {
 		            showNotification('Error', deleteError.message, 'error');
