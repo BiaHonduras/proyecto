@@ -2556,62 +2556,39 @@ header.sticky {
 
         // ===== DASHBOARD =====
         async function loadDashboardData() {
+            const sedeFiltro = document.getElementById('filtroSedeGlobal')?.value || 'Todas';
+            const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaGlobal')?.value || 'Todas';
 
-			console.log('Supabase URL activa:', supabase?.supabaseUrl || supabase?.storageUrl || 'no visible');
-    		const { data, error } = await supabase
-        		.from('inventarios_diarios')
-        		.select('*');
+            const { data, error } = await supabase
+                .from('vw_dashboard_resumen')
+                .select('*')
+                .eq('sede_filtro', sedeFiltro)
+                .eq('tipo_bodega_filtro', tipoBodegaFiltro)
+                .maybeSingle();
 
-    			if (error) {
-        			console.error(error);
-        			showNotification('Error', 'No se pudo cargar el dashboard', 'error');
-        			return;
-    				}
+            if (error) {
+                console.error('Error cargando vw_dashboard_resumen:', error);
+                showNotification('Error', 'No se pudo cargar el dashboard', 'error');
+                return;
+            }
 
-                const inventario = aplicarFiltrosGlobales(data);
+            if (!data) {
+                document.getElementById('totalArticulos').textContent = 0;
+                document.getElementById('totalUnidadesDashboard').textContent = 0;
+                document.getElementById('totalProveedores').textContent = 0;
+                document.getElementById('ultimaActualizacion').textContent = '-';
+            } else {
+                document.getElementById('totalArticulos').textContent = Number(data.total_articulos || 0).toLocaleString('es-HN');
+                document.getElementById('totalUnidadesDashboard').textContent = Number(data.total_unidades || 0).toLocaleString('es-HN');
+                document.getElementById('totalProveedores').textContent = Number(data.total_proveedores || 0).toLocaleString('es-HN');
+                document.getElementById('ultimaActualizacion').textContent = formatearFecha(data.ultima_fecha || data.ultima_actualizacion);
+            }
 
-    			if (!inventario || inventario.length === 0) {
-        			document.getElementById('totalArticulos').textContent = 0;
-        			document.getElementById('totalUnidadesDashboard').textContent = 0;
-        			document.getElementById('totalProveedores').textContent = 0;
-        			document.getElementById('ultimaActualizacion').textContent = '-';
-                    document.getElementById('recentItems').innerHTML = `
-                        <div class="text-center py-8 text-gray-500">
-                            <i class="fas fa-inbox text-3xl mb-2"></i>
-                            <p>No hay artículos para el filtro seleccionado</p>
-                        </div>
-                    `;
-                    document.getElementById('proveedorChart').innerHTML = `
-                        <div class="text-center text-gray-500">
-                            <i class="fas fa-chart-pie text-3xl mb-2"></i>
-                            <p>No hay datos disponibles</p>
-                        </div>
-                    `;
-        			return;
-    				}
-
-    		document.getElementById('totalArticulos').textContent = inventario.length;
-
-    		const totalUnidades = inventario.reduce((sum, item) => {
-        		return sum + ((item.cajas_fardos * item.masterpack) + item.unidades);
-    			}, 0);
-
-    		document.getElementById('totalUnidadesDashboard').textContent =
-			    Math.round(totalUnidades).toLocaleString('en-US');
-
-    		const proveedores = new Set(inventario.map(i => i.proveedor));
-    			document.getElementById('totalProveedores').textContent = proveedores.size;
-
-    		const last = inventario.reduce((max, item) => {
-        		return String(item.fecha || '') > String(max.fecha || '') ? item : max;
-    			});
-
-    		document.getElementById('ultimaActualizacion').textContent =
-        		formatearFecha(last.fecha);
-
-    	cargarArticulosRecientes();
-    	cargarGraficoProveedores();
-}
+            await Promise.all([
+                cargarArticulosRecientes(),
+                cargarGraficoProveedores()
+            ]);
+        }
 
         // === FORMATO DE FECHA ====
         function formatearFecha(fechaISO) {
@@ -3458,46 +3435,27 @@ header.sticky {
                 }
 
         async function eliminarArticulo(id) {
+            if (!confirm('¿Eliminar este registro? Esta acción generará respaldo y auditoría en SQL.')) return;
 
-    if (!confirm('¿Eliminar este registro?')) return;
+            const { data, error } = await supabase.rpc('rpc_eliminar_articulo_seguro', {
+                p_id: String(id),
+                p_usuario: currentUser?.username || currentUser?.usuario || ''
+            });
 
-    const { data: registro, error: errorRegistro } = await supabase
-        .from('inventarios_diarios')
-        .select('id, fecha, sede, idBodega, codigo')
-        .eq('id', id)
-        .maybeSingle();
+            if (error || !data?.ok) {
+                console.error('Error eliminando por RPC:', error || data);
+                showNotification('Error', data?.mensaje || error?.message || 'No se pudo eliminar el registro', 'error');
+                return;
+            }
 
-    if (errorRegistro || !registro) {
-        showNotification('Error', 'No se pudo cargar el registro a eliminar', 'error');
-        return;
-    }
+            await Promise.all([
+                loadInventory(),
+                loadDashboardData(),
+                loadVencimientosData()
+            ]);
 
-    const { error } = await supabase
-        .from('inventarios_diarios')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
-        showNotification('Error', 'No se pudo eliminar', 'error');
-        return;
-    }
-
-    try {
-        await eliminarVencimientoSemanal({
-            fecha: registro.fecha,
-            sede: registro.sede,
-            idBodega: registro.idBodega,
-            codigo: registro.codigo
-        });
-    } catch (errorVencimiento) {
-        console.error('No se pudo eliminar vencimiento semanal asociado:', errorVencimiento);
-    }
-
-    loadInventory();
-    loadDashboardData();
-    loadVencimientosData();
-    showNotification('Éxito', 'Registro eliminado', 'success');
-}
+            showNotification('Éxito', 'Registro eliminado con respaldo y auditoría', 'success');
+        }
 
         // ===== EXPORTAR CSV =====
         async function exportToCSV(sedeFiltro = 'Todas', tipoBodegaFiltro = 'Todas') {
@@ -4146,242 +4104,82 @@ header.sticky {
 		}
 
         async function eliminarGeneralProtegido() {
-		    const confirmar = confirm(
-		        '¿Estás seguro que deseas eliminar todos los registros de Inventarios, Justificaciones y Reportería?\n\n' +
-		        'Antes de eliminar se generará un respaldo completo de las bases SQL.'
-		    );
-		    if (!confirmar) return;
-		
-		    const adminAutorizador = await solicitarAutorizacionAdmin();
-		    if (!adminAutorizador) return;
-		
-		    showNotification('Proceso', 'Generando respaldo completo antes de eliminar...', 'warning');
-		
-		    const [
-		        inventariosRes,
-		        justificacionesRes,
-		        reporteriaRes,
-		        codigosRes,
-		        usuariosRes
-		    ] = await Promise.all([
-		        supabase.from('inventarios_diarios').select('*'),
-		        supabase.from('inventario_justificaciones').select('*'),
-		        supabase.from('inventario_reporteria').select('*'),
-		        supabase.from('codigos').select('*'),
-		        supabase.from('usuarios').select('*')
-		    ]);
-		
-		    const erroresConsulta = [
-		        inventariosRes.error,
-		        justificacionesRes.error,
-		        reporteriaRes.error,
-		        codigosRes.error,
-		        usuariosRes.error
-		    ].filter(Boolean);
-		
-		    if (erroresConsulta.length > 0) {
-		        console.error('Error consultando tablas para respaldo:', erroresConsulta);
-		        showNotification('Error', 'No se pudo generar el respaldo completo antes de eliminar', 'error');
-		        return;
-		    }
-		
-		    const payloadRespaldo = {
-		        tipo_respaldo: 'eliminacion_general_con_respaldo_completo',
-		        fecha_generacion: new Date().toISOString(),
-		        ejecutado_por: currentUser?.username || currentUser?.usuario || 'desconocido',
-		        autorizado_por: adminAutorizador,
-		        tablas: {
-		            inventarios_diarios: inventariosRes.data || [],
-		            inventario_justificaciones: justificacionesRes.data || [],
-		            inventario_reporteria: reporteriaRes.data || [],
-		            codigos: codigosRes.data || [],
-		            usuarios: usuariosRes.data || []
-		        },
-		        resumen: {
-		            inventarios_diarios: (inventariosRes.data || []).length,
-		            inventario_justificaciones: (justificacionesRes.data || []).length,
-		            inventario_reporteria: (reporteriaRes.data || []).length,
-		            codigos: (codigosRes.data || []).length,
-		            usuarios: (usuariosRes.data || []).length
-		        },
-		        version_esquema: 2
-		    };
-		
-		    let respaldoStorage;
-		    try {
-		        respaldoStorage = await subirRespaldoASupabase(
-		            'respaldo_completo_previo_eliminacion_general',
-		            payloadRespaldo,
-		            {
-		                tipo_respaldo: 'eliminacion_general',
-		                autorizado_por: adminAutorizador,
-		                tablas_incluidas: [
-		                    'inventarios_diarios',
-		                    'inventario_justificaciones',
-		                    'inventario_reporteria',
-		                    'codigos',
-		                    'usuarios'
-		                ],
-		                totales_registros: payloadRespaldo.resumen,
-		                observaciones: 'Respaldo completo previo a eliminación general desde Inventarios Diarios'
-		            }
-		        );
-		    } catch (errorRespaldo) {
-		        console.error('Error generando respaldo:', errorRespaldo);
-		        showNotification('Error', errorRespaldo.message || 'Falló el respaldo previo a la eliminación', 'error');
-		        return;
-		    }
-		
-		    showNotification('Proceso', 'Respaldo completado. Iniciando eliminación...', 'warning');
-		
-		    const { error: errorDelete } = await supabase.rpc('eliminar_inventarios_completo');
+            const confirmar = confirm(
+                `¿Estás seguro que deseas eliminar todos los registros de Inventarios, Justificaciones y Reportería?\n\n` +
+                'La eliminación y el respaldo se ejecutarán desde SQL mediante RPC segura.'
+            );
+            if (!confirmar) return;
 
-				if (errorDelete) {
-				    console.error(errorDelete);
-				    showNotification(
-				        'Error',
-				        `El respaldo fue guardado correctamente en ${respaldoStorage.path}, pero ocurrió un error durante la eliminación.`,
-				        'error'
-				    );
-				    return;
-				}
-				
-				showNotification(
-				    'Éxito',
-				    `Respaldo completo guardado en ${respaldoStorage.path}. Luego se eliminaron Inventarios, Justificaciones y Reportería.`,
-				    'success',
-				    9000
-				);
-				
-				limpiarFormulario();
-				loadInventory();
-				loadDashboardData();
-				loadVencimientosData();
-				loadTransitos();
-		}
+            const adminAutorizador = await solicitarAutorizacionAdmin();
+            if (!adminAutorizador) return;
+
+            showNotification('Proceso', 'Ejecutando respaldo y eliminación segura desde SQL...', 'warning');
+
+            const { data, error } = await supabase.rpc('rpc_eliminar_inventarios_completo_seguro', {
+                p_autorizado_por: adminAutorizador,
+                p_usuario: currentUser?.username || currentUser?.usuario || ''
+            });
+
+            if (error || !data?.ok) {
+                console.error('Error RPC eliminación general:', error || data);
+                showNotification('Error', data?.mensaje || error?.message || 'No se pudo completar la eliminación segura', 'error');
+                return;
+            }
+
+            showNotification(
+                'Éxito',
+                `Eliminación segura completada. Inventarios: ${data.inventarios || 0}, Justificaciones: ${data.justificaciones || 0}, Reportería: ${data.reporteria || 0}.`,
+                'success',
+                9000
+            );
+
+            limpiarFormulario();
+            await Promise.all([
+                loadInventory(),
+                loadDashboardData(),
+                loadVencimientosData(),
+                loadTransitos()
+            ]);
+        }
 
         async function eliminarBaseCodigosProtegida() {
-		    const confirmar = confirm(
-		        '¿Estás seguro que deseas eliminar todos los registros de la Base de Códigos?\n\n' +
-		        'Antes de eliminar se generará un respaldo completo de las bases SQL.'
-		    );
-		    if (!confirmar) return;
-		
-		    const adminAutorizador = await solicitarAutorizacionAdmin();
-		    if (!adminAutorizador) return;
-		
-		    showNotification('Proceso', 'Generando respaldo completo antes de eliminar base de códigos...', 'warning');
-		
-		    const [
-		        inventariosRes,
-		        justificacionesRes,
-		        reporteriaRes,
-		        codigosRes,
-		        usuariosRes
-		    ] = await Promise.all([
-		        supabase.from('inventarios_diarios').select('*'),
-		        supabase.from('inventario_justificaciones').select('*'),
-		        supabase.from('inventario_reporteria').select('*'),
-		        supabase.from('codigos').select('*'),
-		        supabase.from('usuarios').select('*')
-		    ]);
-		
-		    const erroresConsulta = [
-		        inventariosRes.error,
-		        justificacionesRes.error,
-		        reporteriaRes.error,
-		        codigosRes.error,
-		        usuariosRes.error
-		    ].filter(Boolean);
-		
-		    if (erroresConsulta.length > 0) {
-		        console.error('Error consultando tablas para respaldo:', erroresConsulta);
-		        showNotification('Error', 'No se pudo generar el respaldo completo antes de eliminar la base de códigos', 'error');
-		        return;
-		    }
-		
-		    const payloadRespaldo = {
-		        tipo_respaldo: 'eliminacion_base_codigos_con_respaldo_completo',
-		        fecha_generacion: new Date().toISOString(),
-		        ejecutado_por: currentUser?.username || currentUser?.usuario || 'desconocido',
-		        autorizado_por: adminAutorizador,
-		        tablas: {
-		            inventarios_diarios: inventariosRes.data || [],
-		            inventario_justificaciones: justificacionesRes.data || [],
-		            inventario_reporteria: reporteriaRes.data || [],
-		            codigos: codigosRes.data || [],
-		            usuarios: usuariosRes.data || []
-		        },
-		        resumen: {
-		            inventarios_diarios: (inventariosRes.data || []).length,
-		            inventario_justificaciones: (justificacionesRes.data || []).length,
-		            inventario_reporteria: (reporteriaRes.data || []).length,
-		            codigos: (codigosRes.data || []).length,
-		            usuarios: (usuariosRes.data || []).length
-		        },
-		        version_esquema: 2
-		    };
-		
-		    let respaldoStorage;
-		    try {
-		        respaldoStorage = await subirRespaldoASupabase(
-		            'respaldo_completo_previo_eliminacion_base_codigos',
-		            payloadRespaldo,
-		            {
-		                tipo_respaldo: 'eliminacion_base_codigos',
-		                autorizado_por: adminAutorizador,
-		                tablas_incluidas: [
-		                    'inventarios_diarios',
-		                    'inventario_justificaciones',
-		                    'inventario_reporteria',
-		                    'codigos',
-		                    'usuarios'
-		                ],
-		                totales_registros: payloadRespaldo.resumen,
-		                observaciones: 'Respaldo completo previo a eliminación de la base de códigos'
-		            }
-		        );
-		    } catch (errorRespaldo) {
-		        console.error('Error generando respaldo:', errorRespaldo);
-		        showNotification('Error', errorRespaldo.message || 'Falló el respaldo previo a la eliminación', 'error');
-		        return;
-		    }
-		
-		    showNotification('Proceso', 'Respaldo completado. Eliminando base de códigos...', 'warning');
-		
-		    const { error } = await supabase.rpc('eliminar_base_codigos_completa');
-		
-		    if (error) {
-		        console.error(error);
-		        showNotification(
-		            'Error',
-		            `El respaldo fue guardado correctamente en ${respaldoStorage.path}, pero no se pudo eliminar la base de códigos.`,
-		            'error'
-		        );
-		        return;
-		    }
-		
-		    showNotification(
-		        'Éxito',
-		        `Respaldo completo guardado en ${respaldoStorage.path}. Luego se eliminó la base de códigos.`,
-		        'success',
-		        9000
-		    );
-		
-		    cargarResumenCodigos();
-		
-		    const codesPreview = document.getElementById('codesPreview');
-		    const codesPreviewHead = document.getElementById('codesPreviewHead');
-		    const codesPreviewBody = document.getElementById('codesPreviewBody');
-		    const importCodesFile = document.getElementById('importCodesFile');
-		    const confirmImportCodes = document.getElementById('confirmImportCodes');
-		
-		    if (codesPreview) codesPreview.classList.add('hidden');
-		    if (codesPreviewHead) codesPreviewHead.innerHTML = '';
-		    if (codesPreviewBody) codesPreviewBody.innerHTML = '';
-		    if (importCodesFile) importCodesFile.value = '';
-		    if (confirmImportCodes) confirmImportCodes.disabled = true;
-		}
+            const confirmar = confirm(
+                `¿Estás seguro que deseas eliminar todos los registros de la Base de Códigos?\n\n` +
+                'La eliminación y el respaldo se ejecutarán desde SQL mediante RPC segura.'
+            );
+            if (!confirmar) return;
+
+            const adminAutorizador = await solicitarAutorizacionAdmin();
+            if (!adminAutorizador) return;
+
+            showNotification('Proceso', 'Ejecutando respaldo y eliminación segura de códigos desde SQL...', 'warning');
+
+            const { data, error } = await supabase.rpc('rpc_eliminar_base_codigos_segura', {
+                p_autorizado_por: adminAutorizador,
+                p_usuario: currentUser?.username || currentUser?.usuario || ''
+            });
+
+            if (error || !data?.ok) {
+                console.error('Error RPC eliminación base códigos:', error || data);
+                showNotification('Error', data?.mensaje || error?.message || 'No se pudo eliminar la base de códigos', 'error');
+                return;
+            }
+
+            showNotification('Éxito', `Base de códigos eliminada con respaldo. Registros: ${data.codigos || 0}.`, 'success', 9000);
+            cargarResumenCodigos();
+
+            const codesPreview = document.getElementById('codesPreview');
+            const codesPreviewHead = document.getElementById('codesPreviewHead');
+            const codesPreviewBody = document.getElementById('codesPreviewBody');
+            const importCodesFile = document.getElementById('importCodesFile');
+            const confirmImportCodes = document.getElementById('confirmImportCodes');
+
+            if (codesPreview) codesPreview.classList.add('hidden');
+            if (codesPreviewHead) codesPreviewHead.innerHTML = '';
+            if (codesPreviewBody) codesPreviewBody.innerHTML = '';
+            if (importCodesFile) importCodesFile.value = '';
+            if (confirmImportCodes) confirmImportCodes.disabled = true;
+        }
 
         function previewCodesFile(input) {
             const file = input.files[0];
@@ -4841,71 +4639,85 @@ tbody.innerHTML = data.map(item => {
     }, duration);
 }
     async function cargarArticulosRecientes() {
-    const { data, error } = await supabase
-        .from('inventarios_diarios')
-        .select('*')
-        .order('created_at', { ascending: false }); // o timestamp
+        const sedeFiltro = document.getElementById('filtroSedeGlobal')?.value || 'Todas';
+        const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaGlobal')?.value || 'Todas';
 
-    const filtrados = aplicarFiltrosGlobales(data).slice(0, 5);
+        let query = supabase
+            .from('inventarios_diarios')
+            .select('id, fecha, created_at, sede, idBodega, codigo, descripcion, proveedor')
+            .order('created_at', { ascending: false })
+            .limit(25);
 
-    const contenedor = document.getElementById('recentItems');
+        if (sedeFiltro !== 'Todas') query = query.eq('sede', sedeFiltro);
+        if (tipoBodegaFiltro !== 'Todas') {
+            query = query.eq('idBodega', tipoBodegaFiltro === 'Principal' ? '030' : tipoBodegaFiltro);
+        }
 
-    if (error || !filtrados || filtrados.length === 0) {
-        contenedor.innerHTML = `
-            <div class="text-center py-8 text-gray-500">
-                <i class="fas fa-inbox text-3xl mb-2"></i>
-                <p>No hay artículos recientes</p>
+        const { data, error } = await query;
+        const contenedor = document.getElementById('recentItems');
+
+        if (error || !data || data.length === 0) {
+            if (error) console.error('Error cargando artículos recientes:', error);
+            contenedor.innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-inbox text-3xl mb-2"></i>
+                    <p>No hay artículos recientes</p>
+                </div>
+            `;
+            return;
+        }
+
+        contenedor.innerHTML = data.slice(0, 5).map(item => `
+            <div class="flex justify-between items-center border-b pb-2 gap-3">
+                <div class="min-w-0">
+                    <p class="font-semibold truncate">${escapeHtml(item.descripcion || '')}</p>
+                    <p class="text-sm text-gray-500 font-mono">${escapeHtml(item.codigo || '')}</p>
+                </div>
+                <div class="text-right shrink-0">
+                    <p class="text-sm">${escapeHtml(item.proveedor || '')}</p>
+                    <p class="text-xs text-gray-400">${escapeHtml(item.fecha || '')}</p>
+                </div>
             </div>
-        `;
-        return;
+        `).join('');
     }
 
-    contenedor.innerHTML = filtrados.map(item => `
-        <div class="flex justify-between items-center border-b pb-2 gap-3">
-            <div class="min-w-0">
-                <p class="font-semibold truncate">${escapeHtml(item.descripcion || '')}</p>
-                <p class="text-sm text-gray-500 font-mono">${escapeHtml(item.codigo || '')}</p>
-            </div>
-            <div class="text-right shrink-0">
-                <p class="text-sm">${escapeHtml(item.proveedor || '')}</p>
-                <p class="text-xs text-gray-400">${escapeHtml(item.fecha || '')}</p>
-            </div>
-        </div>
-    `).join('');
-}
-async function cargarGraficoProveedores() {
+    async function cargarGraficoProveedores() {
+        const sedeFiltro = document.getElementById('filtroSedeGlobal')?.value || 'Todas';
+        const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaGlobal')?.value || 'Todas';
 
-    const { data, error } = await supabase
-        .from('inventarios_diarios')
-        .select('proveedor, sede, idBodega');
+        let query = supabase
+            .from('vw_dashboard_proveedores')
+            .select('sede, id_bodega, proveedor, total_registros, total_unidades, valor_inventario')
+            .order('total_registros', { ascending: false });
 
-    const filtrados = aplicarFiltrosGlobales(data);
+        if (sedeFiltro !== 'Todas') query = query.eq('sede', sedeFiltro);
+        if (tipoBodegaFiltro !== 'Todas') {
+            query = query.eq('id_bodega', tipoBodegaFiltro === 'Principal' ? '030' : tipoBodegaFiltro);
+        }
 
-    const contenedor = document.getElementById('proveedorChart');
+        const { data, error } = await query;
+        const contenedor = document.getElementById('proveedorChart');
 
-    if (error || !filtrados || filtrados.length === 0) {
-        contenedor.innerHTML = `
-            <div class="text-center text-gray-500">
-                <i class="fas fa-chart-pie text-3xl mb-2"></i>
-                <p>No hay datos disponibles</p>
-            </div>
-        `;
-        return;
+        if (error || !data || data.length === 0) {
+            if (error) console.error('Error cargando proveedores:', error);
+            contenedor.innerHTML = `
+                <div class="text-center text-gray-500">
+                    <i class="fas fa-chart-pie text-3xl mb-2"></i>
+                    <p>No hay datos disponibles</p>
+                </div>
+            `;
+            return;
+        }
+
+        const agrupado = {};
+        data.forEach(item => {
+            const proveedor = item.proveedor || 'Sin proveedor';
+            agrupado[proveedor] = (agrupado[proveedor] || 0) + Number(item.total_registros || 0);
+        });
+
+        renderPieChart(Object.keys(agrupado), Object.values(agrupado));
     }
 
-    // Agrupar proveedores
-    const conteo = {};
-
-    filtrados.forEach(item => {
-        if (!item.proveedor) return;
-        conteo[item.proveedor] = (conteo[item.proveedor] || 0) + 1;
-    });
-
-    const labels = Object.keys(conteo);
-    const valores = Object.values(conteo);
-
-    renderPieChart(labels, valores);
-}
         function renderPieChart(labels, data) {
 
     const contenedor = document.getElementById('proveedorChart');
@@ -5151,17 +4963,19 @@ async function cargarGraficoProveedores() {
 			}
 
 async function guardarJustificacion(id, texto) {
+    const { data, error } = await supabase.rpc('rpc_guardar_justificacion_articulo_segura', {
+        p_id: String(id),
+        p_justificacion: texto,
+        p_usuario: currentUser?.username || currentUser?.usuario || ''
+    });
 
-    const { error } = await supabase
-        .from('inventarios_diarios')
-        .update({ justificacion: texto })
-        .eq('id', id);
-
-    if (error) {
-        showNotification('Error', 'No se pudo guardar la justificación', 'error');
+    if (error || !data?.ok) {
+        console.error('Error guardando justificación por RPC:', error || data);
+        showNotification('Error', data?.mensaje || error?.message || 'No se pudo guardar la justificación', 'error');
         return;
     }
 }
+
 	const userShortNameFooter = document.getElementById('userShortNameFooter');
 
 		if (userShortNameFooter && currentUser) {
@@ -5207,87 +5021,85 @@ async function guardarJustificacion(id, texto) {
 	        delete fila.dataset.editando;
 	    });
 	}
+        async function guardarCambiosMasivos() {
+            const filas = document.querySelectorAll('#transitosTableBody tr[data-editando="true"]');
+            const registros = [];
 
-		async function guardarCambiosMasivos() {
-		    const filas = document.querySelectorAll('#transitosTableBody tr[data-editando="true"]');
-		    const registros = [];
-		
-		    if (filas.length === 0) {
-		        showNotification('Advertencia', 'No hay filas seleccionadas para guardar', 'warning');
-		        return;
-		    }
-		
-		    for (const fila of filas) {
-		        const inputJustificacion = fila.querySelector('.justificacion');
-		        const inputCantidad = fila.querySelector('.cantidad-justificada');
-		
-		        if (!inputJustificacion || !inputCantidad) continue;
-		
-		        const codigo = String(inputJustificacion.dataset.id || fila.dataset.codigo || '').trim();
-		        const sede = fila.dataset.sede || '';
-		        const idBodega = fila.dataset.idBodega || '';
-		        const descripcion = fila.querySelector('.descripcion')?.textContent.trim() || '';
-		        const diferencia = parseInt(fila.querySelector('.diferencia')?.textContent.trim() || '0', 10);
-		        const justificacion = (inputJustificacion.value || '').trim();
-		        const valorCantidad = (inputCantidad.value || '').trim();
-		
-		        if (!codigo) {
-		            showNotification('Error', 'No se encontró el código del registro', 'error');
-		            return;
-		        }
-		
-		        if (!justificacion) {
-		            showNotification('Error', 'No puedes guardar con justificaciones vacías', 'error');
-		            inputJustificacion.focus();
-		            return;
-		        }
-		
-		        if (!esEnteroValido(valorCantidad)) {
-		            showNotification('Error', 'La Cantidad Justificada solo permite enteros positivos o negativos', 'error');
-		            inputCantidad.focus();
-		            return;
-		        }
+            if (filas.length === 0) {
+                showNotification('Advertencia', 'No hay filas seleccionadas para guardar', 'warning');
+                return;
+            }
+
+            for (const fila of filas) {
+                const inputJustificacion = fila.querySelector('.justificacion');
+                const inputCantidad = fila.querySelector('.cantidad-justificada');
+
+                if (!inputJustificacion || !inputCantidad) continue;
+
+                const codigo = String(inputJustificacion.dataset.id || fila.dataset.codigo || '').trim();
+                const sede = fila.dataset.sede || '';
+                const idBodega = fila.dataset.idBodega || '';
+                const descripcion = fila.querySelector('.descripcion')?.textContent.trim() || '';
+                const diferencia = parseInt(fila.querySelector('.diferencia')?.textContent.trim() || '0', 10);
+                const justificacion = (inputJustificacion.value || '').trim();
+                const valorCantidad = (inputCantidad.value || '').trim();
+
+                if (!codigo) {
+                    showNotification('Error', 'No se encontró el código del registro', 'error');
+                    return;
+                }
+
+                if (!justificacion) {
+                    showNotification('Error', 'No puedes guardar con justificaciones vacías', 'error');
+                    inputJustificacion.focus();
+                    return;
+                }
+
+                if (!esEnteroValido(valorCantidad)) {
+                    showNotification('Error', 'La Cantidad Justificada solo permite enteros positivos o negativos', 'error');
+                    inputCantidad.focus();
+                    return;
+                }
+
                 const cantidadJustificada = parseInt(valorCantidad, 10);
-                const saldoFinal = diferencia + cantidadJustificada;
-		
-		        const fechaRegistroExistente = fila.dataset.fechaRegistro || '';
-		        const costoUnitario = Number(fila.dataset.costoUnitario || 0);
-		
-		        registros.push({
-		            codigo,
-		            sede,
-		            idBodega,
-		            usuario: currentUser?.username || currentUser?.usuario || '',
-		            descripcion,
-		            diferencia,
-		            cantidad_justificada: cantidadJustificada,
-		            costo_unitario: costoUnitario,
-		            costo_total: cantidadJustificada * costoUnitario,
-		            justificacion,
-		            fecha_modificacion: new Date().toISOString(),
-		            fecha_registro: fechaRegistroExistente || new Date().toISOString()
-		        });
-		    }
-		
-		    if (registros.length === 0) {
-		        showNotification('Advertencia', 'No hay registros para guardar', 'warning');
-		        return;
-		    }
-		
-		    const { error } = await supabase
-		        .from('inventario_justificaciones')
-		        .upsert(registros, { onConflict: 'codigo,sede' });
-		
-		    if (error) {
-		        console.error(error);
-		        showNotification('Error', `Falló el guardado: ${error.message}`, 'error');
-		        return;
-		    }
-		
-		    showNotification('Éxito', 'Registros actualizados correctamente', 'success');
-		    await loadTransitos();
-		}
-		
+                const costoUnitario = Number(fila.dataset.costoUnitario || 0);
+
+                registros.push({
+                    codigo,
+                    sede,
+                    idBodega,
+                    usuario: currentUser?.username || currentUser?.usuario || '',
+                    descripcion,
+                    diferencia,
+                    cantidad_justificada: cantidadJustificada,
+                    costo_unitario: costoUnitario,
+                    costo_total: cantidadJustificada * costoUnitario,
+                    justificacion,
+                    fecha_modificacion: new Date().toISOString(),
+                    fecha_registro: fila.dataset.fechaRegistro || new Date().toISOString()
+                });
+            }
+
+            if (registros.length === 0) {
+                showNotification('Advertencia', 'No hay registros para guardar', 'warning');
+                return;
+            }
+
+            const { data, error } = await supabase.rpc('rpc_guardar_justificaciones_masivas_segura', {
+                p_registros: registros,
+                p_usuario: currentUser?.username || currentUser?.usuario || ''
+            });
+
+            if (error || !data?.ok) {
+                console.error('Error guardando justificaciones por RPC:', error || data);
+                showNotification('Error', data?.mensaje || error?.message || 'Falló el guardado seguro', 'error');
+                return;
+            }
+
+            showNotification('Éxito', 'Registros actualizados correctamente mediante RPC segura', 'success');
+            await loadTransitos();
+        }
+
 	function formatearMoneda(valor) {
 	    const numero = Number(valor) || 0;
 	    const esNegativo = numero < 0;
