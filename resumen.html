@@ -507,7 +507,7 @@
             const { sede, bodegas, proveedores } = obtenerFiltrosActivos();
 
             let query = supabase
-                .from('vw_diferencias_inventario')
+                .from('inventario_justificaciones')
                 .select('*');
 
             if (sede) query = query.eq('sede', sede);
