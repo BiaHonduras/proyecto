@@ -3877,7 +3877,9 @@ header.sticky {
 		        }
 		
 		        const { error: deleteError } = await supabase
-				  .rpc('limpiar_inventario_reporteria');
+				  .rpc('rpc_limpiar_inventario_reporteria_segura', {
+					  p_usuario: currentUser?.username || currentUser?.usuario || ''
+					});
 				
 				if (deleteError) {
 				  console.error('Error limpiando inventario_reporteria:', deleteError);
