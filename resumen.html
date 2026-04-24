@@ -556,7 +556,7 @@
             }
 
             const total = (data || []).reduce((acc, item) => {
-                return acc + Math.abs(Number(item.costo_sf || 0));
+                return acc + Number(item.costo_sf || 0);
             }, 0);
 
             document.getElementById('valor-diferencias').textContent = formatearMoneda(total);
