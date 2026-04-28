@@ -26,8 +26,41 @@
         window.supabase = supabase;
         window.verificarConexion = verificarConexion;
 
-
-        
+		async function cargarBodegas() {
+		    const select = document.getElementById('idBodega');
+		
+		    const { data, error } = await supabase
+		        .from('bodegas')
+		        .select(`
+		            id_bodega,
+		            sede,
+		            nombre,
+		            tipos_bodega (
+		                tipo_bodega,
+		                maneja_vencimiento
+		            )
+		        `)
+		        .order('sede');
+		
+		    if (error) {
+		        console.error('Error cargando bodegas:', error);
+		        return;
+		    }
+		
+		    // limpiar opciones actuales
+		    select.innerHTML = '<option value="">Seleccione una bodega</option>';
+		
+		    data.forEach(b => {
+		        const option = document.createElement('option');
+		        option.value = b.id_bodega;
+		        option.textContent = `${b.sede} - ${b.nombre}`;
+		        select.appendChild(option);
+		    });
+		}
+		
+		// ejecutar cuando cargue la página
+		document.addEventListener('DOMContentLoaded', cargarBodegas);
+		
         window.initAssistant = function() {
             const fab = document.getElementById('assistantFab');
             const panel = document.getElementById('assistantPanel');
@@ -1177,12 +1210,9 @@ header.sticky {
 					
 					    <div>
 					        <label class="block text-sm font-medium text-gray-700 mb-2">Identificador Bodega *</label>
-					        <select id="idBodega" class="input-field w-full px-4 py-3 rounded-lg" required>
-					            <option value="">Seleccione una sede primero</option>
-        						<option value="030">Bodega Principal</option>
-        						<option value="033">Bodega PPV</option>
-        						<option value="095">Bodega PFN</option>
-    						</select>
+							<select id="idBodega" class="input-field w-full px-4 py-3 rounded-lg" required>
+							    <option value="">Cargando bodegas...</option>
+							</select>
 						</div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Actual *</label>
