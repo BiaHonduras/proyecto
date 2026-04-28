@@ -4291,7 +4291,7 @@ header.sticky {
 		
 		            const { error: codigosError } = await supabase
 		                .from('codigos')
-		                .upsert(registros, { onConflict: 'codigo_barra' });
+		                .upsert(registros, { onConflict: 'codigo' });
 		
 		            if (codigosError) {
 		                console.error('Error insertando en codigos:', codigosError);
