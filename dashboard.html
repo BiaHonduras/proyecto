@@ -1161,7 +1161,6 @@ header.sticky {
                 <div class="card p-6">
                     <div class="flex items-center gap-3 mb-6">
     					<h3 class="text-lg font-semibold">Registro de Inventarios Diarios</h3>
-    						<input type="checkbox" id="checkBodega" class="w-4 h-4">
 					</div>
                     <form id="articuloForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					    <div class="md:col-span-2">
@@ -1191,11 +1190,12 @@ header.sticky {
                                    class="input-field w-full px-4 py-3 rounded-lg" 
                                    required>
                         </div>
-						<div>
-    						<label class="block text-sm font-medium text-gray-700 mb-2">Fecha Vencimiento</label>
-    						<input type="date" id="fechaVencimiento"
-           						class="input-field w-full px-4 py-3 rounded-lg bg-gray-100"
-           						disabled>
+						<div id="contenedorVencimiento" class="hidden">
+						    <label class="block text-sm font-medium text-gray-700 mb-2">
+						        Fecha Vencimiento *
+						    </label>
+						    <input type="date" id="fechaVencimiento"
+						        class="input-field w-full px-4 py-3 rounded-lg">
 						</div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Códigos de Barra *</label>
@@ -5677,6 +5677,43 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
             <div class="assistant-empty-note">Modo local activo, con fallback automático a IA si configuras la función assistant-inventario.</div>
         </div>
     </div>
-
+		<script>
+		async function evaluarVencimiento() {
+		    const idBodega = document.getElementById('idBodega').value;
+		    const contenedor = document.getElementById('contenedorVencimiento');
+		
+		    if (!idBodega) {
+		        contenedor.classList.add('hidden');
+		        return;
+		    }
+		
+		    const hoy = new Date();
+		    const esLunes = hoy.getDay() === 1;
+		
+		    try {
+		        const { data, error } = await supabase
+		            .from('bodegas')
+		            .select('maneja_vencimiento')
+		            .eq('id_bodega', idBodega)
+		            .single();
+		
+		        if (error) throw error;
+		
+		        if (esLunes && data.maneja_vencimiento) {
+		            contenedor.classList.remove('hidden');
+		        } else {
+		            contenedor.classList.add('hidden');
+		        }
+		
+		    } catch (err) {
+		        console.error(err);
+		        contenedor.classList.add('hidden');
+		    }
+		}
+		
+		// eventos
+		document.getElementById('idBodega').addEventListener('change', evaluarVencimiento);
+		document.addEventListener('DOMContentLoaded', evaluarVencimiento);
+		</script>
 </body>
 </html>
