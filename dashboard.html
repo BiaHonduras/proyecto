@@ -1221,12 +1221,16 @@ header.sticky {
                                    required>
                         </div>
 						<div id="contenedorVencimiento" class="hidden">
-						    <label class="block text-sm font-medium text-gray-700 mb-2">
-						        Fecha Vencimiento *
-						    </label>
-						    <input type="date" id="fechaVencimiento"
-						        class="input-field w-full px-4 py-3 rounded-lg">
-						</div>
+					<div class="flex items-center gap-2 mb-2">
+						<input type="checkbox" id="checkBodega" class="h-4 w-4" />
+						<label for="checkBodega" class="text-sm font-medium text-gray-700">Registrar vencimiento</label>
+					</div>
+					<label class="block text-sm font-medium text-gray-700 mb-2">
+						Fecha Vencimiento *
+					</label>
+					<input type="date" id="fechaVencimiento" class="input-field w-full px-4 py-3 rounded-lg">
+					<p class="text-xs text-gray-500 mt-2">Activa la casilla para registrar fecha de vencimiento (solo aplica cuando la bodega maneja vencimiento).</p>
+				</div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Códigos de Barra *</label>
                             <button type="button" id="startScannerBtn"
@@ -1997,6 +2001,7 @@ header.sticky {
 
     <script>
         // ===== VARIABLES GLOBALES =====
+const BODEGA_PFN = '095';
         let currentUser = null;
         window.currentUser = null;
         let scannerActive = false;
@@ -2110,7 +2115,7 @@ header.sticky {
             }
 
             if (codigo.endsWith('3')) return 'PPV';
-            if (['015', '045', '095', '096', '099'].includes(codigo) || codigo.endsWith('5')) return 'PFN';
+            if (['015', '045', BODEGA_PFN, '096', '099'].includes(codigo) || codigo.endsWith('5')) return 'PFN';
             if (codigo.endsWith('0')) return 'Principal';
 
             return '';
@@ -2302,11 +2307,7 @@ header.sticky {
             // Inicializar navegación
             initNavigation();
             cargarResumenCodigos();
-
-			document.addEventListener('DOMContentLoaded', () => {
-				programarActualizacionVencimientos();
-				});
-
+			programarActualizacionVencimientos();
 			document.getElementById('btnEditarRegistros').addEventListener('click', () => {
     			activarModoEdicion();
 				});
@@ -3370,10 +3371,10 @@ header.sticky {
 		                <td class="py-4 px-4 text-center">${validacion}</td>
 		                <td class="py-4 px-4 text-center">
 		                    <div class="flex justify-center space-x-2">
-		                        <button class="text-blue-600 hover:text-blue-800" onclick="editarArticulo('${escapeAttr(item.id)}')">
+		                        <button class="text-blue-600 hover:text-blue-800" aria-label="Editar artículo" title="Editar" onclick="editarArticulo('${escapeAttr(item.id)}')">
 		                            <i class="fas fa-edit"></i>
 		                        </button>
-		                        <button class="text-red-600 hover:text-red-800" onclick="eliminarArticulo('${escapeAttr(item.id)}')">
+		                        <button class="text-red-600 hover:text-red-800" aria-label="Eliminar artículo" title="Eliminar" onclick="eliminarArticulo('${escapeAttr(item.id)}')">
 		                            <i class="fas fa-trash"></i>
 		                        </button>
 		                    </div>
@@ -4568,15 +4569,15 @@ header.sticky {
 		
 		
         function escapeHtml(value) {
-            return String(value ?? '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
-        function escapeAttr(value) {
+function escapeAttr(value) {
             return escapeHtml(value).replace(/`/g, '&#096;');
         }
 
@@ -5247,7 +5248,7 @@ async function guardarJustificacion(id, texto) {
 		function obtenerRangoDiasVida(diasvida, fechaVencimiento, idbodega = '') {
 		    const bodega = String(idbodega || '').trim();
 		
-		    if (!fechaVencimiento || bodega === '095') {
+		    if (!fechaVencimiento || bodega === BODEGA_PFN) {
 		        return 'sin_fecha';
 		    }
 		
@@ -5310,7 +5311,7 @@ async function guardarJustificacion(id, texto) {
                 if (tipoBodegaFiltro !== 'Todas') {
                     if (tipoBodegaFiltro === 'Principal') cumpleTipoBodega = item.idbodega === '030';
                     else if (tipoBodegaFiltro === 'PPV') cumpleTipoBodega = item.idbodega === '033';
-                    else if (tipoBodegaFiltro === 'PFN') cumpleTipoBodega = item.idbodega === '095';
+                    else if (tipoBodegaFiltro === 'PFN') cumpleTipoBodega = item.idbodega === BODEGA_PFN;
                 }
 
                 return cumpleSede && cumpleTipoBodega;
@@ -5563,7 +5564,7 @@ async function obtenerAccessToken() {
 		    const fechaInput = document.getElementById('fechaVencimiento');
 		    const checkBodega = document.getElementById('checkBodega');
 		    const checkActivo = !!checkBodega?.checked;
-		    const debeHabilitarse = idBodega !== '095' && checkActivo;
+		    const debeHabilitarse = idBodega !== BODEGA_PFN && checkActivo;
 		
 		    if (!fechaInput) return;
 		
@@ -5577,17 +5578,7 @@ async function obtenerAccessToken() {
 		    }
 		}
 
-		function calcularDiasVidaActual(fechaVencimiento) {
-		    if (!fechaVencimiento) return null;
 		
-		    const hoy = new Date();
-		    const hoyBase = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-		
-		    const venc = new Date(`${fechaVencimiento}T00:00:00`);
-		    const diffMs = venc - hoyBase;
-		
-		    return Math.ceil(diffMs / 86400000);
-		}
 
 </script>
 
@@ -5601,11 +5592,11 @@ async function obtenerAccessToken() {
     <!-- Usuario -->
     <div class="flex items-center gap-2 text-xs whitespace-nowrap">
     	<span id="nombreCorto" class="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap"></span>
-    	<button onclick="window.location.href='dashboard.html'" class="ml-2">
+    	<button onclick="window.location.href='dashboard.html'" class="ml-2" aria-label="Ir al inicio" title="Inicio">
     			<i class="fas fa-home"></i>
 		</button>
 
-		<button id="logoutBtn" class="ml-2">
+		<button id="logoutBtn" class="ml-2" aria-label="Cerrar sesión" title="Cerrar sesión">
     			<i class="fas fa-sign-out-alt"></i>
 		</button>
 	</div>
