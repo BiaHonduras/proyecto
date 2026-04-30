@@ -1011,16 +1011,19 @@ header.sticky {
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-4">Distribución por Proveedor</h3>
-                        <div id="proveedorChart" class="h-64 w-full">
-                            <div class="text-center text-gray-500">
-                                <i class="fas fa-chart-pie text-3xl mb-2"></i>
-                                <p>No hay datos disponibles</p>
-                            </div>
-                        </div>
-                    </div>
+					<div class="card p-6">
+					  <h3 class="text-lg font-semibold mb-1">Distribución por Proveedor</h3>
+					  <p class="text-sm text-gray-600 mb-3" id="totalSkusLabel">
+					    Total SKUs: 0
+					  </p>
+					
+					  <div id="proveedorChart" class="h-64 w-full">
+					    <div class="text-center text-gray-500">
+					      <i class="fas fa-chart-pie text-3xl mb-2"></i>
+					      <p>No hay datos disponibles</p>
+					    </div>
+					  </div>
+					</div>
                 </div>
             </section>
 
@@ -4732,77 +4735,109 @@ tbody.innerHTML = data.map(item => {
     }
 
     async function cargarGraficoProveedores() {
-        const sedeFiltro = document.getElementById('filtroSedeGlobal')?.value || 'Todas';
-        const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaGlobal')?.value || 'Todas';
-
-        let query = supabase
-            .from('vw_dashboard_proveedores')
-            .select('sede, id_bodega, proveedor, total_registros, total_unidades, valor_inventario')
-            .order('total_registros', { ascending: false });
-
-        if (sedeFiltro !== 'Todas') query = query.eq('sede', sedeFiltro);
-        if (tipoBodegaFiltro !== 'Todas') {
-            query = query.eq('id_bodega', tipoBodegaFiltro === 'Principal' ? '030' : tipoBodegaFiltro);
-        }
-
-        const { data, error } = await query;
-        const contenedor = document.getElementById('proveedorChart');
-
-        if (error || !data || data.length === 0) {
-            if (error) console.error('Error cargando proveedores:', error);
-            contenedor.innerHTML = `
-                <div class="text-center text-gray-500">
-                    <i class="fas fa-chart-pie text-3xl mb-2"></i>
-                    <p>No hay datos disponibles</p>
-                </div>
-            `;
-            return;
-        }
-
-        const agrupado = {};
-        data.forEach(item => {
-            const proveedor = item.proveedor || 'Sin proveedor';
-            agrupado[proveedor] = (agrupado[proveedor] || 0) + Number(item.total_registros || 0);
-        });
-
-        renderPieChart(Object.keys(agrupado), Object.values(agrupado));
-    }
-
-        function renderPieChart(labels, data) {
-
-    const contenedor = document.getElementById('proveedorChart');
-
-    contenedor.innerHTML = `
-        <div class="w-full h-full relative">
-            <canvas id="pieChart"></canvas>
-        </div>
-    `;
-
-    const ctx = document.getElementById('pieChart').getContext('2d');
-
-    if (window.__proveedorPieChart && typeof window.__proveedorPieChart.destroy === 'function') {
-        window.__proveedorPieChart.destroy();
-    }
-
-    window.__proveedorPieChart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: data
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-}
+		  const sedeFiltro = document.getElementById('filtroSedeGlobal')?.value || 'Todas';
+		  const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaGlobal')?.value || 'Todas';
+		
+		  let query = supabase
+		    .from('vw_dashboard_proveedores')
+		    .select('proveedor, total_registros');
+		
+		  const { data, error } = await query;
+		
+		  const contenedor = document.getElementById('proveedorChart');
+		  const totalLabel = document.getElementById('totalSkusLabel');
+		
+		  if (error || !data || data.length === 0) {
+		    contenedor.innerHTML = `
+		      <div class="text-center text-gray-500">
+		        <i class="fas fa-chart-pie text-3xl mb-2"></i>
+		        <p>No hay datos disponibles</p>
+		      </div>`;
+		    totalLabel.textContent = 'Total SKUs: 0';
+		    return;
+		  }
+		
+		  // ✅ Total SKU real
+		  const totalGeneral = data.reduce(
+		    (sum, item) => sum + Number(item.total_registros || 0),
+		    0
+		  );
+		
+		  totalLabel.textContent = `Total SKUs: ${totalGeneral}`;
+		
+		  // ✅ Agrupación
+		  const agrupado = {};
+		  data.forEach(item => {
+		    const proveedor = item.proveedor || 'Sin proveedor';
+		    agrupado[proveedor] =
+		      (agrupado[proveedor] || 0) + Number(item.total_registros || 0);
+		  });
+		
+		  // ✅ Cálculo porcentual exacto (suma 100%)
+		  const labels = [];
+		  const porcentajes = [];
+		  const absolutos = [];
+		
+		  let acumulado = 0;
+		  const entries = Object.entries(agrupado);
+		
+		  entries.forEach(([proveedor, cantidad], index) => {
+		    let porcentaje =
+		      index === entries.length - 1
+		        ? 100 - acumulado
+		        : Math.round((cantidad / totalGeneral) * 100);
+		
+		    acumulado += porcentaje;
+		
+		    labels.push(proveedor);
+		    porcentajes.push(porcentaje);
+		    absolutos.push(cantidad);
+		  });
+		
+		  renderPieChart(labels, porcentajes, absolutos);
+		}
+		
+		function renderPieChart(labels, porcentajes, absolutos) {
+		  const contenedor = document.getElementById('proveedorChart');
+		  contenedor.innerHTML = `
+		    <div class="w-full h-full relative">
+		      <canvas id="pieChart"></canvas>
+		    </div>
+		  `;
+		
+		  const ctx = document.getElementById('pieChart').getContext('2d');
+		
+		  if (window.__proveedorPieChart) {
+		    window.__proveedorPieChart.destroy();
+		  }
+		
+		  window.__proveedorPieChart = new Chart(ctx, {
+		    type: 'pie',
+		    data: {
+		      labels,
+		      datasets: [{
+		        data: porcentajes
+		      }]
+		    },
+		    options: {
+		      responsive: true,
+		      maintainAspectRatio: false,
+		      plugins: {
+		        legend: {
+		          position: 'bottom'
+		        },
+		        tooltip: {
+		          callbacks: {
+		            label: function (context) {
+		              const idx = context.dataIndex;
+		              return `${context.label}: ${context.raw}% (${absolutos[idx]} SKUs)`;
+		            }
+		          }
+		        }
+		      }
+		    }
+		  });
+		}
         async function eliminarInventarioDelDia() {
 		    const fecha = document.getElementById('fechaInventario').value;
 		
