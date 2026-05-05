@@ -5750,9 +5750,10 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 				        )
 				    `)
 				    .eq('id_bodega', idBodega)
-				    .single();
+				    .maybesingle();
+					console.log('idBodega:', idBodega);
 		
-		        if (error) throw error;
+		        const maneja = data?.tipos_bodega?.maneja_vencimiento;
 		
 		        if (esLunes && data.maneja_vencimiento) {
 		            contenedor.classList.remove('hidden');
