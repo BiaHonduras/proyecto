@@ -5743,10 +5743,14 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		
 		    try {
 		        const { data, error } = await supabase
-		            .from('tipos_bodegas')
-		            .select('maneja_vencimiento')
-		            .eq('id_bodega', idBodega)
-		            .single();
+				    .from('bodegas')
+				    .select(`
+				        tipos_bodega (
+				            maneja_vencimiento
+				        )
+				    `)
+				    .eq('id_bodega', idBodega)
+				    .single();
 		
 		        if (error) throw error;
 		
