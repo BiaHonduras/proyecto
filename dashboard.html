@@ -1236,14 +1236,14 @@ header.sticky {
 					<input type="date" id="fechaVencimiento" class="input-field w-full px-4 py-3 rounded-lg">
 					<p class="text-xs text-gray-500 mt-2">Activa la casilla para registrar fecha de vencimiento (solo aplica cuando la bodega maneja vencimiento).</p>
 				</div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Códigos de Barra *</label>
-                            <button type="button" id="startScannerBtn"
-                                    class="btn-primary w-full px-4 py-3 rounded-lg text-white">
-                                    <i class="fas fa-barcode mr-2"></i>
-                                    Escáner
-                            </button>
-                        </div>
+                        <div class="md:col-span-2">
+						    <label class="block text-sm font-medium text-gray-700 mb-2">Códigos de Barra *</label>
+						    <button type="button" id="startScannerBtn"
+						        class="btn-primary w-full px-4 py-3 rounded-lg text-white">
+						        <i class="fas fa-barcode mr-2"></i>
+						        Escáner
+						    </button>
+						</div>
 
                         <div id="scanner-area" class="md:col-span-2 hidden">
                             <div class="scanner-container mb-4 rounded-lg overflow-hidden">
