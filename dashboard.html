@@ -2126,20 +2126,23 @@ const BODEGA_PFN = '095';
         }
 
         function aplicarFiltrosGlobales(data = []) {
-            return (data || []).filter(item => {
-                if (filtrosGlobales.sede !== 'Todas' && item.sede !== filtrosGlobales.sede) {
+            return (data || []).filter(item => registroCoincideFiltros(item));
+        }
+
+        function registroCoincideFiltros(item = {}, sedeFiltro = filtrosGlobales.sede, tipoBodegaFiltro = filtrosGlobales.tipoBodega) {
+            if (sedeFiltro !== 'Todas' && item.sede !== sedeFiltro) {
+                return false;
+            }
+
+            if (tipoBodegaFiltro !== 'Todas') {
+                const tipo = obtenerTipoBodegaDesdeId(item.idBodega || item.idbodega);
+
+                if (tipo !== tipoBodegaFiltro) {
                     return false;
                 }
+            }
 
-                if (filtrosGlobales.tipoBodega !== 'Todas') {
-                    const tipo = obtenerTipoBodegaDesdeId(item.idBodega);
-                    if (tipo !== filtrosGlobales.tipoBodega) {
-                        return false;
-                    }
-                }
-
-                return true;
-            });
+            return true;
         }
 
         function filtrarInventarioParaExportacion(data = [], sede = 'Todas', tipoBodega = 'Todas') {
@@ -4754,20 +4757,9 @@ tbody.innerHTML = data.map(item => {
 		    return;
 		  }
 		
-		  const registrosFiltrados = data.filter(item => {
-		    if (sedeFiltro !== 'Todas' && item.sede !== sedeFiltro) {
-		      return false;
-		    }
-		
-		    if (tipoBodegaFiltro !== 'Todas') {
-		      const tipo = obtenerTipoBodegaDesdeId(item.idBodega);
-		      if (tipo !== tipoBodegaFiltro) {
-		        return false;
-		      }
-		    }
-		
-		    return true;
-		  });
+		  const registrosFiltrados = data.filter(item =>
+		    registroCoincideFiltros(item, sedeFiltro, tipoBodegaFiltro)
+		  );
 		
 		  if (!registrosFiltrados.length) {
 		    contenedor.innerHTML = `
@@ -4973,10 +4965,6 @@ tbody.innerHTML = data.map(item => {
 			
 			    const inventarioOriginal = Array.isArray(data) ? data : [];
 			    let inventario = aplicarFiltrosGlobales(inventarioOriginal);
-			
-			    if (inventario.length === 0 && inventarioOriginal.length > 0) {
-			        inventario = inventarioOriginal;
-			    }
 			
 			    if (!inventario.length) {
 			        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6">Sin datos</td></tr>`;
