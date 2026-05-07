@@ -4737,11 +4737,9 @@ tbody.innerHTML = data.map(item => {
 		  const sedeFiltro = document.getElementById('filtroSedeGlobal')?.value || 'Todas';
 		  const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaGlobal')?.value || 'Todas';
 		
-		  let query = supabase
-		    .from('vw_dashboard_proveedores')
-		    .select('proveedor, total_registros');
-		
-		  const { data, error } = await query;
+		  const { data, error } = await supabase
+		    .from('inventarios_diarios')
+		    .select('sede, idBodega, proveedor, codigo');
 		
 		  const contenedor = document.getElementById('proveedorChart');
 		  const totalLabel = document.getElementById('totalSkusLabel');
@@ -4756,23 +4754,49 @@ tbody.innerHTML = data.map(item => {
 		    return;
 		  }
 		
-		  // ✅ Total SKU real
-		  const totalGeneral = data.reduce(
-		    (sum, item) => sum + Number(item.total_registros || 0),
-		    0
-		  );
+		  const registrosFiltrados = data.filter(item => {
+		    if (sedeFiltro !== 'Todas' && item.sede !== sedeFiltro) {
+		      return false;
+		    }
 		
-		  totalLabel.textContent = `Total SKUs: ${totalGeneral}`;
+		    if (tipoBodegaFiltro !== 'Todas') {
+		      const tipo = obtenerTipoBodegaDesdeId(item.idBodega);
+		      if (tipo !== tipoBodegaFiltro) {
+		        return false;
+		      }
+		    }
 		
-		  // ✅ Agrupación
-		  const agrupado = {};
-		  data.forEach(item => {
-		    const proveedor = item.proveedor || 'Sin proveedor';
-		    agrupado[proveedor] =
-		      (agrupado[proveedor] || 0) + Number(item.total_registros || 0);
+		    return true;
 		  });
 		
-		  // ✅ Cálculo porcentual exacto (suma 100%)
+		  if (!registrosFiltrados.length) {
+		    contenedor.innerHTML = `
+		      <div class="text-center text-gray-500">
+		        <i class="fas fa-chart-pie text-3xl mb-2"></i>
+		        <p>No hay datos disponibles</p>
+		      </div>`;
+		    totalLabel.textContent = 'Total SKUs: 0';
+		    return;
+		  }
+		
+		  const agrupado = {};
+		  const skuUnicos = new Set();
+		
+		  registrosFiltrados.forEach(item => {
+		    const proveedor = item.proveedor || 'Sin proveedor';
+		    const codigo = String(item.codigo || '').trim();
+		
+		    if (codigo) {
+		      skuUnicos.add(codigo);
+		    }
+		
+		    agrupado[proveedor] = (agrupado[proveedor] || 0) + 1;
+		  });
+		
+		  const totalGeneral = Object.values(agrupado).reduce((sum, value) => sum + value, 0);
+		
+		  totalLabel.textContent = `Total SKUs: ${skuUnicos.size}`;
+		
 		  const labels = [];
 		  const porcentajes = [];
 		  const absolutos = [];
