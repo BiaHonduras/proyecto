@@ -15,6 +15,7 @@
 
 	<!-- Gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 	<!-- Varios -->
 	<script src="https://cdn.tailwindcss.com"></script>
@@ -121,9 +122,9 @@ Fecha,Proveedor,Código de Barra, Codigo,Descripcion,Inventario Reporteria,Maste
                 {
                     keywords: ['csv', 'exportar', 'descargar'],
                     answer: `Para exportar:
-1. Ve a "Exportar CSV".
+1. Ve a "Exportación Informe".
 2. Marca los campos que quieres incluir.
-3. Presiona "Exportar a CSV".
+3. Presiona "Exportar a XLSX".
 4. Selecciona filtros de sede y tipo de bodega.
 5. Descarga el archivo generado.`
                 },
@@ -202,7 +203,7 @@ Prueba con temas como:
 - registrar artículos
 - importar inventario
 - importar códigos
-- exportar CSV
+- exportación informe
 - diferencia DIF
 - uso del escáner
 - justificaciones
@@ -882,7 +883,7 @@ header.sticky {
 				</a>
                 <a href="#exportar" class="nav-item" data-section="exportar">
                     <i class="fas fa-file-export"></i>
-                    Exportar CSV
+                    Exportación Informe
                 </a>
                 <a href="#importar-inventario" class="nav-item" data-section="importar-inventario">
                     <i class="fas fa-file-import"></i>
@@ -1494,11 +1495,11 @@ header.sticky {
 	    </div>
 </section>
 
-            <!-- Exportar CSV Section -->
+            <!-- Exportación Informe Section -->
             <section id="exportar-section" class="section-content hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-6">Exportar Inventario a CSV</h3>
+                        <h3 class="text-lg font-semibold mb-6">Exportación Informe</h3>
                         
                         <div class="space-y-6">
                             <div>
@@ -1585,7 +1586,7 @@ header.sticky {
                             
                             <button id="exportCSV" class="btn-primary w-full py-3 rounded-lg text-white">
                                 <i class="fas fa-file-export mr-2"></i>
-                                Exportar a CSV
+                                Exportar a XLSX
                             </button>
                         </div>
                     </div>
@@ -1598,8 +1599,8 @@ header.sticky {
                                 <i class="fas fa-info-circle text-blue-500 mr-3 mt-1"></i>
                                 <div>
                                     <p class="text-sm text-blue-800">
-                                        <strong>Formato CSV:</strong> El archivo se generará sin apóstrofes y con codificación UTF-8 para 
-                                        garantizar la compatibilidad con Excel y otros programas de hojas de cálculo.
+                                        <strong>Formato XLSX:</strong> El archivo se generará sin apóstrofes y con codificación UTF-8 para 
+                                        garantizar la compatibilidad con Excel y otros programas de hojas de cálculo modernos.
                                     </p>
                                 </div>
                             </div>
@@ -3509,7 +3510,8 @@ const BODEGA_PFN = '095';
             showNotification('Éxito', 'Registro eliminado con respaldo y auditoría', 'success');
         }
 
-        // ===== EXPORTAR CSV =====
+        
+// ===== EXPORTACIÓN INFORME XLSX =====
         async function exportToCSV(sedeFiltro = 'Todas', tipoBodegaFiltro = 'Todas') {
             const { data, error } = await supabase
                 .from('inventarios_diarios')
@@ -3549,10 +3551,10 @@ const BODEGA_PFN = '095';
             }
 
             const mapaJustificaciones = {};
-			(justificaciones || []).forEach(j => {
-			    const codigo = String(j.codigo || '').trim();
-			    if (codigo) mapaJustificaciones[codigo] = j;
-			});
+            (justificaciones || []).forEach(j => {
+                const codigo = String(j.codigo || '').trim();
+                if (codigo) mapaJustificaciones[codigo] = j;
+            });
 
             const mapaVencimientos = {};
             (vencimientos || []).forEach(v => {
@@ -3561,111 +3563,109 @@ const BODEGA_PFN = '095';
                 mapaVencimientos[key] = normalizado;
             });
 
-            const selectedFields = Array.from(
-                document.querySelectorAll('input[name="exportFields"]:checked')
-            ).map(checkbox => checkbox.value);
+            const formatoFecha = (fecha) => {
+                if (!fecha) return '';
 
-            if (!selectedFields.length) {
-                showNotification('Advertencia', 'Seleccione al menos un campo para exportar', 'warning');
-                return;
-            }
+                const date = new Date(fecha);
 
-            const headersMap = {
-                idBodega: 'Bodega',
-                fecha: 'Fecha Actual',
-                fecha_vencimiento: 'Fecha Vencimiento',
-                codigo: 'Codigo Articulo',
-                codigo_barra: 'Codigo Barra',
-                proveedor: 'Proveedor',
-                descripcion: 'Descripcion',
-                inventarioReporteria: 'Inventario Reporteria',
-                masterpack: 'Masterpack',
-                cajasFardos: 'Cajas/Fardos',
-                unidades: 'Unidades',
-                total: 'Total',
-                diferencia: 'Diferencia',
-                validacion: 'Validacion',
-                diasvida: 'Dias de Vida',
-                cantidad_justificada: 'Cantidad Justificada',
-                justificacion: 'Justificacion',
-                usuario_justificacion: 'Usuario Justificacion',
-                fecha_modificacion_justificacion: 'Fecha Modificacion Justificacion'
+                if (isNaN(date.getTime())) return fecha;
+
+                const dia = String(date.getDate()).padStart(2, '0');
+                const mes = String(date.getMonth() + 1).padStart(2, '0');
+                const anio = date.getFullYear();
+
+                return `${dia}-${mes}-${anio}`;
             };
 
-            const headers = selectedFields.map(field => headersMap[field] || field);
-
-            const csvContent = inventario.map(item => {
+            const datosExportacion = inventario.map(item => {
                 const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
                 const diferencia = total - Number(item.inventario_reporteria || 0);
 
                 let validacion = '';
+
                 if (diferencia === 0) validacion = 'OK';
                 else if (diferencia < 0) validacion = 'VAL-';
                 else validacion = 'VAL+';
 
                 const codigoItem = String(item.codigo || '').trim();
-				const justificacionData = mapaJustificaciones[codigoItem] || {};
+                const justificacionData = mapaJustificaciones[codigoItem] || {};
+
                 const keyVencimiento = construirClaveVencimiento({
                     sede: item.sede,
                     idBodega: item.idBodega,
                     codigo: item.codigo
                 });
-				
+
                 const vencimientoSemanal = mapaVencimientos[keyVencimiento] || {};
                 const fechaVencimiento = vencimientoSemanal.fecha_vencimiento || '';
                 const diasvida = vencimientoSemanal.diasvida ?? '';
 
-                const rowData = {
-                    idBodega: item.idBodega || '',
-                    fecha: item.fecha || '',
-                    fecha_vencimiento: fechaVencimiento,
-                    codigo: item.codigo || '',
-                    codigo_barra: item.codigo_barra || '',
-                    proveedor: item.proveedor || '',
-                    descripcion: item.descripcion || '',
-                    inventarioReporteria: item.inventario_reporteria ?? '',
-                    masterpack: item.masterpack ?? '',
-                    cajasFardos: item.cajas_fardos ?? 0,
-                    unidades: item.unidades ?? '',
-                    total: total.toFixed(2),
-                    diferencia: diferencia.toFixed(2),
-                    validacion: validacion,
-                    diasvida: diasvida,
-                    cantidad_justificada: justificacionData.cantidad_justificada ?? '',
-                    justificacion: justificacionData.justificacion || '',
-                    usuario_justificacion: justificacionData.usuario || '',
-                    fecha_modificacion_justificacion: justificacionData.fecha_modificacion || ''
+                return {
+                    'Bodega': item.idBodega || '',
+                    'Fecha Actual': formatoFecha(item.fecha),
+                    'Fecha Vencimiento': formatoFecha(fechaVencimiento),
+                    'Código de Barra': Number(item.codigo_barra || 0),
+                    'Proveedor': item.proveedor || '',
+                    'Descripción': item.descripcion || '',
+                    'Inventario Reportería': Number(item.inventario_reporteria || 0),
+                    'Masterpack': Number(item.masterpack || 0),
+                    'Cajas/Fardos': Number(item.cajas_fardos || 0),
+                    'Unidades': Number(item.unidades || 0),
+                    'Total': Number(total || 0),
+                    'Diferencia': Number(diferencia || 0),
+                    'Validación': validacion,
+                    'Días de Vida': diasvida,
+                    'Justificación': justificacionData.justificacion || '',
+                    'Cantidad Justificada': Number(justificacionData.cantidad_justificada || 0),
+                    'Usuario Justificación': justificacionData.usuario || '',
+                    'Fecha Modificación Justificación': formatoFecha(justificacionData.fecha_modificacion)
                 };
+            });
 
-                return selectedFields.map(field => {
-                    const valor = rowData[field] ?? '';
-                    return `"${String(valor).replace(/"/g, '""')}"`;
-                }).join(',');
-            }).join('\n');
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils.json_to_sheet(datosExportacion);
 
-            const csv = headers.join(',') + '\n' + csvContent;
+            worksheet['!cols'] = [
+                { wch: 20 },
+                { wch: 16 },
+                { wch: 20 },
+                { wch: 20 },
+                { wch: 30 },
+                { wch: 45 },
+                { wch: 22 },
+                { wch: 15 },
+                { wch: 15 },
+                { wch: 12 },
+                { wch: 12 },
+                { wch: 12 },
+                { wch: 15 },
+                { wch: 15 },
+                { wch: 40 },
+                { wch: 22 },
+                { wch: 25 },
+                { wch: 30 }
+            ];
 
-            const nombreSede = sedeFiltro === 'Todas' ? 'todas_sedes' : sedeFiltro.toLowerCase().replace(/\s+/g, '_');
-            const nombreBodega = tipoBodegaFiltro === 'Todas' ? 'todas_bodegas' : tipoBodegaFiltro.toLowerCase();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Informe Inventario');
 
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
+            const nombreSede = sedeFiltro === 'Todas'
+                ? 'todas_sedes'
+                : sedeFiltro.toLowerCase().replace(/\s+/g, '_');
 
-            link.setAttribute('href', url);
-            link.setAttribute('download', `inventario_${nombreSede}_${nombreBodega}_${new Date().toISOString().split('T')[0]}.csv`);
-            link.style.visibility = 'hidden';
+            const nombreBodega = tipoBodegaFiltro === 'Todas'
+                ? 'todas_bodegas'
+                : tipoBodegaFiltro.toLowerCase();
 
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            XLSX.writeFile(
+                workbook,
+                `informe_inventario_${nombreSede}_${nombreBodega}_${new Date().toISOString().split('T')[0]}.xlsx`
+            );
 
             cerrarModalExportarCSV();
-            showNotification('Éxito', 'CSV exportado correctamente', 'success');
+            showNotification('Éxito', 'Informe XLSX exportado correctamente', 'success');
         }
 
-        function normalizarNombreColumnaCSV(nombre = '') {
+function normalizarNombreColumnaCSV(nombre = '') {
             return String(nombre || '')
                 .trim()
                 .toLowerCase()
@@ -5718,7 +5718,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
                     <button class="assistant-chip" type="button" data-question="¿Cómo importar códigos?">Importar códigos</button>
                     <button class="assistant-chip" type="button" data-question="¿Qué significa la diferencia DIF?">Qué es DIF</button>
                     <button class="assistant-chip" type="button" data-question="¿Cómo usar el escáner?">Usar escáner</button>
-                    <button class="assistant-chip" type="button" data-question="¿Cómo exportar a CSV?">Exportar CSV</button>
+                    <button class="assistant-chip" type="button" data-question="¿Cómo exportar a CSV?">Exportación Informe</button>
                     <button class="assistant-chip" type="button" data-question="¿Qué formato debe tener el archivo de inventario?">Formato inventario</button>
                 </div>
             </div>
