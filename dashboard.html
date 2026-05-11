@@ -5743,36 +5743,31 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
     </div>
 		<script>
 		async function evaluarVencimiento() {
-			console.log('Entró');
 		    const idBodega = document.getElementById('idBodega').value;
-			console.log(idBodega);
 		    const contenedor = document.getElementById('contenedorVencimiento');
 		
 		    if (!idBodega) {
-				console.log('Sin Bodega');
 		        contenedor.classList.add('hidden');
 		        return;
 		    }
-			console.log('Mostrando');
-			contenedor.classList.remove('hidden');
-			
+		
 		    const hoy = new Date();
 		    const esLunes = hoy.getDay() === 1;
 		
 		    try {
 		        const { data, error } = await supabase
-				    .from('bodegas')
-				    .select(`
-				        tipos_bodega (
-				            maneja_vencimiento
-				        )
-				    `)
-				    .eq('id_bodega', idBodega)
-				    .maybeSingle();
-
-				console.log(data);
+		            .from('bodegas')
+		            .select(`
+		                tipos_bodega (
+		                    maneja_vencimiento
+		                )
+		            `)
+		            .eq('id_bodega', idBodega)
+		            .maybeSingle();
 		
-		        const maneja = data?.tipos_bodega?.[0]?.maneja_vencimiento;
+		        if (error) throw error;
+		
+		        const maneja = data?.tipos_bodega?.maneja_vencimiento;
 		
 		        if (esLunes && maneja) {
 		            contenedor.classList.remove('hidden');
