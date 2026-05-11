@@ -2108,6 +2108,7 @@ const BODEGA_PFN = '095';
 
         function obtenerTipoBodegaDesdeId(idBodega) {
             const codigo = String(idBodega || '').trim();
+			console.log('Debug Codigo: ',codigo);
 
             for (const lista of Object.values(bodegasPorSede)) {
                 const encontrada = lista.find(bodega => String(bodega.value) === codigo);
@@ -2117,11 +2118,12 @@ const BODEGA_PFN = '095';
                     if (encontrada.label.includes('Principal')) return 'Principal';
                 }
             }
-
+			console.log('No encontrada en Listas, Aplicando reglas Fallback');
             if (codigo.endsWith('3')) return 'PPV';
             if (['015', '045', BODEGA_PFN, '096', '099'].includes(codigo) || codigo.endsWith('5')) return 'PFN';
             if (codigo.endsWith('0')) return 'Principal';
 
+			console.log('Tipo Vacío para: ',codigo);
             return '';
         }
 
