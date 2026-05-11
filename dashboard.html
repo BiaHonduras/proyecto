@@ -5762,9 +5762,10 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 				    `)
 				    .eq('id_bodega', idBodega)
 				    .maybeSingle();
-					console.log('idBodega:', idBodega);
+
+				console.log(data);
 		
-		        const maneja = data?.tipos_bodega?.maneja_vencimiento;
+		        const maneja = data?.tipos_bodega?.[0]?.maneja_vencimiento;
 		
 		        if (esLunes && maneja) {
 		            contenedor.classList.remove('hidden');
@@ -5776,6 +5777,8 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		        console.error(err);
 		        contenedor.classList.add('hidden');
 		    }
+
+			if(error) throw error;
 		}
 		
 		// eventos
