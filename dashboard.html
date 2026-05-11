@@ -5741,14 +5741,19 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
     </div>
 		<script>
 		async function evaluarVencimiento() {
+			console.log('Entró');
 		    const idBodega = document.getElementById('idBodega').value;
+			console.log(idBodega);
 		    const contenedor = document.getElementById('contenedorVencimiento');
 		
 		    if (!idBodega) {
+				console.log('Sin Bodega');
 		        contenedor.classList.add('hidden');
 		        return;
 		    }
-		
+			console.log('Mostrando');
+			contenedor.classList.remove('hidden');
+			
 		    const hoy = new Date();
 		    const esLunes = hoy.getDay() === 1;
 		
