@@ -5612,7 +5612,7 @@ async function obtenerAccessToken() {
 		    const fechaInput = document.getElementById('fechaVencimiento');
 		    const checkBodega = document.getElementById('checkBodega');
 		    const checkActivo = !!checkBodega?.checked;
-		    const debeHabilitarse = idBodega !== BODEGA_PFN && checkActivo;
+		    const debeHabilitarse = idBodega !== BODEGA_PFN;
 		
 		    if (!fechaInput) return;
 		
@@ -5766,7 +5766,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		
 		        const maneja = data?.tipos_bodega?.maneja_vencimiento;
 		
-		        if (esLunes && data.maneja_vencimiento) {
+		        if (esLunes && maneja) {
 		            contenedor.classList.remove('hidden');
 		        } else {
 		            contenedor.classList.add('hidden');
