@@ -4936,6 +4936,7 @@ tbody.innerHTML = data.map(item => {
 		'Inventario Completo',
 		'Factura pendiente de Ingreso',
 		'Faltante',
+		'Producto Dañado en Bodega',
 		'Revisar con reconteo',
 		'Sobrante',
 		'Transito / Pendiente',
@@ -5770,8 +5771,9 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		
 		        const maneja = data?.tipos_bodega?.maneja_vencimiento;
 		
-		        if (esLunes && maneja) {
+		        if (maneja) {
 		            contenedor.classList.remove('hidden');
+					toggleFechaVencimiento();
 		        } else {
 		            contenedor.classList.add('hidden');
 		        }
