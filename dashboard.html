@@ -5617,8 +5617,6 @@ async function obtenerAccessToken() {
 		    const checkBodega = document.getElementById('checkBodega');
 		    const checkActivo = !!checkBodega?.checked;
 		    const debeHabilitarse = idBodega !== BODEGA_PFN;
-			const checkActivo = !!checkBodega?.checked;
-			const debeHabilitarse = idBodega !== BODEGA_PFN && checkActivo;
 		
 		    if (!fechaInput) return;
 		
