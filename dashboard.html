@@ -839,6 +839,13 @@ header.sticky {
     max-width: 96px;
 }
 
+input[type="date"]:disabled {
+  background-color: #e9ecef; /* Gris Bootstrap por defecto */
+  opacity: 1; /* Evita que se vuelva transparente */
+  cursor: not-allowed;
+  color: #6c757d;
+}		
+
 </style>
 </head>
 	
@@ -1219,23 +1226,29 @@ header.sticky {
 							    <option value="">Cargando bodegas...</option>
 							</select>
 						</div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Actual *</label>
-                            <input type="date" id="fechaInventario" 
-                                   class="input-field w-full px-4 py-3 rounded-lg" 
-                                   required>
-                        </div>
-						<div id="contenedorVencimiento" class="hidden">
-					<div class="flex items-center gap-2 mb-2">
-						<input type="checkbox" id="checkBodega" class="h-4 w-4" />
-						<label for="checkBodega" class="text-sm font-medium text-gray-700">Registrar vencimiento</label>
-					</div>
-					<label class="block text-sm font-medium text-gray-700 mb-2">
-						Fecha Vencimiento *
-					</label>
-					<input type="date" id="fechaVencimiento" class="input-field w-full px-4 py-3 rounded-lg">
-					<p class="text-xs text-gray-500 mt-2">Activa la casilla para registrar fecha de vencimiento (solo aplica cuando la bodega maneja vencimiento).</p>
-				</div>
+
+						<div class="form-row">
+						  <div class="col-md-6 mb-3">
+						    <label for="fechaActual">Fecha Actual *</label>
+						    <input type="date" id="fechaActual" class="form-control" required>
+						  </div>
+						  
+						  <div class="col-md-6 mb-3">
+						    <div class="form-check">
+						      <input type="checkbox" class="form-check-input" id="checkVencimiento">
+						      <label class="form-check-label" for="checkVencimiento">Registrar vencimiento</label>
+						    </div>
+						    <small class="form-text text-muted">
+						      Activa la casilla para registrar fecha de vencimiento (solo aplica cuando la bodega maneja vencimiento).
+						    </small>
+						  </div>
+						</div>
+
+						<div class="form-group mb-3">
+						  <label for="fechaVencimiento">Fecha Vencimiento *</label>
+						  <input type="date" id="fechaVencimiento" class="form-control" disabled>
+						</div>
+
                         <div class="md:col-span-2">
 						    <label class="block text-sm font-medium text-gray-700 mb-2">Códigos de Barra *</label>
 						    <button type="button" id="startScannerBtn"
@@ -2510,6 +2523,24 @@ const BODEGA_PFN = '095';
 					}
 			const fechaVencimiento = document.getElementById('fechaVencimiento');
 			toggleFechaVencimiento();
+
+			  const checkVenc = document.getElementById('checkVencimiento');
+			  const fechaVenc = document.getElementById('fechaVencimiento');
+			
+			  // Estado inicial: deshabilitado pero visible
+			  fechaVenc.disabled = true;
+			
+			  checkVenc.addEventListener('change', function() {
+			    if (this.checked) {
+			      fechaVenc.disabled = false;
+			      fechaVenc.required = true; // Opcional: obliga a llenarlo cuando está activo
+			      fechaVenc.focus();
+			    } else {
+			      fechaVenc.disabled = true;
+			      fechaVenc.required = false;
+			      fechaVenc.value = ''; // Limpia el campo al desmarcar
+			    }
+			  });
         });
 
         // ===== NAVEGACIÓN =====
