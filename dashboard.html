@@ -2532,17 +2532,19 @@ const BODEGA_PFN = '095';
 			  // Estado inicial: deshabilitado pero visible
 			  fechaVenc.disabled = true;
 			
-			  checkVenc.addEventListener('change', function() {
-			    if (this.checked) {
-			      fechaVenc.disabled = false;
-			      fechaVenc.required = true; // Opcional: obliga a llenarlo cuando está activo
-			      fechaVenc.focus();
-			    } else {
-			      fechaVenc.disabled = true;
-			      fechaVenc.required = false;
-			      fechaVenc.value = ''; // Limpia el campo al desmarcar
-			    }
-			  });
+			  if (checkVenc && fechaVenc) {
+				  checkVenc.addEventListener('change', function() {
+				    if (this.checked) {
+				      fechaVenc.disabled = false;
+				      fechaVenc.required = true;
+				      fechaVenc.focus();
+				    } else {
+				      fechaVenc.disabled = true;
+				      fechaVenc.required = false;
+				      fechaVenc.value = '';
+				    }
+				  });
+				}
         });
 
         // ===== NAVEGACIÓN =====
