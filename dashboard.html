@@ -2011,7 +2011,6 @@ input[type="date"]:disabled {
 
     <script>
         // ===== VARIABLES GLOBALES =====
-const BODEGA_PFN = '095';
         let currentUser = null;
         window.currentUser = null;
         let scannerActive = false;
@@ -3631,6 +3630,7 @@ const BODEGA_PFN = '095';
                     'Fecha Vencimiento': formatoFecha(fechaVencimiento),
                     'Código de Barra': Number(item.codigo_barra || 0),
                     'Proveedor': item.proveedor || '',
+					'Código': item.codigo || '',
                     'Descripción': item.descripcion || '',
                     'Inventario Reportería': Number(item.inventario_reporteria || 0),
                     'Masterpack': Number(item.masterpack || 0),
