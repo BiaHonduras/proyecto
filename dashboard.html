@@ -1232,7 +1232,7 @@ input[type="date"]:disabled {
                             <input type="date" id="fechaInventario" class="input-field w-full px-4 py-3 rounded-lg" required>
                         </div>
 
-						<div id="contenedorVencimiento">
+						<div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Vencimiento *</label>
                             <input type="date" id="fechaVencimiento" class="input-field w-full px-4 py-3 rounded-lg" disabled>
                         </div>
@@ -5763,9 +5763,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		<script>
 		async function evaluarVencimiento() {
 		    const idBodega = document.getElementById('idBodega')?.value || "";
-		
 		    const contenedor = document.getElementById('contenedorVencimiento');
-			console.log('Contenedor Vencimiento: ',contenedor);
 		    
 		    // 🛡️ Defensive check: Ensure the container exists before manipulating it
 		    if (!contenedor) {
