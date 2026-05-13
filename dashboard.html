@@ -1233,7 +1233,6 @@ input[type="date"]:disabled {
                         </div>
 
 						<div id="contenedorVencimiento">
-							<input type="checkbox" id="checkBodega">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Vencimiento *</label>
                             <input type="date" id="fechaVencimiento" class="input-field w-full px-4 py-3 rounded-lg" disabled>
                         </div>
@@ -5764,9 +5763,9 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		<script>
 		async function evaluarVencimiento() {
 		    const idBodega = document.getElementById('idBodega')?.value || "";
-		    console.log('ID Bodega:', idBodega);
 		
 		    const contenedor = document.getElementById('contenedorVencimiento');
+			console.log('Contenedor Vencimiento: ',contenedor);
 		    
 		    // 🛡️ Defensive check: Ensure the container exists before manipulating it
 		    if (!contenedor) {
@@ -5789,7 +5788,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		            .eq('id_bodega', idBodega)
 		            .maybeSingle();
 		
-		        console.log('Supabase response:', data);
+		        console.log('Supabase Response:', data);
 		
 		        // 🔍 Correctly access the nested property
 		        const manejaVencimiento = data?.tipos_bodega?.maneja_vencimiento;
