@@ -5646,7 +5646,6 @@ async function obtenerAccessToken() {
 		    const checkBodega = document.getElementById('checkBodega');
 		    const checkActivo = !!checkBodega?.checked;
 		    const debeHabilitarse = maneja_vencimiento && checkActivo;
-			const fechaInput = document.querySelector('#fechaVencimiento, [name="fecha_vencimiento"]');
 		
 		    if (!fechaInput) return;
 		
