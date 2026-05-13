@@ -5322,7 +5322,7 @@ async function guardarJustificacion(id, texto) {
 		function obtenerRangoDiasVida(diasvida, fechaVencimiento, idbodega = '') {
 		    const bodega = String(idbodega || '').trim();
 		
-		    if (!fechaVencimiento || maneja) {
+		    if (!fechaVencimiento || maneja_vencimiento) {
 		        return 'sin_fecha';
 		    }
 		
@@ -5638,7 +5638,7 @@ async function obtenerAccessToken() {
 		    const fechaInput = document.getElementById('fechaVencimiento');
 		    const checkBodega = document.getElementById('checkBodega');
 		    const checkActivo = !!checkBodega?.checked;
-		    const debeHabilitarse = maneja && checkActivo;
+		    const debeHabilitarse = maneja_vencimiento && checkActivo;
 		
 		    if (!fechaInput) return;
 		
