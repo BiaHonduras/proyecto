@@ -839,18 +839,6 @@ header.sticky {
     max-width: 96px;
 }
 
-#fechaVencimiento:disabled {
-    background-color: #f8f9fa;
-    color: #6c757d;
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-
-#fechaVencimiento:not(:disabled) {
-    background-color: #ffffff;
-    border-color: #28a745; /* Resalta en verde cuando está activo */
-}
-
 </style>
 </head>
 	
@@ -1231,27 +1219,23 @@ header.sticky {
 							    <option value="">Cargando bodegas...</option>
 							</select>
 						</div>
-						
-                        <div class="col-md-4">
-					        <label for="fechaActual" class="form-label">Fecha Actual *</label>
-					        <input type="date" id="fechaActual" class="form-control" required>
-					    </div>
-						
-						<div class="col-md-4 d-flex align-items-end">
-					        <div class="form-check mb-2">
-					            <input class="form-check-input" type="checkbox" id="checkVencimiento">
-					            <label class="form-check-label" for="checkVencimiento">
-					                Registrar vencimiento
-					            </label>
-					        </div>
-					    </div>
-					    
-					    <div class="col-md-4" id="contenedorFechaVenc">
-					        <label for="fechaVencimiento" class="form-label">Fecha Vencimiento *</label>
-					        <input type="date" id="fechaVencimiento" class="form-control" disabled>
-					        <small class="text-muted">Activa la casilla para registrar fecha de vencimiento (solo aplica cuando la bodega maneja vencimiento).</small>
-					    </div>
-
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Actual *</label>
+                            <input type="date" id="fechaInventario" 
+                                   class="input-field w-full px-4 py-3 rounded-lg" 
+                                   required>
+                        </div>
+						<div id="contenedorVencimiento" class="hidden">
+					<div class="flex items-center gap-2 mb-2">
+						<input type="checkbox" id="checkBodega" class="h-4 w-4" />
+						<label for="checkBodega" class="text-sm font-medium text-gray-700">Registrar vencimiento</label>
+					</div>
+					<label class="block text-sm font-medium text-gray-700 mb-2">
+						Fecha Vencimiento *
+					</label>
+					<input type="date" id="fechaVencimiento" class="input-field w-full px-4 py-3 rounded-lg">
+					<p class="text-xs text-gray-500 mt-2">Activa la casilla para registrar fecha de vencimiento (solo aplica cuando la bodega maneja vencimiento).</p>
+				</div>
                         <div class="md:col-span-2">
 						    <label class="block text-sm font-medium text-gray-700 mb-2">Códigos de Barra *</label>
 						    <button type="button" id="startScannerBtn"
@@ -2124,7 +2108,6 @@ const BODEGA_PFN = '095';
 
         function obtenerTipoBodegaDesdeId(idBodega) {
             const codigo = String(idBodega || '').trim();
-			console.log('Debug Codigo: ',codigo);
 
             for (const lista of Object.values(bodegasPorSede)) {
                 const encontrada = lista.find(bodega => String(bodega.value) === codigo);
@@ -2134,12 +2117,11 @@ const BODEGA_PFN = '095';
                     if (encontrada.label.includes('Principal')) return 'Principal';
                 }
             }
-			console.log('No encontrada en Listas, Aplicando reglas Fallback');
+
             if (codigo.endsWith('3')) return 'PPV';
             if (['015', '045', BODEGA_PFN, '096', '099'].includes(codigo) || codigo.endsWith('5')) return 'PFN';
             if (codigo.endsWith('0')) return 'Principal';
 
-			console.log('Tipo Vacío para: ',codigo);
             return '';
         }
 
@@ -2283,31 +2265,7 @@ const BODEGA_PFN = '095';
 
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', async function() {
-			const checkVenc = document.getElementById('activarVencimiento');
-    		const inputFechaVenc = document.getElementById('fechaVencimiento');
-
-			if (checkVenc && inputFechaVenc) {
-			        // Estado inicial
-			        inputFechaVenc.disabled = !checkVenc.checked;
-			
-			        // Evento al cambiar el checkbox
-			        checkVenc.addEventListener('change', function() {
-			            const estaActivo = this.checked;
-			            inputFechaVenc.disabled = !estaActivo;
-			            
-			            if (estaActivo) {
-			                inputFechaVenc.focus();
-			                // Opcional: establecer fecha por defecto si está vacío
-			                if (!inputFechaVenc.value) {
-			                    const hoy = new Date().toISOString().split('T')[0];
-			                    inputFechaVenc.value = hoy;
-			                }
-			            } else {
-			                inputFechaVenc.value = ''; // Limpiar al desactivar
-			            }
-			        });
-			    }
-					
+            
 			// Verificar autenticación
             const userData = sessionStorage.getItem('currentUser');
             if (!userData) {
@@ -3647,7 +3605,6 @@ const BODEGA_PFN = '095';
                     'Fecha Vencimiento': formatoFecha(fechaVencimiento),
                     'Código de Barra': Number(item.codigo_barra || 0),
                     'Proveedor': item.proveedor || '',
-					'Codigo': item.codigo || '',
                     'Descripción': item.descripcion || '',
                     'Inventario Reportería': Number(item.inventario_reporteria || 0),
                     'Masterpack': Number(item.masterpack || 0),
@@ -4976,7 +4933,6 @@ tbody.innerHTML = data.map(item => {
 		'Inventario Completo',
 		'Factura pendiente de Ingreso',
 		'Faltante',
-		'Producto Dañado en Bodega',
 		'Revisar con reconteo',
 		'Sobrante',
 		'Transito / Pendiente',
@@ -5656,7 +5612,7 @@ async function obtenerAccessToken() {
 		    const fechaInput = document.getElementById('fechaVencimiento');
 		    const checkBodega = document.getElementById('checkBodega');
 		    const checkActivo = !!checkBodega?.checked;
-		    const debeHabilitarse = idBodega !== BODEGA_PFN;
+		    const debeHabilitarse = idBodega !== BODEGA_PFN && checkActivo;
 		
 		    if (!fechaInput) return;
 		
@@ -5668,8 +5624,10 @@ async function obtenerAccessToken() {
 		    if (!debeHabilitarse) {
 		        fechaInput.value = '';
 		    }
-			document.getElementById('checkBodega').addEventListener('change', toggleFechaVencimiento);
 		}
+
+		
+
 </script>
 
 <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
@@ -5782,46 +5740,43 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
         </div>
     </div>
 		<script>
-		// Reemplaza la función original que lanza el error
-		window.evaluarVencimiento = function() {
-		    const checkbox = document.getElementById('checkVencimiento');
-		    const campoFecha = document.getElementById('fechaVencimiento');
-		    const contenedor = document.getElementById('contenedorFechaVenc');
+		async function evaluarVencimiento() {
+		    const idBodega = document.getElementById('idBodega').value;
+		    const contenedor = document.getElementById('contenedorVencimiento');
 		
-		    // Validación de seguridad: si no encuentra los elementos, sale sin romper la página
-		    if (!checkbox || !campoFecha || !contenedor) {
-		        console.warn('⚠️ No se encontraron los elementos de vencimiento. Verifica los IDs en el HTML.');
+		    if (!idBodega) {
+		        contenedor.classList.add('hidden');
 		        return;
 		    }
 		
-		    const estaActivo = checkbox.checked;
-		    campoFecha.disabled = !estaActivo;
+		    const hoy = new Date();
+		    const esLunes = hoy.getDay() === 1;
 		
-		    if (estaActivo) {
-		        contenedor.classList.remove('d-none');
-		        campoFecha.focus();
-		        // Si está vacío, sugiere la fecha actual
-		        if (!campoFecha.value) {
-		            campoFecha.value = new Date().toISOString().split('T')[0];
+		    try {
+		        const { data, error } = await supabase
+				    .from('bodegas')
+				    .select(`
+				        tipos_bodega (
+				            maneja_vencimiento
+				        )
+				    `)
+				    .eq('id_bodega', idBodega)
+				    .maybeSingle();
+					console.log('idBodega:', idBodega);
+		
+		        const maneja = data?.tipos_bodega?.maneja_vencimiento;
+		
+		        if (esLunes && data.maneja_vencimiento) {
+		            contenedor.classList.remove('hidden');
+		        } else {
+		            contenedor.classList.add('hidden');
 		        }
-		    } else {
-		        contenedor.classList.add('d-none');
-		        campoFecha.value = '';
-		        campoFecha.setCustomValidity(''); // Limpia validación si la había
-		    }
-		};
 		
-		// Ejecutar al cargar la página y vincular evento
-		document.addEventListener('DOMContentLoaded', function() {
-		    const checkbox = document.getElementById('checkVencimiento');
-		    if (checkbox) {
-		        // Estado inicial al cargar
-		        window.evaluarVencimiento();
-		        
-		        // Escuchar cambios
-		        checkbox.addEventListener('change', window.evaluarVencimiento);
+		    } catch (err) {
+		        console.error(err);
+		        contenedor.classList.add('hidden');
 		    }
-		});
+		}
 		
 		// eventos
 		document.getElementById('idBodega').addEventListener('change', evaluarVencimiento);
