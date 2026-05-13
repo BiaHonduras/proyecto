@@ -5617,6 +5617,8 @@ async function obtenerAccessToken() {
 		    const checkBodega = document.getElementById('checkBodega');
 		    const checkActivo = !!checkBodega?.checked;
 		    const debeHabilitarse = idBodega !== BODEGA_PFN;
+			const checkActivo = !!checkBodega?.checked;
+			const debeHabilitarse = idBodega !== BODEGA_PFN && checkActivo;
 		
 		    if (!fechaInput) return;
 		
@@ -5628,10 +5630,8 @@ async function obtenerAccessToken() {
 		    if (!debeHabilitarse) {
 		        fechaInput.value = '';
 		    }
+			document.getElementById('checkBodega').addEventListener('change', toggleFechaVencimiento);
 		}
-
-		
-
 </script>
 
 <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
