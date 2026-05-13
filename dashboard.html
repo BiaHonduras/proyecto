@@ -2012,6 +2012,7 @@ input[type="date"]:disabled {
     <script>
         // ===== VARIABLES GLOBALES =====
         let currentUser = null;
+		let maneja_vencimiento = false;
         window.currentUser = null;
         let scannerActive = false;
         let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
@@ -2336,7 +2337,9 @@ input[type="date"]:disabled {
 			    document.getElementById('codigoBarra').value = '';
 			});
 
-			document.getElementById('idBodega').addEventListener('change', () => {
+			document.getElementById('idBodega').addEventListener('change', funtion() {
+				const selectedOption = this.options[this.selectedIndex];
+				maneja_vencimiento = selectedOption.dataset.manejaVencimiento === 'true' || false;
 			    limpiarCamposArticulo();
 			    document.getElementById('codigoArticulo').value = '';
 			    document.getElementById('codigoBarra').value = '';
@@ -5322,14 +5325,18 @@ async function guardarJustificacion(id, texto) {
 		function obtenerRangoDiasVida(diasvida, fechaVencimiento, idbodega = '') {
 		    const bodega = String(idbodega || '').trim();
 		
-		    if (!fechaVencimiento || maneja_vencimiento) {
-		        return 'sin_fecha';
+		    if (!fechaVencimiento || !maneja_vencimiento) {
+		        return 'Sin Fecha / PFN';
 		    }
-		
-		    if (diasvida <= 60) return 'hasta_60';
-		    if (diasvida <= 90) return '61_90';
-		    if (diasvida <= 120) return '91_120';
-		    return '121_mas';
+			const hoy = new Date();
+		    const vence = new Date(fechaVencimiento);
+		    const diffTime = vence - hoy;
+		    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+				
+		    if (diffDays <= 60) return '-60 Días de Vida';
+		    if (diffDays <= 90) return '61 a 90 Días';
+		    if (diffDays <= 120) return '91 a 120 Días';
+		    return '+121 Días';
 		}
 		
 		function programarActualizacionVencimientos() {
@@ -5639,6 +5646,7 @@ async function obtenerAccessToken() {
 		    const checkBodega = document.getElementById('checkBodega');
 		    const checkActivo = !!checkBodega?.checked;
 		    const debeHabilitarse = maneja_vencimiento && checkActivo;
+			const fechaInput = document.querySelector('#fechaVencimiento, [name="fecha_vencimiento"]');
 		
 		    if (!fechaInput) return;
 		
@@ -5650,6 +5658,9 @@ async function obtenerAccessToken() {
 		    if (!debeHabilitarse) {
 		        fechaInput.value = '';
 		    }
+			const activa = (typeof maneja_vencimiento !== 'undefined') ? maneja_vencimiento : false;
+		    fechaInput.disabled = !activa;
+		    fechaInput.required = activa;
 		}
 
 		
