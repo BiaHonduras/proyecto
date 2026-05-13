@@ -2337,7 +2337,7 @@ input[type="date"]:disabled {
 			    document.getElementById('codigoBarra').value = '';
 			});
 
-			document.getElementById('idBodega').addEventListener('change', funtion() {
+			document.getElementById('idBodega').addEventListener('change', function() {
 				const selectedOption = this.options[this.selectedIndex];
 				maneja_vencimiento = selectedOption.dataset.manejaVencimiento === 'true' || false;
 			    limpiarCamposArticulo();
