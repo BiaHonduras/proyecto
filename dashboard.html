@@ -5762,11 +5762,18 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
     </div>
 		<script>
 		async function evaluarVencimiento() {
-		    const idBodega = document.getElementById('idBodega').value;
-			console.log('ID Bodega: ',idBodega);
-		    const contenedor = document.getElementById('contenedorVencimiento');
+		    const idBodega = document.getElementById('idBodega')?.value || "";
+		    console.log('ID Bodega:', idBodega);
 		
-		    if (!idBodega) {
+		    const contenedor = document.getElementById('contenedorVencimiento');
+		    
+		    // 🛡️ Defensive check: Ensure the container exists before manipulating it
+		    if (!contenedor) {
+		        console.warn('⚠️ #contenedorVencimiento no encontrado en el DOM. Verifica el HTML o si se renderiza dinámicamente.');
+		        return;
+		    }
+		
+		    if (!idBodega.trim()) {
 		        contenedor.classList.add('hidden');
 		        return;
 		    }
@@ -5776,26 +5783,24 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		
 		    try {
 		        const { data, error } = await supabase
-				    .from('bodegas')
-				    .select(`
-				        tipos_bodega (
-				            maneja_vencimiento
-				        )
-				    `)
-				    .eq('id_bodega', idBodega)
-				    .maybeSingle();
-					console.log('idBodega:', idBodega);
+		            .from('bodegas')
+		            .select(`tipos_bodega (maneja_vencimiento)`)
+		            .eq('id_bodega', idBodega)
+		            .maybeSingle();
 		
-		        const maneja = data?.tipos_bodega?.maneja_vencimiento;
+		        console.log('Supabase response:', data);
 		
-		        if (esLunes && data.maneja_vencimiento) {
+		        // 🔍 Correctly access the nested property
+		        const manejaVencimiento = data?.tipos_bodega?.maneja_vencimiento;
+		
+		        if (esLunes && manejaVencimiento) {
 		            contenedor.classList.remove('hidden');
 		        } else {
 		            contenedor.classList.add('hidden');
 		        }
 		
 		    } catch (err) {
-		        console.error(err);
+		        console.error('Error en evaluarVencimiento:', err);
 		        contenedor.classList.add('hidden');
 		    }
 		}
