@@ -2513,9 +2513,7 @@ const BODEGA_PFN = '095';
 			toggleFechaVencimiento();
 
 			    const checkVenc = document.getElementById('checkVencimiento');
-				console.log('Check Vencimiento',checkVenc);
 			    const fechaVenc = document.getElementById('fechaVencimiento');
-				console.log('Fecha Vencimiento',fechaVenc);
 			
 			  // Estado inicial: deshabilitado pero visible
 			  fechaVenc.disabled = true;
@@ -5765,6 +5763,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		<script>
 		async function evaluarVencimiento() {
 		    const idBodega = document.getElementById('idBodega').value;
+			console.log('ID Bodega: ',idBodega);
 		    const contenedor = document.getElementById('contenedorVencimiento');
 		
 		    if (!idBodega) {
