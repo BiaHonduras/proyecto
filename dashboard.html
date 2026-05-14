@@ -3291,8 +3291,6 @@ const BODEGA_PFN = '095';
 		    const inventarioOriginal = Array.isArray(data) ? data : [];
 		    let inventario = aplicarFiltrosGlobales(inventarioOriginal);
 		
-		    console.log('Después de aplicarFiltrosGlobales:', inventario.length);
-		
 		    if (inventario.length === 0 && inventarioOriginal.length > 0) {
 		        console.warn('Los filtros dejaron vacío. Mostrando todo como respaldo.');
 		        inventario = inventarioOriginal;
@@ -3336,8 +3334,6 @@ const BODEGA_PFN = '095';
 
 		        return codigoA.localeCompare(codigoB, 'es', { numeric: true, sensitivity: 'base' });
 		    });
-
-		    console.log('Inventario final a renderizar:', inventario.length);
 		
 		    if (!inventario.length) {
 		        tbody.innerHTML = `
