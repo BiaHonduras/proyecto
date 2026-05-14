@@ -5667,8 +5667,6 @@ async function obtenerAccessToken() {
 		            `)
 		            .eq('id_bodega', idBodega)
 		            .maybeSingle();
-				console.log('DATA: ',data);
-				console.log('Error: ',error);
 
 		        if (error) throw error;
 
@@ -5678,6 +5676,7 @@ async function obtenerAccessToken() {
 		            : !!tiposBodega?.maneja_vencimiento;
 				console.log('DATA BODEGA: ', data);
 				console.log('MANEJA: ', manejaVencimiento);
+				console.log('Error: ',error);
 
 		        if (!manejaVencimiento) {
 		            ocultarVencimiento();
