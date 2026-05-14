@@ -5769,7 +5769,13 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		
 		        if (error) throw error;
 		
-		        const manejaVencimiento = !!data?.tipos_bodega?.maneja_vencimiento;
+		        const tiposBodega = data?.tipos_bodega;
+
+				const manejaVencimiento = Array.isArray(tiposBodega)
+				    ? !!tiposBodega[0]?.maneja_vencimiento
+				    : !!tiposBodega?.maneja_vencimiento;
+				console.log('DATA BODEGA: ', data);
+				console.log('MANEJA: ', manejaVencimiento);
 		
 		        if (!manejaVencimiento) {
 		            contenedor.classList.add('hidden');
