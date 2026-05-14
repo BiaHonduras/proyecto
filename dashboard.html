@@ -2224,7 +2224,7 @@ const BODEGA_PFN = '095';
 		    if (!filtroSede || !filtroTipoBodega) return;
 		
 		    const sedeUsuario = currentUser?.sede || currentUser?.Sede || null;
-		    const tipoBodegaUsuario = currentUser?.tipo_bodega || currentUser?.tipoBodega || null;
+		    const tipoBodegaUsuario = currentUser?.tipos_bodega || currentUser?.tipoBodega || null;
 		    const esAdmin = currentUser?.role === 'admin' || currentUser?.rol === 'admin';
 		
 		    filtrosGlobales.sede = esAdmin ? 'Todas' : (sedeUsuario || 'Todas');
@@ -2596,7 +2596,7 @@ const BODEGA_PFN = '095';
                 .from('vw_dashboard_resumen')
                 .select('*')
                 .eq('sede_filtro', sedeFiltro)
-                .eq('tipo_bodega_filtro', tipoBodegaFiltro)
+                .eq('tipos_bodega_filtro', tiposBodegaFiltro)
                 .maybeSingle();
 
             if (error) {
