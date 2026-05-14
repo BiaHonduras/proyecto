@@ -5658,7 +5658,6 @@ async function obtenerAccessToken() {
 		    }
 
 		    try {
-				console.log('ID BODEGA:', idBodega);
 		        const { data, error } = await supabase
 		            .from('bodegas')
 		            .select(`
@@ -5675,9 +5674,10 @@ async function obtenerAccessToken() {
 		        const manejaVencimiento = Array.isArray(tiposBodega)
 		            ? !!tiposBodega[0]?.maneja_vencimiento
 		            : !!tiposBodega?.maneja_vencimiento;
+				
+				console.log('ID BODEGA:', idBodega);
 				console.log('DATA BODEGA: ', data);
 				console.log('MANEJA: ', manejaVencimiento);
-				console.log('Error: ',error);
 
 		        if (!manejaVencimiento) {
 		            ocultarVencimiento();
