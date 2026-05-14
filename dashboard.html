@@ -5750,17 +5750,13 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		
 		    if (!idBodega) {
 		        contenedor.classList.add('hidden');
-		
 		        checkBodega.checked = false;
-		
 		        fechaInput.value = '';
 		        fechaInput.disabled = true;
-		
 		        return;
 		    }
 		
 		    try {
-		
 		        const { data, error } = await supabase
 		            .from('bodegas')
 		            .select(`
@@ -5777,24 +5773,19 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		
 		        if (!manejaVencimiento) {
 		            contenedor.classList.add('hidden');
-		
 		            checkBodega.checked = false;
-		
 		            fechaInput.value = '';
 		            fechaInput.disabled = true;
-		
 		            return;
 		        }
 		
 		        contenedor.classList.remove('hidden');
-		
 		        const hoy = new Date();
 		        const esLunes = hoy.getDay() === 1;
-		
+	
 		        if (esLunes) {
 		            checkBodega.checked = true;
 		        }
-		
 		        toggleFechaVencimiento();
 		
 		    } catch (err) {
@@ -5803,6 +5794,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		// eventos
 		document.getElementById('idBodega').addEventListener('change', evaluarVencimiento);
 		document.addEventListener('DOMContentLoaded', evaluarVencimiento);
+	}
 	</script>
 </body>
 </html>
