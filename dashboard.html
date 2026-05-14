@@ -37,7 +37,7 @@
 		            sede,
 		            nombre,
 		            tipos_bodega (
-		                tipo_bodega,
+		                tipos_bodega,
 		                maneja_vencimiento
 		            )
 		        `)
@@ -5675,7 +5675,6 @@ async function obtenerAccessToken() {
 		            ? !!tiposBodega[0]?.maneja_vencimiento
 		            : !!tiposBodega?.maneja_vencimiento;
 				
-				console.log('ID BODEGA:', idBodega);
 				console.log('DATA BODEGA: ', data);
 				console.log('MANEJA: ', manejaVencimiento);
 
