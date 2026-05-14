@@ -2596,7 +2596,7 @@ const BODEGA_PFN = '095';
                 .from('vw_dashboard_resumen')
                 .select('*')
                 .eq('sede_filtro', sedeFiltro)
-                .eq('tipos_bodega_filtro', tiposBodegaFiltro)
+                .eq('tipo_bodega_filtro', tipoBodegaFiltro)
                 .maybeSingle();
 
             if (error) {
