@@ -1228,7 +1228,7 @@ header.sticky {
 						
 						<div id="contenedorVencimiento">
 						    <div class="flex items-center gap-2 mb-2">
-						        <input type="checkbox" id="checkVencimiento" class="h-4 w-4"/>
+						        <input type="checkbox" id="checkVencimiento" onchange="toggleFechaVencimiento()">
 						        <label for="checkVencimiento" class="text-sm font-medium text-gray-700">Actualizar Vencimientos</label>
 						    </div>
 						
@@ -5906,6 +5906,32 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		document.getElementById('idBodega').addEventListener('change', evaluarVencimiento);
 		document.addEventListener('DOMContentLoaded', evaluarVencimiento);
 	}
+		function verificarDiaLunes() {
+	    const hoy = new Date();
+	    const diaSemana = hoy.getDay(); // 0 = Domingo, 1 = Lunes, etc.
+	    const fechaVencimientoInput = document.getElementById('fechaVencimiento');
+	    const checkVencimiento = document.getElementById('checkVencimiento');
+	    
+	    if (diaSemana === 1) { // Es lunes
+	        fechaVencimientoInput.disabled = false;
+	        if (checkVencimiento) checkVencimiento.checked = true;
+	    } else {
+	        fechaVencimientoInput.disabled = true;
+	        if (checkVencimiento) checkVencimiento.checked = false;
+	    		}
+		}
+		// Función para habilitar/deshabilitar manualmente
+		function toggleFechaVencimiento() {
+		    const checkVencimiento = document.getElementById('checkVencimiento');
+		    const fechaVencimientoInput = document.getElementById('fechaVencimiento');
+		    
+		    fechaVencimientoInput.disabled = !checkVencimiento.checked;
+		}
+		
+		// Llamar al cargar la página
+		document.addEventListener('DOMContentLoaded', function() {
+		    verificarDiaLunes();
+		});		
 	</script>
 </body>
 </html>
