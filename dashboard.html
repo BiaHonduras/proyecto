@@ -5611,26 +5611,27 @@ async function obtenerAccessToken() {
 		}
 
 		function toggleFechaVencimiento() {
-		    const idBodega = document.getElementById('idBodega')?.value;
 		    const fechaInput = document.getElementById('fechaVencimiento');
 		    const checkBodega = document.getElementById('checkBodega');
-		    const checkActivo = !!checkBodega?.checked;
-		    const debeHabilitarse = idBodega !== BODEGA_PFN && checkActivo;
+
+			if (checkBodega) {
+			    checkBodega.addEventListener('change', toggleFechaVencimiento);
+			}
 		
-		    if (!fechaInput) return;
+		    if (!fechaInput || !checkBodega) return;
 		
-		    fechaInput.disabled = !debeHabilitarse;
-		    fechaInput.readOnly = !debeHabilitarse;
-		    fechaInput.classList.toggle('bg-gray-100', !debeHabilitarse);
-		    fechaInput.classList.toggle('input-disabled', !debeHabilitarse);
+		    const habilitado = checkBodega.checked;
 		
-		    if (!debeHabilitarse) {
+		    fechaInput.disabled = !habilitado;
+		    fechaInput.readOnly = !habilitado;
+		
+		    fechaInput.classList.toggle('bg-gray-100', !habilitado);
+		    fechaInput.classList.toggle('input-disabled', !habilitado);
+		
+		    if (!habilitado) {
 		        fechaInput.value = '';
 		    }
 		}
-
-		
-
 </script>
 
 <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
@@ -5743,42 +5744,64 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
         </div>
     </div>
 		<script>
+			
 		async function evaluarVencimiento() {
 		    const idBodega = document.getElementById('idBodega').value;
 		    const contenedor = document.getElementById('contenedorVencimiento');
+		    const checkBodega = document.getElementById('checkBodega');
+		    const fechaInput = document.getElementById('fechaVencimiento');
 		
 		    if (!idBodega) {
 		        contenedor.classList.add('hidden');
+		
+		        checkBodega.checked = false;
+		
+		        fechaInput.value = '';
+		        fechaInput.disabled = true;
+		
 		        return;
 		    }
 		
-		    const hoy = new Date();
-		    const esLunes = hoy.getDay() === 1;
-		
 		    try {
+		
 		        const { data, error } = await supabase
-				    .from('bodegas')
-				    .select(`
-				        tipos_bodega (
-				            maneja_vencimiento
-				        )
-				    `)
-				    .eq('id_bodega', idBodega)
-				    .maybeSingle();
-					console.log('idBodega:', idBodega);
+		            .from('bodegas')
+		            .select(`
+		                tipos_bodega (
+		                    maneja_vencimiento
+		                )
+		            `)
+		            .eq('id_bodega', idBodega)
+		            .maybeSingle();
 		
-		        const maneja = data?.tipos_bodega?.maneja_vencimiento;
+		        if (error) throw error;
 		
-		        if (esLunes && data.maneja_vencimiento) {
-		            contenedor.classList.remove('hidden');
-		        } else {
+		        const manejaVencimiento = !!data?.tipos_bodega?.maneja_vencimiento;
+		
+		        if (!manejaVencimiento) {
 		            contenedor.classList.add('hidden');
+		
+		            checkBodega.checked = false;
+		
+		            fechaInput.value = '';
+		            fechaInput.disabled = true;
+		
+		            return;
 		        }
 		
+		        contenedor.classList.remove('hidden');
+		
+		        const hoy = new Date();
+		        const esLunes = hoy.getDay() === 1;
+		
+		        if (esLunes) {
+		            checkBodega.checked = true;
+		        }
+		
+		        toggleFechaVencimiento();
+		
 		    } catch (err) {
-		        console.error(err);
-		        contenedor.classList.add('hidden');
-		    }
+		
 		}
 		
 		// eventos
