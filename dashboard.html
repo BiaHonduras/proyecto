@@ -1221,27 +1221,21 @@ header.sticky {
 							</select>
 						</div>
 						
-                        <div class="row mb-3">
-						    <div class="col-md-4">
-						        <label for="fechaActual">Fecha Actual *</label>
-						        <input type="date" id="fechaActual" class="form-control" required>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Actual *</label>
+                            <input type="date" id="fechaInventario" class="input-field w-full px-4 py-3 rounded-lg" required>
+                        </div>
+						
+						<div id="contenedorVencimiento" class="hidden">
+						    <div class="flex items-center gap-2 mb-2">
+						        <input type="checkbox" id="checkVencimiento" class="h-4 w-4"/>
+						        <label for="checkVencimiento" class="text-sm font-medium text-gray-700">Actualizar Vencimientos</label>
 						    </div>
 						
-						    <div class="col-md-4">
-						        <div class="form-check mt-4">
-						            <input type="checkbox" class="form-check-input" id="checkVencimiento">
-						            <label class="form-check-label" for="checkVencimiento">Actualizar Vencimientos</label>
-						        </div>
-						        <small class="text-muted d-block mt-1">
-						            Los lunes el campo se habilita automáticamente. En otros días puedes activarlo manualmente usando esta casilla.
-						        </small>
-						    </div>
+						    <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Vencimiento *</label>
+						    <input type="date" id="fechaVencimiento" class="input-field w-full px-4 py-3 rounded-lg bg-gray-100 input-disabled" disabled>
 						
-						    <div class="col-md-4">
-						        <label for="fechaVencimiento">Fecha Vencimiento *</label>
-						        <!-- ⚠️ IMPORTANTE: Se mantiene siempre en el DOM, solo se controla con "disabled" -->
-						        <input type="date" id="fechaVencimiento" class="form-control" disabled>
-						    </div>
+						    <p class="text-xs text-gray-500 mt-2"> Los lunes el campo se habilita automáticamente. En otros días puedes activarlo manualmente usando esta casilla.</p>
 						</div>
 						
                         <div class="md:col-span-2">
@@ -2330,7 +2324,8 @@ const BODEGA_PFN = '095';
 			document.getElementById('btnGuardarRegistros').addEventListener('click', () => {
     			guardarCambiosMasivos();
 				});
-			
+
+
 			document.getElementById('sede').addEventListener('change', () => {
 			    actualizarBodegasPorSede();
 			    limpiarCamposArticulo();
@@ -2515,42 +2510,7 @@ const BODEGA_PFN = '095';
         				buscarArticulo(valor);
     					}, 400);
 					}
-			const fechaVencimientoInput = document.getElementById('fechaVencimiento');
-			const fechaActualInput = document.getElementById('fechaActual');
-		    const checkVencimiento = document.getElementById('checkVencimiento');
-
-			function controlarCampoVencimiento() {
-		        // Tomar la fecha seleccionada o usar la de hoy por defecto
-		        const fechaValor = fechaActualInput.value;
-		        // Añadir 'T00:00:00' evita errores de zona horaria que cambian el día
-		        const fecha = fechaValor ? new Date(fechaValor + 'T00:00:00') : new Date();
-		        const hoyEsLunes = esLunes(fecha);
-		
-		        if (hoyEsLunes) {
-		            fechaVencimientoInput.disabled = false;
-		            checkVencimiento.checked = true;
-		        } else {
-		            // Si no es lunes, el estado sigue al checkbox
-		            fechaVencimientoInput.disabled = !checkVencimiento.checked;
-		        }
-		    }
-			// Evento: Al hacer clic en el checkbox
-		    checkVencimiento.addEventListener('change', () => {
-		        fechaVencimientoInput.disabled = !checkVencimiento.checked;
-		        if (checkVencimiento.checked) fechaVencimientoInput.focus();
-		    });
-		
-		    // Evento: Al cambiar la fecha actual manualmente
-		    fechaActualInput.addEventListener('change', controlarCampoVencimiento);
-		
-		    // Inicialización
-		    if (!fechaActualInput.value) {
-		        const hoy = new Date();
-		        fechaActualInput.value = hoy.toISOString().split('T')[0];
-		    }
-		    
-		    // Ejecutar lógica al cargar
-		    controlarCampoVencimiento();
+			const fechaVencimiento = document.getElementById('fechaVencimiento');
 			toggleFechaVencimiento();
         });
 
@@ -3331,6 +3291,8 @@ const BODEGA_PFN = '095';
 		    const inventarioOriginal = Array.isArray(data) ? data : [];
 		    let inventario = aplicarFiltrosGlobales(inventarioOriginal);
 		
+		    console.log('Después de aplicarFiltrosGlobales:', inventario.length);
+		
 		    if (inventario.length === 0 && inventarioOriginal.length > 0) {
 		        console.warn('Los filtros dejaron vacío. Mostrando todo como respaldo.');
 		        inventario = inventarioOriginal;
@@ -3374,6 +3336,8 @@ const BODEGA_PFN = '095';
 
 		        return codigoA.localeCompare(codigoB, 'es', { numeric: true, sensitivity: 'base' });
 		    });
+
+		    console.log('Inventario final a renderizar:', inventario.length);
 		
 		    if (!inventario.length) {
 		        tbody.innerHTML = `
@@ -5672,35 +5636,12 @@ async function obtenerAccessToken() {
 		        fechaInput.value = '';
 		    }
 		}
-		
-		// 🔹 Función segura para obtener elementos
-		const getEl = (id) => {
-		  const el = document.getElementById(id);
-		  if (!el) console.warn(`⚠️ Elemento no encontrado: #${id}`);
-		  return el;
-		};
 
 		async function evaluarVencimiento() {
 		    const idBodega = document.getElementById('idBodega')?.value || '';
 		    const contenedor = document.getElementById('contenedorVencimiento');
 		    const checkVencimiento = document.getElementById('checkVencimiento');
 		    const fechaInput = document.getElementById('fechaVencimiento');
-			const input = getEl('fechaVencimiento');
- 	 		const check = getEl('checkVencimiento');
-
-			if (!input || !check) return; // 🛑 Detiene ejecución si falta algún elemento
-
-			// Ahora es seguro acceder a .classList, .disabled, .checked, etc.
-		  const fechaActual = getEl('fechaActual')?.value;
-		  const esLunes = fechaActual ? new Date(fechaActual + 'T00:00:00').getDay() === 1 : false;
-		
-		  if (esLunes) {
-		    input.disabled = false;
-		    check.checked = true;
-		    input.classList.remove('text-muted'); // Ejemplo seguro
-		  } else {
-		    input.disabled = !check.checked;
-		  }
 
 		    if (!contenedor || !checkVencimiento || !fechaInput) return;
 
@@ -5759,13 +5700,6 @@ async function obtenerAccessToken() {
 		        ocultarVencimiento();
 		    }
 		}
-		// 🔹 Ejemplo aplicado a tu error de línea 2430
-		document.addEventListener('DOMContentLoaded', () => {
-		  const campoFecha = getEl('fechaActual');
-		  if (campoFecha) {
-		    campoFecha.value = new Date().toISOString().split('T')[0];
-		  }
-		});
 
 		document.addEventListener('DOMContentLoaded', () => {
 		    const checkVencimiento = document.getElementById('checkVencimiento');
