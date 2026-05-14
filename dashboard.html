@@ -5672,12 +5672,35 @@ async function obtenerAccessToken() {
 		        fechaInput.value = '';
 		    }
 		}
+		
+		// 🔹 Función segura para obtener elementos
+		const getEl = (id) => {
+		  const el = document.getElementById(id);
+		  if (!el) console.warn(`⚠️ Elemento no encontrado: #${id}`);
+		  return el;
+		};
 
 		async function evaluarVencimiento() {
 		    const idBodega = document.getElementById('idBodega')?.value || '';
 		    const contenedor = document.getElementById('contenedorVencimiento');
 		    const checkVencimiento = document.getElementById('checkVencimiento');
 		    const fechaInput = document.getElementById('fechaVencimiento');
+			const input = getEl('fechaVencimiento');
+ 	 		const check = getEl('checkVencimiento');
+
+			if (!input || !check) return; // 🛑 Detiene ejecución si falta algún elemento
+
+			// Ahora es seguro acceder a .classList, .disabled, .checked, etc.
+		  const fechaActual = getEl('fechaActual')?.value;
+		  const esLunes = fechaActual ? new Date(fechaActual + 'T00:00:00').getDay() === 1 : false;
+		
+		  if (esLunes) {
+		    input.disabled = false;
+		    check.checked = true;
+		    input.classList.remove('text-muted'); // Ejemplo seguro
+		  } else {
+		    input.disabled = !check.checked;
+		  }
 
 		    if (!contenedor || !checkVencimiento || !fechaInput) return;
 
@@ -5736,6 +5759,13 @@ async function obtenerAccessToken() {
 		        ocultarVencimiento();
 		    }
 		}
+		// 🔹 Ejemplo aplicado a tu error de línea 2430
+		document.addEventListener('DOMContentLoaded', () => {
+		  const campoFecha = getEl('fechaActual');
+		  if (campoFecha) {
+		    campoFecha.value = new Date().toISOString().split('T')[0];
+		  }
+		});
 
 		document.addEventListener('DOMContentLoaded', () => {
 		    const checkVencimiento = document.getElementById('checkVencimiento');
