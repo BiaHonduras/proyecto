@@ -5667,6 +5667,8 @@ async function obtenerAccessToken() {
 		            `)
 		            .eq('id_bodega', idBodega)
 		            .maybeSingle();
+				console.log('DATA: ',data);
+				console.log('Error: ',error);
 
 		        if (error) throw error;
 
