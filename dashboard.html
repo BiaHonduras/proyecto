@@ -1226,7 +1226,7 @@ header.sticky {
                             <input type="date" id="fechaInventario" class="input-field w-full px-4 py-3 rounded-lg" required>
                         </div>
 						
-						<div id="contenedorVencimiento" class="hidden">
+						<div id="contenedorVencimiento">
 						    <div class="flex items-center gap-2 mb-2">
 						        <input type="checkbox" id="checkVencimiento" class="h-4 w-4"/>
 						        <label for="checkVencimiento" class="text-sm font-medium text-gray-700">Actualizar Vencimientos</label>
@@ -2512,6 +2512,35 @@ const BODEGA_PFN = '095';
 					}
 			const fechaVencimiento = document.getElementById('fechaVencimiento');
 			toggleFechaVencimiento();
+			
+			const checkbox = document.getElementById('checkVencimiento');
+		    const inputFecha = document.getElementById('fechaVencimiento');
+		    const diaSemana = new Date().getDay(); // 0=Dom, 1=Lun, 2=Mar...
+		
+		    // Función para habilitar/deshabilitar visual y funcionalmente
+		    const toggleFecha = (habilitar) => {
+		        inputFecha.disabled = !habilitar;
+		        if (habilitar) {
+		            inputFecha.classList.remove('bg-gray-100', 'text-gray-500', 'cursor-not-allowed');
+		            inputFecha.classList.add('bg-white', 'text-gray-900');
+		        } else {
+		            inputFecha.classList.add('bg-gray-100', 'text-gray-500', 'cursor-not-allowed');
+		            inputFecha.classList.remove('bg-white', 'text-gray-900');
+		            inputFecha.value = ''; // Opcional: limpiar si se desactiva
+		        }
+		    };
+		
+		    // 1. Si es Lunes (1), habilitar automáticamente y marcar checkbox
+		    if (diaSemana === 1) {
+		        checkbox.checked = true;
+		        toggleFecha(true);
+		    }
+		
+		    // 2. Control manual con el checkbox
+		    checkbox.addEventListener('change', function() {
+		        toggleFecha(this.checked);
+		        if (this.checked) inputFecha.focus();
+		    });
         });
 
         // ===== NAVEGACIÓN =====
