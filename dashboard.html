@@ -5674,6 +5674,8 @@ async function obtenerAccessToken() {
 		        const manejaVencimiento = Array.isArray(tiposBodega)
 		            ? !!tiposBodega[0]?.maneja_vencimiento
 		            : !!tiposBodega?.maneja_vencimiento;
+				console.log('DATA BODEGA: ', data);
+				console.log('MANEJA: ', manejaVencimiento);
 
 		        if (!manejaVencimiento) {
 		            ocultarVencimiento();
