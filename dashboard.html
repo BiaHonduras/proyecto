@@ -1418,6 +1418,24 @@ header.sticky {
                         </div>
                     </div>
                     
+                    
+                    <div id="inventarioResumen" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 mb-6">
+                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                            <p class="text-sm text-orange-700">Sku´s Pendientes</p>
+                            <h4 id="skusPendientes" class="text-2xl font-bold text-orange-800">0</h4>
+                        </div>
+
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <p class="text-sm text-green-700">Sku´s Inventariados</p>
+                            <h4 id="skusInventariados" class="text-2xl font-bold text-green-800">0</h4>
+                        </div>
+
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <p class="text-sm text-blue-700">% Inventario General</p>
+                            <h4 id="porcentajeInventarioGeneral" class="text-2xl font-bold text-blue-800">0%</h4>
+                        </div>
+                    </div>
+
                     <div class="w-full overflow-x-auto">
                         <div class="w-full">
 							<table class="min-w-full">
@@ -3367,7 +3385,56 @@ const BODEGA_PFN = '095';
 		    });
 
 		    console.log('Inventario final a renderizar:', inventario.length);
-		
+
+            try {
+                const resumenPendientes = document.getElementById('skusPendientes');
+                const resumenInventariados = document.getElementById('skusInventariados');
+                const resumenPorcentaje = document.getElementById('porcentajeInventarioGeneral');
+
+                const skusImportados = new Set();
+                const skusInventariadosSet = new Set();
+
+                const { data: dataImportados } = await supabase
+                    .from('inventario_reporteria')
+                    .select('codigo');
+
+                (dataImportados || []).forEach(item => {
+                    const codigo = String(item.codigo || '').trim();
+                    if (codigo) {
+                        skusImportados.add(codigo);
+                    }
+                });
+
+                inventario.forEach(item => {
+                    const codigo = String(item.codigo || '').trim();
+                    if (codigo) {
+                        skusInventariadosSet.add(codigo);
+                    }
+                });
+
+                const totalImportados = skusImportados.size;
+                const totalInventariados = skusInventariadosSet.size;
+                const totalPendientes = Math.max(totalImportados - totalInventariados, 0);
+                const porcentaje = totalImportados > 0
+                    ? ((totalInventariados / totalImportados) * 100).toFixed(2)
+                    : '0.00';
+
+                if (resumenPendientes) {
+                    resumenPendientes.textContent = totalPendientes.toLocaleString();
+                }
+
+                if (resumenInventariados) {
+                    resumenInventariados.textContent = totalInventariados.toLocaleString();
+                }
+
+                if (resumenPorcentaje) {
+                    resumenPorcentaje.textContent = `${porcentaje}%`;
+                }
+
+            } catch (errorResumen) {
+                console.error('Error calculando resumen de inventario:', errorResumen);
+            }
+
 		    if (!inventario.length) {
 		        tbody.innerHTML = `
 		            <tr>
