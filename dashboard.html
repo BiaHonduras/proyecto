@@ -56,6 +56,7 @@
 		        option.value = b.id_bodega;
 		        option.textContent = `${b.sede} - ${b.nombre}`;
                 option.dataset.manejaVencimiento = b.tipos_bodega?.maneja_vencimiento ? 'true' : 'false';
+                option.dataset.manejaVencimiento = b.tipos_bodega?.maneja_vencimiento ? 'true' : 'false';
 		        select.appendChild(option);
 		    });
 		}
@@ -1227,7 +1228,7 @@ header.sticky {
                             <input type="date" id="fechaInventario" class="input-field w-full px-4 py-3 rounded-lg" required>
                         </div>
 						
-						<div id="contenedorVencimiento">
+						<div id="contenedorVencimiento" style="display:block !important; visibility:visible !important;">
 						    <div class="flex items-center gap-2 mb-2">
 						        <input type="checkbox" id="checkVencimiento" onchange="toggleFechaVencimiento()">
 						        <label for="checkVencimiento" class="text-sm font-medium text-gray-700">Actualizar Vencimientos</label>
@@ -6061,6 +6062,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 return false;
             }
         });
+    }
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const contenedor = document.getElementById('contenedorVencimiento');
+    const check = document.getElementById('checkVencimiento');
+    const fecha = document.getElementById('fechaVencimiento');
+    const form = document.getElementById('articuloForm');
+    const selectBodega = document.getElementById('idBodega');
+
+    if (contenedor) {
+        contenedor.style.display = 'block';
+        contenedor.style.visibility = 'visible';
+    }
+
+    function toggleFechaVencimiento() {
+        if (!fecha || !check) return;
+        fecha.disabled = !check.checked;
+
+        if (fecha.disabled) {
+            fecha.classList.add('input-disabled');
+            fecha.classList.add('bg-gray-100');
+        } else {
+            fecha.classList.remove('input-disabled');
+            fecha.classList.remove('bg-gray-100');
+        }
+    }
+
+    window.toggleFechaVencimiento = toggleFechaVencimiento;
+
+    const hoy = new Date();
+    if (hoy.getDay() === 1 && check) {
+        check.checked = true;
+    }
+
+    toggleFechaVencimiento();
+
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            const selected = selectBodega?.selectedOptions?.[0];
+            const maneja = selected?.dataset?.manejaVencimiento;
+
+            if (check.checked && maneja === 'false') {
+                e.preventDefault();
+                alert('La bodega seleccionada no permite registrar Fecha de Vencimiento.');
+                return false;
+            }
+        }, true);
     }
 });
 </script>
