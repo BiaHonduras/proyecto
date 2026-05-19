@@ -55,6 +55,7 @@
 		        const option = document.createElement('option');
 		        option.value = b.id_bodega;
 		        option.textContent = `${b.sede} - ${b.nombre}`;
+                option.dataset.manejaVencimiento = b.tipos_bodega?.maneja_vencimiento ? 'true' : 'false';
 		        select.appendChild(option);
 		    });
 		}
@@ -6000,5 +6001,69 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		    verificarDiaLunes();
 		});		
 	</script>
+
+<script>
+function toggleFechaVencimiento() {
+    const check = document.getElementById('checkVencimiento');
+    const input = document.getElementById('fechaVencimiento');
+
+    if (!check || !input) return;
+
+    input.disabled = !check.checked;
+
+    if (check.checked) {
+        input.classList.remove('bg-gray-100', 'input-disabled');
+    } else {
+        input.classList.add('bg-gray-100', 'input-disabled');
+        input.value = '';
+    }
+}
+
+function validarPermiteVencimiento() {
+    const select = document.getElementById('idBodega');
+    const check = document.getElementById('checkVencimiento');
+
+    if (!select || !check) return true;
+
+    const option = select.options[select.selectedIndex];
+    const maneja = option?.dataset?.manejaVencimiento === 'true';
+
+    if (check.checked && !maneja) {
+        alert('La bodega seleccionada no permite registrar fecha de vencimiento.');
+        return false;
+    }
+
+    return true;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('fechaVencimiento');
+    const check = document.getElementById('checkVencimiento');
+    const form = document.getElementById('articuloForm');
+
+    if (input) {
+        input.disabled = true;
+        input.classList.add('bg-gray-100', 'input-disabled');
+    }
+
+    const hoy = new Date();
+    const esLunes = hoy.getDay() === 1;
+
+    if (check && esLunes) {
+        check.checked = true;
+        toggleFechaVencimiento();
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validarPermiteVencimiento()) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+});
+</script>
+
 </body>
 </html>
