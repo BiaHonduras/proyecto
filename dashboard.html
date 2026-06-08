@@ -53,12 +53,22 @@
 		
 		    data.forEach(b => {
 		        const option = document.createElement('option');
-		        option.value = b.id_bodega;
+		        const tipoBodega = Array.isArray(b.tipos_bodega) ? b.tipos_bodega[0] : b.tipos_bodega;
+		        const manejaVencimiento = !!tipoBodega?.maneja_vencimiento;
+		        option.value = String(b.id_bodega ?? '');
 		        option.textContent = `${b.sede} - ${b.nombre}`;
-                option.dataset.manejaVencimiento = b.tipos_bodega?.maneja_vencimiento ? 'true' : 'false';
-                option.dataset.manejaVencimiento = b.tipos_bodega?.maneja_vencimiento ? 'true' : 'false';
+                option.dataset.manejaVencimiento = manejaVencimiento ? 'true' : 'false';
+                option.dataset.sede = b.sede || '';
+                option.dataset.nombre = b.nombre || '';
 		        select.appendChild(option);
 		    });
+
+            // Avisar que las opciones ya tienen dataset cargado.
+            // Esto evita validar vencimientos antes de que exista la bodega seleccionada.
+            select.dispatchEvent(new Event('bodegas:cargadas'));
+            if (typeof window.evaluarVencimiento === 'function') {
+                window.evaluarVencimiento();
+            }
 		}
 		
 		// ejecutar cuando cargue la página
@@ -5735,54 +5745,80 @@ async function obtenerAccessToken() {
 		    }
 		}
 
-		async function evaluarVencimiento() {
-		    const idBodega = document.getElementById('idBodega')?.value || '';
+		function obtenerOpcionBodegaSeleccionada() {
+		    const selectBodega = document.getElementById('idBodega');
+		    if (!selectBodega || !selectBodega.value) return null;
+		    return selectBodega.selectedOptions?.[0] || null;
+		}
+
+		async function obtenerPermisoVencimientoBodega(idBodega) {
+		    const option = obtenerOpcionBodegaSeleccionada();
+
+		    // Primer origen confiable: el dataset cargado en cargarBodegas().
+		    // Evita que DATA BODEGA salga null por validar antes de tiempo o por relaciones Supabase.
+		    if (option?.dataset?.manejaVencimiento === 'true') return true;
+		    if (option?.dataset?.manejaVencimiento === 'false') return false;
+
+		    // Respaldo: consulta directa a Supabase si por alguna razón la opción no trae dataset.
+		    const { data, error } = await supabase
+		        .from('bodegas')
+		        .select(`
+		            id_bodega,
+		            tipos_bodega (
+		                maneja_vencimiento
+		            )
+		        `)
+		        .eq('id_bodega', idBodega)
+		        .maybeSingle();
+
+		    if (error) throw error;
+
+		    const tiposBodega = data?.tipos_bodega;
+		    const manejaVencimiento = Array.isArray(tiposBodega)
+		        ? !!tiposBodega[0]?.maneja_vencimiento
+		        : !!tiposBodega?.maneja_vencimiento;
+
+		    console.log('DATA BODEGA: ', data);
+		    console.log('MANEJA: ', manejaVencimiento);
+
+		    return manejaVencimiento;
+		}
+
+		function ocultarBloqueVencimiento() {
 		    const contenedor = document.getElementById('contenedorVencimiento');
 		    const checkVencimiento = document.getElementById('checkVencimiento');
 		    const fechaInput = document.getElementById('fechaVencimiento');
 
-		    if (!contenedor || !checkVencimiento || !fechaInput) return;
+		    if (contenedor) contenedor.classList.add('hidden');
+		    if (checkVencimiento) checkVencimiento.checked = false;
+		    if (fechaInput) fechaInput.value = '';
+		    setEstadoFechaVencimiento(false);
+		}
 
-		    const ocultarVencimiento = () => {
-		        contenedor.classList.add('hidden');
-		        checkVencimiento.checked = false;
-		        fechaInput.value = '';
-		        setEstadoFechaVencimiento(false);
-		    };
+		async function evaluarVencimiento() {
+		    const selectBodega = document.getElementById('idBodega');
+		    const idBodega = selectBodega?.value || '';
+		    const contenedor = document.getElementById('contenedorVencimiento');
+		    const checkVencimiento = document.getElementById('checkVencimiento');
+		    const fechaInput = document.getElementById('fechaVencimiento');
+
+		    if (!contenedor || !checkVencimiento || !fechaInput) return false;
 
 		    if (!idBodega) {
-		        ocultarVencimiento();
-		        return;
+		        ocultarBloqueVencimiento();
+		        return false;
 		    }
 
 		    try {
-		        const { data, error } = await supabase
-		            .from('bodegas')
-		            .select(`
-		                tipos_bodega (
-		                    maneja_vencimiento
-		                )
-		            `)
-		            .eq('id_bodega', idBodega)
-		            .maybeSingle();
-
-		        if (error) throw error;
-
-		        const tiposBodega = data?.tipos_bodega;
-		        const manejaVencimiento = Array.isArray(tiposBodega)
-		            ? !!tiposBodega[0]?.maneja_vencimiento
-		            : !!tiposBodega?.maneja_vencimiento;
-				
-				console.log('DATA BODEGA: ', data);
-				console.log('MANEJA: ', manejaVencimiento);
+		        const manejaVencimiento = await obtenerPermisoVencimientoBodega(idBodega);
+		        console.log('BODEGA SELECCIONADA: ', idBodega);
+		        console.log('MANEJA VENCIMIENTO: ', manejaVencimiento);
 
 		        if (!manejaVencimiento) {
-		            ocultarVencimiento();
-		            return;
+		            ocultarBloqueVencimiento();
+		            return false;
 		        }
 
-		        // Siempre mostrar el campo cuando la bodega maneja vencimiento.
-		        // Si no es lunes, queda visible pero deshabilitado hasta marcar el check.
 		        contenedor.classList.remove('hidden');
 
 		        if (esFechaLunes()) {
@@ -5793,11 +5829,17 @@ async function obtenerAccessToken() {
 		            fechaInput.value = '';
 		            setEstadoFechaVencimiento(false);
 		        }
+
+		        return true;
 		    } catch (err) {
 		        console.error('Error evaluando vencimiento:', err);
-		        ocultarVencimiento();
+		        ocultarBloqueVencimiento();
+		        return false;
 		    }
 		}
+
+        window.evaluarVencimiento = evaluarVencimiento;
+        window.toggleFechaVencimiento = toggleFechaVencimiento;
 
 		document.addEventListener('DOMContentLoaded', () => {
 		    const checkVencimiento = document.getElementById('checkVencimiento');
@@ -5914,202 +5956,47 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
             <div class="assistant-empty-note">Creado por Hernán Banegas.</div>
         </div>
     </div>
-		<script>
-			
-		async function evaluarVencimiento() {
-		    const idBodega = document.getElementById('idBodega').value;
-		    const contenedor = document.getElementById('contenedorVencimiento');
-		    const checkVencimiento = document.getElementById('checkVencimiento');
-		    const fechaInput = document.getElementById('fechaVencimiento');
-		
-		    if (!idBodega) {
-		        contenedor.classList.add('hidden');
-		        checkVencimiento.checked = false;
-		        fechaInput.value = '';
-		        fechaInput.disabled = true;
-		        return;
-		    }
-		
-		    try {
-		        const { data, error } = await supabase
-		            .from('bodegas')
-		            .select(`
-		                tipos_bodega (
-		                    maneja_vencimiento
-		                )
-		            `)
-		            .eq('id_bodega', idBodega)
-		            .maybeSingle();
-		
-		        if (error) throw error;
-		
-		        const tiposBodega = data?.tipos_bodega;
-
-				const manejaVencimiento = Array.isArray(tiposBodega)
-				    ? !!tiposBodega[0]?.maneja_vencimiento
-				    : !!tiposBodega?.maneja_vencimiento;
-				console.log('DATA BODEGA: ', data);
-				console.log('MANEJA: ', manejaVencimiento);
-		
-		        if (!manejaVencimiento) {
-		            contenedor.classList.add('hidden');
-		            checkVencimiento.checked = false;
-		            fechaInput.value = '';
-		            fechaInput.disabled = true;
-		            return;
-		        }
-		
-		        contenedor.classList.remove('hidden');
-		        const hoy = new Date();
-		        const esLunes = hoy.getDay() === 1;
-	
-		        if (esLunes) {
-		            checkVencimiento.checked = true;
-		        }
-		        toggleFechaVencimiento();
-		
-		    } catch (err) {
-		
-		}
-		// eventos
-		document.getElementById('idBodega').addEventListener('change', evaluarVencimiento);
-		document.addEventListener('DOMContentLoaded', evaluarVencimiento);
-	}
-		function verificarDiaLunes() {
-	    const hoy = new Date();
-	    const diaSemana = hoy.getDay(); // 0 = Domingo, 1 = Lunes, etc.
-	    const fechaVencimientoInput = document.getElementById('fechaVencimiento');
-	    const checkVencimiento = document.getElementById('checkVencimiento');
-	    
-	    if (diaSemana === 1) { // Es lunes
-	        fechaVencimientoInput.disabled = false;
-	        if (checkVencimiento) checkVencimiento.checked = true;
-	    } else {
-	        fechaVencimientoInput.disabled = true;
-	        if (checkVencimiento) checkVencimiento.checked = false;
-	    		}
-		}
-		// Función para habilitar/deshabilitar manualmente
-		function toggleFechaVencimiento() {
-		    const checkVencimiento = document.getElementById('checkVencimiento');
-		    const fechaVencimientoInput = document.getElementById('fechaVencimiento');
-		    
-		    fechaVencimientoInput.disabled = !checkVencimiento.checked;
-		}
-		
-		// Llamar al cargar la página
-		document.addEventListener('DOMContentLoaded', function() {
-		    verificarDiaLunes();
-		});		
-	</script>
-
 <script>
-function toggleFechaVencimiento() {
-    const check = document.getElementById('checkVencimiento');
-    const input = document.getElementById('fechaVencimiento');
-
-    if (!check || !input) return;
-
-    input.disabled = !check.checked;
-
-    if (check.checked) {
-        input.classList.remove('bg-gray-100', 'input-disabled');
-    } else {
-        input.classList.add('bg-gray-100', 'input-disabled');
-        input.value = '';
-    }
-}
-
-function validarPermiteVencimiento() {
-    const select = document.getElementById('idBodega');
-    const check = document.getElementById('checkVencimiento');
-
-    if (!select || !check) return true;
-
-    const option = select.options[select.selectedIndex];
-    const maneja = option?.dataset?.manejaVencimiento === 'true';
-
-    if (check.checked && !maneja) {
-        alert('La bodega seleccionada no permite registrar fecha de vencimiento.');
-        return false;
-    }
-
-    return true;
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('fechaVencimiento');
+document.addEventListener('DOMContentLoaded', function () {
     const check = document.getElementById('checkVencimiento');
     const form = document.getElementById('articuloForm');
+    const selectBodega = document.getElementById('idBodega');
 
-    if (input) {
-        input.disabled = true;
-        input.classList.add('bg-gray-100', 'input-disabled');
+    if (check) {
+        check.addEventListener('change', function () {
+            if (typeof window.toggleFechaVencimiento === 'function') {
+                window.toggleFechaVencimiento();
+            }
+        });
     }
 
-    const hoy = new Date();
-    const esLunes = hoy.getDay() === 1;
-
-    if (check && esLunes) {
-        check.checked = true;
-        toggleFechaVencimiento();
+    if (selectBodega) {
+        selectBodega.addEventListener('bodegas:cargadas', function () {
+            if (typeof window.evaluarVencimiento === 'function') {
+                window.evaluarVencimiento();
+            }
+        });
     }
 
     if (form) {
         form.addEventListener('submit', function(e) {
-            if (!validarPermiteVencimiento()) {
+            const fechaInput = document.getElementById('fechaVencimiento');
+            const vencimientoActivo = !!check?.checked;
+            const bodegaPermite = selectBodega?.selectedOptions?.[0]?.dataset?.manejaVencimiento === 'true';
+
+            // Solo bloquear cuando el usuario intenta guardar fecha de vencimiento
+            // en una bodega marcada explícitamente como no permitida.
+            if (vencimientoActivo && !bodegaPermite) {
                 e.preventDefault();
+                e.stopImmediatePropagation();
+                alert('La bodega seleccionada no permite registrar fecha de vencimiento.');
                 return false;
             }
-        });
-    }
-});
-</script>
 
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const contenedor = document.getElementById('contenedorVencimiento');
-    const check = document.getElementById('checkVencimiento');
-    const fecha = document.getElementById('fechaVencimiento');
-    const form = document.getElementById('articuloForm');
-    const selectBodega = document.getElementById('idBodega');
-
-    if (contenedor) {
-        contenedor.style.display = 'block';
-        contenedor.style.visibility = 'visible';
-    }
-
-    function toggleFechaVencimiento() {
-        if (!fecha || !check) return;
-        fecha.disabled = !check.checked;
-
-        if (fecha.disabled) {
-            fecha.classList.add('input-disabled');
-            fecha.classList.add('bg-gray-100');
-        } else {
-            fecha.classList.remove('input-disabled');
-            fecha.classList.remove('bg-gray-100');
-        }
-    }
-
-    window.toggleFechaVencimiento = toggleFechaVencimiento;
-
-    const hoy = new Date();
-    if (hoy.getDay() === 1 && check) {
-        check.checked = true;
-    }
-
-    toggleFechaVencimiento();
-
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            const selected = selectBodega?.selectedOptions?.[0];
-            const maneja = selected?.dataset?.manejaVencimiento;
-
-            if (check.checked && maneja === 'false') {
+            if (vencimientoActivo && !fechaInput?.value) {
                 e.preventDefault();
-                alert('La bodega seleccionada no permite registrar Fecha de Vencimiento.');
+                e.stopImmediatePropagation();
+                alert('Debes ingresar la fecha de vencimiento.');
                 return false;
             }
         }, true);
