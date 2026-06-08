@@ -5914,15 +5914,15 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		    }
 		
 		    try {
-		        const { data, error } = await supabase
-		            .from('bodegas')
-		            .select(`
-		                tipos_bodega (
-		                    maneja_vencimiento
-		                )
-		            `)
-		            .eq('id_bodega', idBodega)
-		            .maybeSingle();
+		        console.log('ID BODEGA:', idBodega);
+
+				const { data, error } = await supabase
+				    .from('bodegas')
+				    .select('*')
+				    .eq('id_bodega', idBodega)
+				    .maybeSingle();
+				
+				console.log('BODEGA COMPLETA:', data);
 		
 		        if (error) throw error;
 		
@@ -5931,8 +5931,6 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 				const manejaVencimiento = Array.isArray(tiposBodega)
 				    ? !!tiposBodega[0]?.maneja_vencimiento
 				    : !!tiposBodega?.maneja_vencimiento;
-				console.log('DATA BODEGA: ', data);
-				console.log('MANEJA: ', manejaVencimiento);
 		
 		        if (!manejaVencimiento) {
 		            contenedor.classList.add('hidden');
