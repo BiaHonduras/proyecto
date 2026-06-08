@@ -2297,8 +2297,6 @@ const BODEGA_PFN = '095';
 
             try {
                 const { data: authData, error: authError } = await window.supabase.auth.getUser();
-				console.log(data.user);
-				
                 if (authError || !authData?.user) {
                     sessionStorage.removeItem('currentUser');
                     window.currentUser = null;
@@ -2538,13 +2536,6 @@ const BODEGA_PFN = '095';
 			const checkbox = document.getElementById('checkVencimiento');
 		    const inputFecha = document.getElementById('fechaVencimiento');
 		    const diaSemana = new Date().getDay(); // 0=Dom, 1=Lun, 2=Mar...
-			const hoy = new Date();
-    		const esLunes = hoy.getDay() === 1;
-
-			const check = document.getElementById('checkVencimiento');
-		    if (check) {
-		        check.disabled = !esLunes;
-		    }
 		
 		    // Función para habilitar/deshabilitar visual y funcionalmente
 		    const toggleFecha = (habilitar) => {
@@ -2560,9 +2551,10 @@ const BODEGA_PFN = '095';
 		    };
 		
 		    // 1. Si es Lunes (1), habilitar automáticamente y marcar checkbox
-		    if (!esLunes) {
-				  checkVencimiento.disabled = false; // o lo dejas opcional
-				}
+		    if (diaSemana === 1) {
+		        checkbox.checked = true;
+		        toggleFecha(true);
+		    }
 		
 		    // 2. Control manual con el checkbox
 		    checkbox.addEventListener('change', function() {
@@ -2900,9 +2892,25 @@ const BODEGA_PFN = '095';
             }
         }
 
-		async function guardarVencimientoSemanal(payloadVencimiento) {
+        async function guardarVencimientoSemanal(payloadVencimiento) {
 		    const { data: { user } } = await supabase.auth.getUser();
-		
+
+			const { data: existentes } = await supabase
+			  .from('vencimientos_semanales')
+			  .select('*')
+			  .eq('sede', payloadVencimiento.sede)
+			  .eq('idbodega', payloadVencimiento.idbodega)
+			  .eq('codigo', payloadVencimiento.codigo);
+
+			if (existentes.length > 0) {
+			  await supabase
+			    .from('vencimientos_semanales')
+			    .delete()
+			    .eq('sede', payloadVencimiento.sede)
+			    .eq('idbodega', payloadVencimiento.idbodega)
+			    .eq('codigo', payloadVencimiento.codigo);
+			}
+			
 		    const { error } = await supabase
 		        .from('vencimientos_semanales')
 		        .upsert([{
@@ -2912,7 +2920,9 @@ const BODEGA_PFN = '095';
 		            onConflict: 'sede,idbodega,codigo'
 		        });
 		
-		    if (error) throw error;
+		    if (error) {
+		        throw error;
+		    }
 		}
 
         async function eliminarVencimientoSemanal(clave = {}) {
@@ -2970,9 +2980,7 @@ const BODEGA_PFN = '095';
 		    const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
 		    const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
 		    const unidades = parseFloat(document.getElementById('unidades').value) || 0;
-		    const select = document.getElementById('idBodega');
-			const option = select.options[select.selectedIndex];
-			const maneja = option?.dataset?.manejaVencimiento === 'true' || option?.dataset?.manejaVencimiento === '1';
+		    const sede = document.getElementById('sede').value;
 
 		    if (!codigo || !fecha || !sede || !idBodega) {
 		        showNotification('Error', 'Código, fecha, sede y bodega son requeridos', 'error');
@@ -4403,6 +4411,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
 		                    masterpack,
 		                    codigo_barra,
 		                    costo,
+							user_id: currentUser.id
 		                });
 		            }
 		
