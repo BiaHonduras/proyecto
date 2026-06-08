@@ -2536,6 +2536,7 @@ const BODEGA_PFN = '095';
 			const checkbox = document.getElementById('checkVencimiento');
 		    const inputFecha = document.getElementById('fechaVencimiento');
 		    const diaSemana = new Date().getDay(); // 0=Dom, 1=Lun, 2=Mar...
+			const esLunes = hoy === 1;
 		
 		    // Función para habilitar/deshabilitar visual y funcionalmente
 		    const toggleFecha = (habilitar) => {
@@ -2551,10 +2552,9 @@ const BODEGA_PFN = '095';
 		    };
 		
 		    // 1. Si es Lunes (1), habilitar automáticamente y marcar checkbox
-		    if (diaSemana === 1) {
-		        checkbox.checked = true;
-		        toggleFecha(true);
-		    }
+		    if (!esLunes) {
+				  checkVencimiento.disabled = false; // o lo dejas opcional
+				}
 		
 		    // 2. Control manual con el checkbox
 		    checkbox.addEventListener('change', function() {
@@ -2963,6 +2963,9 @@ const BODEGA_PFN = '095';
 		    const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
 		    const unidades = parseFloat(document.getElementById('unidades').value) || 0;
 		    const sede = document.getElementById('sede').value;
+
+			const maneja = option?.dataset?.manejaVencimiento === 'true'
+              || option?.dataset?.manejaVencimiento === '1';
 
 		    if (!codigo || !fecha || !sede || !idBodega) {
 		        showNotification('Error', 'Código, fecha, sede y bodega son requeridos', 'error');
