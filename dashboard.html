@@ -5922,7 +5922,9 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 				    .eq('id_bodega', idBodega)
 				    .maybeSingle();
 				
-				console.log('BODEGA COMPLETA:', data);
+				const idBodega = document.getElementById('idBodega').value;
+				console.log('[' + idBodega + ']');
+				console.log(idBodega.length);
 		
 		        if (error) throw error;
 		
