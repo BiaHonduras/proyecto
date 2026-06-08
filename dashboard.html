@@ -2297,6 +2297,8 @@ const BODEGA_PFN = '095';
 
             try {
                 const { data: authData, error: authError } = await window.supabase.auth.getUser();
+				console.log(data.user);
+				
                 if (authError || !authData?.user) {
                     sessionStorage.removeItem('currentUser');
                     window.currentUser = null;
