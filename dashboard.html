@@ -2536,7 +2536,13 @@ const BODEGA_PFN = '095';
 			const checkbox = document.getElementById('checkVencimiento');
 		    const inputFecha = document.getElementById('fechaVencimiento');
 		    const diaSemana = new Date().getDay(); // 0=Dom, 1=Lun, 2=Mar...
-			const esLunes = hoy === 1;
+			const hoy = new Date();
+    		const esLunes = hoy.getDay() === 1;
+
+			onst check = document.getElementById('checkVencimiento');
+		    if (check) {
+		        check.disabled = !esLunes;
+		    }
 		
 		    // Función para habilitar/deshabilitar visual y funcionalmente
 		    const toggleFecha = (habilitar) => {
