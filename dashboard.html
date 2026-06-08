@@ -2910,6 +2910,13 @@ const BODEGA_PFN = '095';
 			    .eq('idbodega', payloadVencimiento.idbodega)
 			    .eq('codigo', payloadVencimiento.codigo);
 			}
+
+			console.log({
+				  fecha: payloadInventario.fecha,
+				  sede: payloadInventario.sede,
+				  idBodega: payloadInventario.idBodega,
+				  codigo: payloadInventario.codigo
+				});
 			
 		    const { error } = await supabase
 		        .from('vencimientos_semanales')
