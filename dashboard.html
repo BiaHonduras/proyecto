@@ -56,7 +56,6 @@
 		        option.value = b.id_bodega;
 		        option.textContent = `${b.sede} - ${b.nombre}`;
                 option.dataset.manejaVencimiento = b.tipos_bodega?.maneja_vencimiento ? 'true' : 'false';
-                option.dataset.manejaVencimiento = b.tipos_bodega?.maneja_vencimiento ? 'true' : 'false';
 		        select.appendChild(option);
 		    });
 		}
@@ -5736,66 +5735,50 @@ async function obtenerAccessToken() {
 		}
 
 		async function evaluarVencimiento() {
-		    const idBodega = document.getElementById('idBodega')?.value || '';
+		    const selectBodega = document.getElementById('idBodega');
 		    const contenedor = document.getElementById('contenedorVencimiento');
 		    const checkVencimiento = document.getElementById('checkVencimiento');
 		    const fechaInput = document.getElementById('fechaVencimiento');
-
-		    if (!contenedor || !checkVencimiento || !fechaInput) return;
-
+		
+		    if (!selectBodega || !contenedor || !checkVencimiento || !fechaInput) {
+		        return;
+		    }
+		
+		    const opcionSeleccionada =
+		        selectBodega.options[selectBodega.selectedIndex];
+		
 		    const ocultarVencimiento = () => {
 		        contenedor.classList.add('hidden');
 		        checkVencimiento.checked = false;
 		        fechaInput.value = '';
 		        setEstadoFechaVencimiento(false);
 		    };
-
-		    if (!idBodega) {
+		
+		    if (!opcionSeleccionada || !selectBodega.value) {
 		        ocultarVencimiento();
 		        return;
 		    }
-
-		    try {
-		        const { data, error } = await supabase
-		            .from('bodegas')
-		            .select(`
-		                tipos_bodega (
-		                    maneja_vencimiento
-		                )
-		            `)
-		            .eq('id_bodega', idBodega)
-		            .maybeSingle();
-
-		        if (error) throw error;
-
-		        const tiposBodega = data?.tipos_bodega;
-		        const manejaVencimiento = Array.isArray(tiposBodega)
-		            ? !!tiposBodega[0]?.maneja_vencimiento
-		            : !!tiposBodega?.maneja_vencimiento;
-				
-				console.log('DATA BODEGA: ', data);
-				console.log('MANEJA: ', manejaVencimiento);
-
-		        if (!manejaVencimiento) {
-		            ocultarVencimiento();
-		            return;
-		        }
-
-		        // Siempre mostrar el campo cuando la bodega maneja vencimiento.
-		        // Si no es lunes, queda visible pero deshabilitado hasta marcar el check.
-		        contenedor.classList.remove('hidden');
-
-		        if (esFechaLunes()) {
-		            checkVencimiento.checked = true;
-		            setEstadoFechaVencimiento(true);
-		        } else {
-		            checkVencimiento.checked = false;
-		            fechaInput.value = '';
-		            setEstadoFechaVencimiento(false);
-		        }
-		    } catch (err) {
-		        console.error('Error evaluando vencimiento:', err);
+		
+		    const manejaVencimiento =
+		        opcionSeleccionada.dataset.manejaVencimiento === 'true';
+		
+		    console.log('BODEGA:', selectBodega.value);
+		    console.log('MANEJA VENCIMIENTO:', manejaVencimiento);
+		
+		    if (!manejaVencimiento) {
 		        ocultarVencimiento();
+		        return;
+		    }
+		
+		    contenedor.classList.remove('hidden');
+		
+		    if (esFechaLunes()) {
+		        checkVencimiento.checked = true;
+		        setEstadoFechaVencimiento(true);
+		    } else {
+		        checkVencimiento.checked = false;
+		        fechaInput.value = '';
+		        setEstadoFechaVencimiento(false);
 		    }
 		}
 
