@@ -2970,7 +2970,7 @@ const BODEGA_PFN = '095';
 		    const unidades = parseFloat(document.getElementById('unidades').value) || 0;
 		    const select = document.getElementById('idBodega');
 			const option = select.options[select.selectedIndex];
-			const maneja = option?.dataset?.manejaVencimiento === 'true'; || option?.dataset?.manejaVencimiento === '1';
+			const maneja = option?.dataset?.manejaVencimiento === 'true' || option?.dataset?.manejaVencimiento === '1';
 
 		    if (!codigo || !fecha || !sede || !idBodega) {
 		        showNotification('Error', 'Código, fecha, sede y bodega son requeridos', 'error');
