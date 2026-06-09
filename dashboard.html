@@ -5914,18 +5914,15 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		    }
 		
 		    try {
-		        console.log('ID BODEGA:', idBodega);
-
+				const idBodegaNumero = parseInt(idBodega, 10);
+				
 				const { data, error } = await supabase
 				    .from('bodegas')
 				    .select('*')
 				    .eq('id_bodega', idBodega)
 				    .maybeSingle();
-				
-				const idBodega = document.getElementById('idBodega').value;
-				console.log('[' + idBodega + ']');
-				console.log(idBodega.length);
-		
+				console.log(data);
+					
 		        if (error) throw error;
 		
 		        const tiposBodega = data?.tipos_bodega;
