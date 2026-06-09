@@ -5914,15 +5914,22 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		    }
 		
 		    try {
-				const idBodegaNumero = parseInt(idBodega, 10);
-				
 				const { data, error } = await supabase
 				    .from('bodegas')
-				    .select('*')
-				    .eq('id_bodega', idBodega)
-				    .maybeSingle();
-				console.log(data);
-					
+				    .select(`
+				        *,
+				        tipos_bodega (
+				            tipos_bodega,
+				            maneja_vencimiento
+				        )
+				    `)
+				    .eq('id_bodega', Number(idBodega))
+				    .single();
+				
+					console.log('ID BODEGA:', idBodega);
+					console.log('ERROR:', error);
+					console.log('DATA BODEGA:', data);
+		
 		        if (error) throw error;
 		
 		        const tiposBodega = data?.tipos_bodega;
@@ -5949,7 +5956,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		        toggleFechaVencimiento();
 		
 		    } catch (err) {
-		
+				console.error('Error evaluarVencimiento: ', err);
 		}
 		// eventos
 		document.getElementById('idBodega').addEventListener('change', evaluarVencimiento);
