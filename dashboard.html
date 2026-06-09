@@ -5985,8 +5985,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		        let permiteVencimiento = false;
 		        
 		        if (dataBodega.tipos_bodega) {
-		            permiteVencimiento = dataBodega.tipos_bodega === 'PP' || 
-		                                dataBodega.tipos_bodega === 'Principal';
+		            permiteVencimiento = dataBodega.tipos_bodega === 'PP' || dataBodega.tipos_bodega === 'PRINCIPAL';
 		        } else if (dataBodega.permite_vencimiento !== undefined) {
 		            permiteVencimiento = dataBodega.permite_vencimiento === true;
 		        } else {
