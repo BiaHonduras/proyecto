@@ -5927,8 +5927,8 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 				    .single();
 				
 					console.log('ID BODEGA:', idBodega);
-					console.log('ERROR:', error);
-					console.log('DATA BODEGA:', data);
+					console.log('TIPO:', typeof idBodega);
+					console.log('JSON:', JSON.stringify(idBodega));
 		
 		        if (error) throw error;
 		
