@@ -3339,8 +3339,6 @@ const BODEGA_PFN = '095';
 		    const inventarioOriginal = Array.isArray(data) ? data : [];
 		    let inventario = aplicarFiltrosGlobales(inventarioOriginal);
 		
-		    console.log('Después de aplicarFiltrosGlobales:', inventario.length);
-		
 		    if (inventario.length === 0 && inventarioOriginal.length > 0) {
 		        console.warn('Los filtros dejaron vacío. Mostrando todo como respaldo.');
 		        inventario = inventarioOriginal;
@@ -3384,8 +3382,6 @@ const BODEGA_PFN = '095';
 
 		        return codigoA.localeCompare(codigoB, 'es', { numeric: true, sensitivity: 'base' });
 		    });
-
-		    console.log('Inventario final a renderizar:', inventario.length);
 
             try {
                 const resumenPendientes = document.getElementById('skusPendientes');
@@ -5927,9 +5923,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		            
 		            // ✅ Ajustar según las columnas reales que encuentres
 		            // Si solo existe id_bodega, mostrar solo eso
-		            if (bodega.nombre_bodega) {
-		                option.textContent = `${bodega.id_bodega} - ${bodega.nombre_bodega}`;
-		            } else if (bodega.nombre) {
+		            if (bodega.nombre) {
 		                option.textContent = `${bodega.id_bodega} - ${bodega.nombre}`;
 		            } else if (bodega.descripcion) {
 		                option.textContent = `${bodega.id_bodega} - ${bodega.descripcion}`;
