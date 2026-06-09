@@ -5758,9 +5758,6 @@ async function obtenerAccessToken() {
 		    const manejaVencimiento =
 		        opcionSeleccionada.dataset.manejaVencimiento === 'true';
 		
-		    console.log('BODEGA:', selectBodega.value);
-		    console.log('MANEJA VENCIMIENTO:', manejaVencimiento);
-		
 		    if (!manejaVencimiento) {
 		        ocultarVencimiento();
 		        return;
@@ -5977,8 +5974,6 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		        }
 		
 		        const dataBodega = data[0];
-		        console.log('DATA BODEGA COMPLETA:', dataBodega);
-		        console.log('Columnas disponibles:', Object.keys(dataBodega));
 		
 		        // ✅ Determinar si permite vencimientos según las columnas reales
 		        // Ajusta según lo que encuentres en la consola
@@ -5996,7 +5991,6 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		        console.log('Permite vencimiento:', permiteVencimiento);
 		
 		        if (!permiteVencimiento) {
-		            console.log('Esta bodega no permite registro de vencimientos');
 		            contenedor.classList.add('hidden');
 		            checkVencimiento.checked = false;
 		            fechaInput.value = '';
