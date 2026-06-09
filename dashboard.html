@@ -5925,10 +5925,6 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 				console.log('ERROR: ', error);
 		
 		        if (error) throw error;
-
-				const manejaVencimiento = Array.isArray(tiposBodega)
-				    ? !!tiposBodega[0]?.maneja_vencimiento
-				    : !!tiposBodega?.maneja_vencimiento;
 		
 		        if (!manejaVencimiento) {
 		            contenedor.classList.add('hidden');
