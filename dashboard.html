@@ -5914,15 +5914,17 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		    }
 		
 		    try {
-				const { count, error } = await supabase
-				  .from('bodegas')
-				  .select('*', {
-				    count: 'exact',
-				    head: true
-				  });
+				const { data, error, count, status, statusText } = await supabase
+				    .from('bodegas')
+				    .select('*', { count: 'exact' });
 				
-				console.log('COUNT:', count);
-				console.log('ERROR:', error);
+				console.log({
+				    data,
+				    error,
+				    count,
+				    status,
+				    statusText
+				});
 			
 		        if (error) throw error;
 		
