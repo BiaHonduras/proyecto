@@ -5914,12 +5914,19 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		    }
 		
 		    try {
-				const { data, error } = await supabase
-				  .from('tipos_bodega')
-				  .select('*');
+				const { data: bodega } = await supabase
+				  .from('bodegas')
+				  .select('tipos_bodega')
+				  .eq('id_bodega', idBodega)
+				  .single();
 				
-				console.log('DATA: ',data);
-				console.log('Error: ',error);
+				const { data: tipo } = await supabase
+				  .from('tipos_bodega')
+				  .select('maneja_vencimiento')
+				  .eq('tipos_bodega', bodega.tipos_bodega)
+				  .single();
+				
+				const manejaVencimiento = tipo?.maneja_vencimiento === true;
 			
 		        if (error) throw error;
 		
