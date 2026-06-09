@@ -5905,6 +5905,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		    const checkVencimiento = document.getElementById('checkVencimiento');
 		    const fechaInput = document.getElementById('fechaVencimiento');
 		
+		    // Si no hay bodega seleccionada, ocultar todo
 		    if (!idBodega) {
 		        contenedor.classList.add('hidden');
 		        checkVencimiento.checked = false;
@@ -5914,32 +5915,70 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		    }
 		
 		    try {
-				const { data, error } = await supabase
-				  .from('bodegas')
-				  .select('id_bodega, tipos_bodega')
-				  .eq('id_bodega', '030');
-				
-				console.log('DATA: ', data);
-				console.log('ERROR: ', error);
-			
-		        if (error) throw error;
+		        // ✅ CORRECCIÓN 1: Usar la variable idBodega en lugar de '030'
+		        const { data, error } = await supabase
+		            .from('bodegas')
+		            .select('id_bodega, tipos_bodega')
+		            .eq('id_bodega', idBodega);  // ← CAMBIO AQUÍ
 		
+		        // ✅ CORRECCIÓN 2: Manejar errores PRIMERO
+		        if (error) {
+		            console.error('Error al consultar bodega:', error);
+		            throw error;
+		        }
+		
+		        // ✅ CORRECCIÓN 3: Verificar que data exista y tenga contenido
+		        if (!data || data.length === 0) {
+		            console.warn('No se encontró la bodega:', idBodega);
+		            contenedor.classList.add('hidden');
+		            return;
+		        }
+		
+		        const dataBodega = data[0]; // Obtener el primer resultado
+		        console.log('DATA BODEGA:', dataBodega);
+		
+		        // ✅ CORRECCIÓN 4: Validar si la bodega permite vencimientos
+		        // (Ajusta 'PP' o el valor según tu lógica de negocio)
+		        const permiteVencimiento = dataBodega.tipos_bodega === 'PP' || 
+		                                   dataBodega.tipos_bodega === 'Principal';
+		
+		        if (!permiteVencimiento) {
+		            console.log('Esta bodega no permite registro de vencimientos');
+		            contenedor.classList.add('hidden');
+		            checkVencimiento.checked = false;
+		            fechaInput.value = '';
+		            fechaInput.disabled = true;
+		            return;
+		        }
+		
+		        // Si la bodega SÍ permite vencimientos, mostrar el contenedor
 		        contenedor.classList.remove('hidden');
+		        
 		        const hoy = new Date();
 		        const esLunes = hoy.getDay() === 1;
-	
+		
 		        if (esLunes) {
 		            checkVencimiento.checked = true;
+		            fechaInput.disabled = false;
+		        } else {
+		            checkVencimiento.checked = false;
+		            fechaInput.disabled = true;
 		        }
+		
 		        toggleFechaVencimiento();
 		
 		    } catch (err) {
-		
+		        // ✅ CORRECCIÓN 5: Mostrar el error en consola
+		        console.error('Error en evaluarVencimiento:', err);
+		        contenedor.classList.add('hidden');
+		    }
 		}
-		// eventos
-		document.getElementById('idBodega').addEventListener('change', evaluarVencimiento);
-		document.addEventListener('DOMContentLoaded', evaluarVencimiento);
-	}
+		
+		// ✅ CORRECCIÓN 6: Mover los event listeners FUERA de la función
+		document.addEventListener('DOMContentLoaded', () => {
+		    document.getElementById('idBodega').addEventListener('change', evaluarVencimiento);
+		    evaluarVencimiento(); // Ejecutar una vez al cargar
+		});
 		function verificarDiaLunes() {
 	    const hoy = new Date();
 	    const diaSemana = hoy.getDay(); // 0 = Domingo, 1 = Lunes, etc.
