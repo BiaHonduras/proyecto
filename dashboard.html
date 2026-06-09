@@ -5915,17 +5915,19 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		
 		    try {
 				const { data, error } = await supabase
-				  	.from('bodegas')
-					.select(`
-					    id_bodega,
-					    nombre,
-					    tipos_bodega (
-					        tipos_bodega,
-					        maneja_vencimiento
-					    )
-					`)
+				  .from('bodegas')
+				  .select(`
+				    id_bodega,
+				    tipos_bodega,
+				    tipos_bodega!inner (
+				      tipos_bodega,
+				      maneja_vencimiento
+				    )
+				  `)
+				  .eq('id_bodega', '030');
 				
 				console.log(data);
+				console.log(error);
 			
 		        if (error) throw error;
 		
