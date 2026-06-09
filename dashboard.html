@@ -5925,6 +5925,8 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 				    status,
 				    statusText
 				});
+				console.log(await supabase.auth.getSession());
+				console.log(await supabase.auth.getUser());
 			
 		        if (error) throw error;
 		
