@@ -5921,18 +5921,10 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 				    head: true
 				  });
 				
-				console.log('COUNT: ', count);
-				console.log('ERROR: ', error);
-		
+				console.log('COUNT:', count);
+				console.log('ERROR:', error);
+			
 		        if (error) throw error;
-		
-		        if (!manejaVencimiento) {
-		            contenedor.classList.add('hidden');
-		            checkVencimiento.checked = false;
-		            fechaInput.value = '';
-		            fechaInput.disabled = true;
-		            return;
-		        }
 		
 		        contenedor.classList.remove('hidden');
 		        const hoy = new Date();
@@ -5944,7 +5936,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		        toggleFechaVencimiento();
 		
 		    } catch (err) {
-				console.error('Error evaluarVencimiento: ', err);
+		
 		}
 		// eventos
 		document.getElementById('idBodega').addEventListener('change', evaluarVencimiento);
