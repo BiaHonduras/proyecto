@@ -5916,19 +5916,11 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		    try {
 				const { data, error } = await supabase
 				    .from('bodegas')
-				    .select(`
-				        *,
-				        tipos_bodega (
-				            tipos_bodega,
-				            maneja_vencimiento
-				        )
-				    `)
-				    .eq('id_bodega', Number(idBodega))
-				    .single();
+				    .select('*')
+				    .eq('id_bodega', '030');
 				
-					console.log('ID BODEGA:', idBodega);
-					console.log('TIPO:', typeof idBodega);
-					console.log('JSON:', JSON.stringify(idBodega));
+				console.log(data);
+				console.log(error);
 		
 		        if (error) throw error;
 		
