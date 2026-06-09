@@ -5925,8 +5925,6 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 				console.log('ERROR: ', error);
 		
 		        if (error) throw error;
-		
-		        const tiposBodega = data?.tipos_bodega;
 
 				const manejaVencimiento = Array.isArray(tiposBodega)
 				    ? !!tiposBodega[0]?.maneja_vencimiento
