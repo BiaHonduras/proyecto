@@ -5914,19 +5914,11 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		    }
 		
 		    try {
-				const { data, error, count, status, statusText } = await supabase
-				    .from('bodegas')
-				    .select('*', { count: 'exact' });
+				const { data, error } = await supabase
+				  .from('bodegas_test')
+				  .select('*');
 				
-				console.log({
-				    data,
-				    error,
-				    count,
-				    status,
-				    statusText
-				});
-				console.log(await supabase.auth.getSession());
-				console.log(await supabase.auth.getUser());
+				console.log(data, error);
 			
 		        if (error) throw error;
 		
