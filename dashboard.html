@@ -5898,12 +5898,41 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
         </div>
     </div>
 		<script>
+		async function cargarBodegas() {
+		    try {
+		        const { data, error } = await supabase
+		            .from('bodegas')
+		            .select('id_bodega, nombre_bodega');
+		        
+		        if (error) throw error;
+		        
+		        const select = document.getElementById('idBodega');
+		        select.innerHTML = '<option value="">Seleccione una bodega</option>';
+		        
+		        data.forEach(bodega => {
+		            const option = document.createElement('option');
+		            option.value = bodega.id_bodega;
+		            option.textContent = `${bodega.id_bodega} - ${bodega.nombre_bodega}`;
+		            select.appendChild(option);
+		        });
+		        
+		        console.log('Bodegas cargadas:', data.length);
+		    } catch (err) {
+		        console.error('Error al cargar bodegas:', err);
+		    }
+		}
+		
+		// Llamar al cargar la página
+		document.addEventListener('DOMContentLoaded', cargarBodegas);
 			
 		async function evaluarVencimiento() {
 		    const idBodega = document.getElementById('idBodega').value;
 		    const contenedor = document.getElementById('contenedorVencimiento');
 		    const checkVencimiento = document.getElementById('checkVencimiento');
 		    const fechaInput = document.getElementById('fechaVencimiento');
+
+			    console.log('Bodega seleccionada:', idBodega);
+    			console.log('Tipo de dato:', typeof idBodega);
 		
 		    // Si no hay bodega seleccionada, ocultar todo
 		    if (!idBodega) {
