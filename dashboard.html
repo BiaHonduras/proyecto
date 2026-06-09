@@ -5900,23 +5900,48 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		<script>
 		async function cargarBodegas() {
 		    try {
+		        // ✅ Usar SELECT * para obtener todas las columnas
 		        const { data, error } = await supabase
 		            .from('bodegas')
-		            .select('id_bodega, bodega');
+		            .select('*');
 		        
-		        if (error) throw error;
+		        if (error) {
+		            console.error('Error al cargar bodegas:', error);
+		            throw error;
+		        }
+		        
+		        console.log('Bodegas cargadas:', data);
+		        
+		        if (!data || data.length === 0) {
+		            console.warn('La tabla bodegas está vacía');
+		            return;
+		        }
 		        
 		        const select = document.getElementById('idBodega');
 		        select.innerHTML = '<option value="">Seleccione una bodega</option>';
 		        
+		        // ✅ Usar las columnas reales que existen
 		        data.forEach(bodega => {
 		            const option = document.createElement('option');
 		            option.value = bodega.id_bodega;
-		            option.textContent = `${bodega.id_bodega} - ${bodega.nombre_bodega}`;
+		            
+		            // ✅ Ajustar según las columnas reales que encuentres
+		            // Si solo existe id_bodega, mostrar solo eso
+		            if (bodega.nombre_bodega) {
+		                option.textContent = `${bodega.id_bodega} - ${bodega.nombre_bodega}`;
+		            } else if (bodega.nombre) {
+		                option.textContent = `${bodega.id_bodega} - ${bodega.nombre}`;
+		            } else if (bodega.descripcion) {
+		                option.textContent = `${bodega.id_bodega} - ${bodega.descripcion}`;
+		            } else {
+		                // Si solo existe id_bodega
+		                option.textContent = bodega.id_bodega;
+		            }
+		            
 		            select.appendChild(option);
 		        });
 		        
-		        console.log('Bodegas cargadas:', data.length);
+		        console.log('Bodegas cargadas en el select:', data.length);
 		    } catch (err) {
 		        console.error('Error al cargar bodegas:', err);
 		    }
@@ -5930,11 +5955,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		    const contenedor = document.getElementById('contenedorVencimiento');
 		    const checkVencimiento = document.getElementById('checkVencimiento');
 		    const fechaInput = document.getElementById('fechaVencimiento');
-
-			    console.log('Bodega seleccionada:', idBodega);
-    			console.log('Tipo de dato:', typeof idBodega);
 		
-		    // Si no hay bodega seleccionada, ocultar todo
 		    if (!idBodega) {
 		        contenedor.classList.add('hidden');
 		        checkVencimiento.checked = false;
@@ -5944,32 +5965,42 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		    }
 		
 		    try {
-		        // ✅ CORRECCIÓN 1: Usar la variable idBodega en lugar de '030'
+		        // ✅ Usar SELECT * para obtener todas las columnas
 		        const { data, error } = await supabase
 		            .from('bodegas')
-		            .select('id_bodega, tipos_bodega')
-		            .eq('id_bodega', idBodega);  // ← CAMBIO AQUÍ
+		            .select('*')
+		            .eq('id_bodega', idBodega);
 		
-		        // ✅ CORRECCIÓN 2: Manejar errores PRIMERO
 		        if (error) {
 		            console.error('Error al consultar bodega:', error);
 		            throw error;
 		        }
 		
-		        // ✅ CORRECCIÓN 3: Verificar que data exista y tenga contenido
 		        if (!data || data.length === 0) {
 		            console.warn('No se encontró la bodega:', idBodega);
 		            contenedor.classList.add('hidden');
 		            return;
 		        }
 		
-		        const dataBodega = data[0]; // Obtener el primer resultado
-		        console.log('DATA BODEGA:', dataBodega);
+		        const dataBodega = data[0];
+		        console.log('DATA BODEGA COMPLETA:', dataBodega);
+		        console.log('Columnas disponibles:', Object.keys(dataBodega));
 		
-		        // ✅ CORRECCIÓN 4: Validar si la bodega permite vencimientos
-		        // (Ajusta 'PP' o el valor según tu lógica de negocio)
-		        const permiteVencimiento = dataBodega.tipos_bodega === 'PP' || 
-		                                   dataBodega.tipos_bodega === 'Principal';
+		        // ✅ Determinar si permite vencimientos según las columnas reales
+		        // Ajusta según lo que encuentres en la consola
+		        let permiteVencimiento = false;
+		        
+		        if (dataBodega.tipos_bodega) {
+		            permiteVencimiento = dataBodega.tipos_bodega === 'PP' || 
+		                                dataBodega.tipos_bodega === 'Principal';
+		        } else if (dataBodega.permite_vencimiento !== undefined) {
+		            permiteVencimiento = dataBodega.permite_vencimiento === true;
+		        } else {
+		            // Si no hay información, permitir por defecto
+		            permiteVencimiento = true;
+		        }
+		
+		        console.log('Permite vencimiento:', permiteVencimiento);
 		
 		        if (!permiteVencimiento) {
 		            console.log('Esta bodega no permite registro de vencimientos');
@@ -5980,7 +6011,6 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		            return;
 		        }
 		
-		        // Si la bodega SÍ permite vencimientos, mostrar el contenedor
 		        contenedor.classList.remove('hidden');
 		        
 		        const hoy = new Date();
@@ -5997,7 +6027,6 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		        toggleFechaVencimiento();
 		
 		    } catch (err) {
-		        // ✅ CORRECCIÓN 5: Mostrar el error en consola
 		        console.error('Error en evaluarVencimiento:', err);
 		        contenedor.classList.add('hidden');
 		    }
