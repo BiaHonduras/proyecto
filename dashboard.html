@@ -5431,7 +5431,7 @@ async function guardarJustificacion(id, texto) {
 		function obtenerRangoDiasVida(diasvida, fechaVencimiento, idbodega = '') {
 		    const bodega = String(idbodega || '').trim();
 		
-		    if (!fechaVencimiento || bodega === BODEGA_PFN) {
+		    if (!fechaVencimiento) {
 		        return 'sin_fecha';
 		    }
 		
