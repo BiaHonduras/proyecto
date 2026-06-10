@@ -5090,7 +5090,8 @@ tbody.innerHTML = data.map(item => {
 			
 			    const { data, error: errorInventario } = await supabase
 			        .from('inventarios_diarios')
-			        .select('*');
+			        .select('*')
+					.eq('tipo_bodega', 'PRINCIPAL');
 			
 			    if (errorInventario) {
 			        console.error('Error inventarios_diarios:', errorInventario);
