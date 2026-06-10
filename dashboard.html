@@ -5492,19 +5492,6 @@ async function guardarJustificacion(id, texto) {
                 };
             });
 
-            const registrosFiltrados = registrosActualizados.filter(item => {
-                const cumpleSede = sedeFiltro === 'Todas' || item.sede === sedeFiltro;
-
-                let cumpleTipoBodega = true;
-                if (tipoBodegaFiltro !== 'Todas') {
-                    if (tipoBodegaFiltro === 'Principal') cumpleTipoBodega = item.idbodega === '030';
-                    else if (tipoBodegaFiltro === 'PPV') cumpleTipoBodega = item.idbodega === '033';
-                    else if (tipoBodegaFiltro === 'PFN') cumpleTipoBodega = item.idbodega === BODEGA_PFN;
-                }
-
-                return cumpleSede && cumpleTipoBodega;
-            });
-
             const totalVida60 = registrosFiltrados.filter(item => item.rango_diasvida === 'hasta_60').length;
             const totalVida90 = registrosFiltrados.filter(item => item.rango_diasvida === '61_90').length;
             const totalVida120 = registrosFiltrados.filter(item => item.rango_diasvida === '91_120').length;
