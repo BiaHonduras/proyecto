@@ -4833,18 +4833,14 @@ tbody.innerHTML = data.map(item => {
 
         let query = supabase
             .from('inventarios_diarios')
-            .select('id, fecha, created_at, sede, idBodega, codigo, descripcion, proveedor, tipos_bodega')
+            .select('id, fecha, created_at, sede, idBodega, codigo, descripcion, proveedor')
             .order('created_at', { ascending: false })
             .limit(25);
 
         if (sedeFiltro !== 'Todas') query = query.eq('sede', sedeFiltro);
         if (tipoBodegaFiltro !== 'Todas') {
-		    if (tipoBodegaFiltro === 'PRINCIPAL') {
-		        query = query.in('tipos_bodega', ['PRINCIPAL', 'PPV', 'PFN']);
-		    } else {
-		        query = query.eq('tipos_bodega', tipoBodegaFiltro);
-		    }
-		}
+            query = query.eq('idBodega', tipoBodegaFiltro === 'Principal' ? '030' : tipoBodegaFiltro);
+        }
 
         const { data, error } = await query;
         const contenedor = document.getElementById('recentItems');
@@ -5094,8 +5090,7 @@ tbody.innerHTML = data.map(item => {
 			
 			    const { data, error: errorInventario } = await supabase
 			        .from('inventarios_diarios')
-			        .select('*')
-					.eq('tipos_bodega', 'PRINCIPAL');
+			        .select('*');
 			
 			    if (errorInventario) {
 			        console.error('Error inventarios_diarios:', errorInventario);
@@ -5490,6 +5485,19 @@ async function guardarJustificacion(id, texto) {
                     diasvida: diasvidaActual,
                     rango_diasvida: rangoActual
                 };
+            });
+
+            const registrosFiltrados = registrosActualizados.filter(item => {
+                const cumpleSede = sedeFiltro === 'Todas' || item.sede === sedeFiltro;
+
+                let cumpleTipoBodega = true;
+                if (tipoBodegaFiltro !== 'Todas') {
+                    if (tipoBodegaFiltro === 'Principal') cumpleTipoBodega = item.idbodega === '030';
+                    else if (tipoBodegaFiltro === 'PPV') cumpleTipoBodega = item.idbodega === '033';
+                    else if (tipoBodegaFiltro === 'PFN') cumpleTipoBodega = item.idbodega === BODEGA_PFN;
+                }
+
+                return cumpleSede && cumpleTipoBodega;
             });
 
             const totalVida60 = registrosFiltrados.filter(item => item.rango_diasvida === 'hasta_60').length;
