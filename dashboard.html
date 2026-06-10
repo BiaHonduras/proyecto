@@ -2127,24 +2127,24 @@ const BODEGA_PFN = '095';
 			
 };
 
-        function obtenerTipoBodegaDesdeId(idBodega) {
-            const codigo = String(idBodega || '').trim();
+        const mapaTiposBodega = {};
 
-            for (const lista of Object.values(bodegasPorSede)) {
-                const encontrada = lista.find(bodega => String(bodega.value) === codigo);
-                if (encontrada) {
-                    if (encontrada.label.includes('PFN')) return 'PFN';
-                    if (encontrada.label.includes('PPV')) return 'PPV';
-                    if (encontrada.label.includes('Principal')) return 'Principal';
-                }
-            }
-
-            if (codigo.endsWith('3')) return 'PPV';
-            if (['015', '045', BODEGA_PFN, '096', '099'].includes(codigo) || codigo.endsWith('5')) return 'PFN';
-            if (codigo.endsWith('0')) return 'Principal';
-
-            return '';
-        }
+		Object.values(bodegasPorSede).forEach(bodegas => {
+		    bodegas.forEach(bodega => {
+		        if (bodega.label.includes('Principal')) {
+		            mapaTiposBodega[bodega.value] = 'Principal';
+		        } else if (bodega.label.includes('PPV')) {
+		            mapaTiposBodega[bodega.value] = 'PPV';
+		        } else if (bodega.label.includes('PFN')) {
+		            mapaTiposBodega[bodega.value] = 'PFN';
+		        }
+		    });
+		});
+		
+		function obtenerTipoBodegaDesdeId(idBodega) {
+		    const id = String(idBodega).trim().padStart(3, '0');
+		    return mapaTiposBodega[id] || 'Sin clasificar';
+		}
 
         function aplicarFiltrosGlobales(data = []) {
             return (data || []).filter(item => registroCoincideFiltros(item));
