@@ -1403,35 +1403,6 @@ header.sticky {
                         <!-- Ver Inventario Section -->
             <section id="inventario-section" class="section-content hidden">
                 <div class="card p-6">
-					<div class="card p-4 mb-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Sede</label>
-                            <select id="filtroSedeGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
-                                <option value="Todas">Todas las sedes</option>
-                                <option value="Amarateca">Amarateca</option>
-                                <option value="La Ceiba">La Ceiba</option>
-                                <option value="San Pedro Sula">San Pedro Sula</option>
-                                <option value="Santa Rosa de Copan">Santa Rosa de Copan</option>
-                                <option value="Tegucigalpa">Tegucigalpa</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Tipo de Bodega</label>
-                            <select id="filtroTipoBodegaGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
-                                <option value="Todas">Todas las bodegas</option>
-                                <option value="Principal">Principal</option>
-                                <option value="PPV">PPV</option>
-                                <option value="PFN">PFN</option>
-                            </select>
-                        </div>
-                        <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                            <p class="text-sm text-gray-600">Vista activa</p>
-                            <p class="font-semibold text-gray-800" id="labelFiltrosActivos">Todas las sedes, Todas las bodegas</p>
-                        </div>
-                    </div>
-                </div>
-					
                     <div class="flex items-center justify-between">
                         <h3 class="text-xl font-semibold text-gray-800">Inventario Actual</h3>
                         
@@ -1501,34 +1472,6 @@ header.sticky {
 			
 	<section id="transitos-section" class="section-content hidden">
 	    <div class="card p-6">
-			<div class="card p-4 mb-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Sede</label>
-                            <select id="filtroSedeGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
-                                <option value="Todas">Todas las sedes</option>
-                                <option value="Amarateca">Amarateca</option>
-                                <option value="La Ceiba">La Ceiba</option>
-                                <option value="San Pedro Sula">San Pedro Sula</option>
-                                <option value="Santa Rosa de Copan">Santa Rosa de Copan</option>
-                                <option value="Tegucigalpa">Tegucigalpa</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Tipo de Bodega</label>
-                            <select id="filtroTipoBodegaGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
-                                <option value="Todas">Todas las bodegas</option>
-                                <option value="Principal">Principal</option>
-                                <option value="PPV">PPV</option>
-                                <option value="PFN">PFN</option>
-                            </select>
-                        </div>
-                        <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                            <p class="text-sm text-gray-600">Vista activa</p>
-                            <p class="font-semibold text-gray-800" id="labelFiltrosActivos">Todas las sedes, Todas las bodegas</p>
-                        </div>
-                    </div>
-                </div>
 	        <h3 class="text-xl font-semibold text-gray-800 mb-4">Tránsitos / Pendientes</h3>
 	
 			<div class="flex gap-3 mb-4">
@@ -2083,7 +2026,7 @@ header.sticky {
 
     <script>
         // ===== VARIABLES GLOBALES =====
-
+const BODEGA_PFN = '095';
         let currentUser = null;
         window.currentUser = null;
         let scannerActive = false;
@@ -2183,81 +2126,25 @@ header.sticky {
 			    ]
 			
 };
-		const mapaTiposBodega = {};
-		Object.values(bodegasPorSede).forEach(bodegas => {
-		    bodegas.forEach(bodega => {
-		        if (bodega.label.includes('Principal')) {
-		            mapaTiposBodega[bodega.value] = 'Principal';
-		        } else if (bodega.label.includes('PPV')) {
-		            mapaTiposBodega[bodega.value] = 'PPV';
-		        } else if (bodega.label.includes('PFN')) {
-		            mapaTiposBodega[bodega.value] = 'PFN';
-		        }
-		    });
-		});
-		
+
         function obtenerTipoBodegaDesdeId(idBodega) {
-		    const id = String(idBodega).trim().padStart(3, '0');
-		
-		    for (const sede in bodegasPorSede) {
-		        const bodegas = bodegasPorSede[sede];
-		
-		        const bodega = bodegas.find(b => b.value === id);
-		
-		        if (bodega) {
-		            if (bodega.label.includes('Principal')) {
-		                return 'Principal';
-		            }
-		
-		            if (bodega.label.includes('PPV')) {
-		                return 'PPV';
-		            }
-		
-		            if (bodega.label.includes('PFN')) {
-		                return 'PFN';
-		            }
-		        }
-		    }
-		
-		    return 'Sin clasificar';
-		}
-		
-		function obtenerSedeDesdeIdBodega(idBodega) {
-		    const id = String(idBodega).trim().padStart(3, '0');
-		
-		    for (const [sede, bodegas] of Object.entries(bodegasPorSede)) {
-		        if (bodegas.some(b => b.value === id)) {
-		            return sede;
-		        }
-		    }
-		
-		    return 'Sin clasificar';
-		}
+            const codigo = String(idBodega || '').trim();
 
-		function cumpleFiltroSede(idBodega, sedeFiltro) {
-		    if (!sedeFiltro || sedeFiltro === 'Todas') {
-		        return true;
-		    }
-		
-		    return obtenerSedeDesdeIdBodega(idBodega) === sedeFiltro;
-		}
+            for (const lista of Object.values(bodegasPorSede)) {
+                const encontrada = lista.find(bodega => String(bodega.value) === codigo);
+                if (encontrada) {
+                    if (encontrada.label.includes('PFN')) return 'PFN';
+                    if (encontrada.label.includes('PPV')) return 'PPV';
+                    if (encontrada.label.includes('Principal')) return 'Principal';
+                }
+            }
 
-		function cumpleFiltroTipoBodega(idBodega, tipoFiltro) {
-		    if (!tipoFiltro || tipoFiltro === 'Todas') {
-		        return true;
-		    }
-		
-		    return obtenerTipoBodegaDesdeId(idBodega) === tipoFiltro;
-		}
+            if (codigo.endsWith('3')) return 'PPV';
+            if (['015', '045', BODEGA_PFN, '096', '099'].includes(codigo) || codigo.endsWith('5')) return 'PFN';
+            if (codigo.endsWith('0')) return 'Principal';
 
-		function cumpleFiltrosGenerales(item, sedeFiltro, tipoBodegaFiltro) {
-		    const idBodega = item.idBodega || item.idbodega;
-		
-		    return (
-		        cumpleFiltroSede(idBodega, sedeFiltro) &&
-		        cumpleFiltroTipoBodega(idBodega, tipoBodegaFiltro)
-		    );
-		}
+            return '';
+        }
 
         function aplicarFiltrosGlobales(data = []) {
             return (data || []).filter(item => registroCoincideFiltros(item));
