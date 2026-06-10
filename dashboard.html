@@ -1029,37 +1029,37 @@ header.sticky {
             </section>
 
             <section id="vencimientos-section" class="section-content hidden">
+				<div class="card p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Sede</label>
+                            <select id="filtroSedeGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+                                <option value="Todas">Todas las sedes</option>
+                                <option value="Amarateca">Amarateca</option>
+                                <option value="La Ceiba">La Ceiba</option>
+                                <option value="San Pedro Sula">San Pedro Sula</option>
+                                <option value="Santa Rosa de Copan">Santa Rosa de Copan</option>
+                                <option value="Tegucigalpa">Tegucigalpa</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Tipo de Bodega</label>
+                            <select id="filtroTipoBodegaGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+                                <option value="Todas">Todas las bodegas</option>
+                                <option value="Principal">Principal</option>
+                                <option value="PPV">PPV</option>
+                                <option value="PFN">PFN</option>
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                            <p class="text-sm text-gray-600">Vista activa</p>
+                            <p class="font-semibold text-gray-800" id="labelFiltrosActivos">Todas las sedes, Todas las bodegas</p>
+                        </div>
+                    </div>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
-							<div class="card p-4 mb-6">
-			                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-			                        <div>
-			                            <label class="block text-xs font-medium text-gray-600 mb-1">Sede</label>
-			                            <select id="filtroSedeGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
-			                                <option value="Todas">Todas las sedes</option>
-			                                <option value="Amarateca">Amarateca</option>
-			                                <option value="La Ceiba">La Ceiba</option>
-			                                <option value="San Pedro Sula">San Pedro Sula</option>
-			                                <option value="Santa Rosa de Copan">Santa Rosa de Copan</option>
-			                                <option value="Tegucigalpa">Tegucigalpa</option>
-			                            </select>
-			                        </div>
-			                        <div>
-			                            <label class="block text-xs font-medium text-gray-600 mb-1">Tipo de Bodega</label>
-			                            <select id="filtroTipoBodegaGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
-			                                <option value="Todas">Todas las bodegas</option>
-			                                <option value="Principal">Principal</option>
-			                                <option value="PPV">PPV</option>
-			                                <option value="PFN">PFN</option>
-			                            </select>
-			                        </div>
-			                        <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-			                            <p class="text-sm text-gray-600">Vista activa</p>
-			                            <p class="font-semibold text-gray-800" id="labelFiltrosActivos">Todas las sedes, Todas las bodegas</p>
-			                        </div>
-			                    </div>
-			                </div>
                             <div>
                                 <p class="text-sm text-gray-600">-60 Días de Vida</p>
                                 <h3 class="text-2xl font-bold text-red-600" id="totalVida60">0</h3>
