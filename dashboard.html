@@ -1033,7 +1033,7 @@ header.sticky {
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Sede</label>
-                            <select id="filtroSedeGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+                            <select id="filtroSedeVencimientos" class="input-field w-full px-3 py-2 text-sm rounded-lg">
                                 <option value="Todas">Todas las sedes</option>
                                 <option value="Amarateca">Amarateca</option>
                                 <option value="La Ceiba">La Ceiba</option>
@@ -1044,7 +1044,7 @@ header.sticky {
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Tipo de Bodega</label>
-                            <select id="filtroTipoBodegaGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+                            <select id="filtroTipoBodegaVencimientos" class="input-field w-full px-3 py-2 text-sm rounded-lg">
                                 <option value="Todas">Todas las bodegas</option>
                                 <option value="Principal">Principal</option>
                                 <option value="PPV">PPV</option>
@@ -1434,7 +1434,7 @@ header.sticky {
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Sede</label>
-                            <select id="filtroSedeGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+                            <select id="filtroSedeInventarios" class="input-field w-full px-3 py-2 text-sm rounded-lg">
                                 <option value="Todas">Todas las sedes</option>
                                 <option value="Amarateca">Amarateca</option>
                                 <option value="La Ceiba">La Ceiba</option>
@@ -1445,7 +1445,7 @@ header.sticky {
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Tipo de Bodega</label>
-                            <select id="filtroTipoBodegaGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+                            <select id="filtroTipoBodegaInventarios" class="input-field w-full px-3 py-2 text-sm rounded-lg">
                                 <option value="Todas">Todas las bodegas</option>
                                 <option value="Principal">Principal</option>
                                 <option value="PPV">PPV</option>
@@ -1531,7 +1531,7 @@ header.sticky {
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Sede</label>
-                            <select id="filtroSedeGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+                            <select id="filtroSedeJustificaciones" class="input-field w-full px-3 py-2 text-sm rounded-lg">
                                 <option value="Todas">Todas las sedes</option>
                                 <option value="Amarateca">Amarateca</option>
                                 <option value="La Ceiba">La Ceiba</option>
@@ -1542,7 +1542,7 @@ header.sticky {
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Tipo de Bodega</label>
-                            <select id="filtroTipoBodegaGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+                            <select id="filtroTipoBodegaJustificaciones" class="input-field w-full px-3 py-2 text-sm rounded-lg">
                                 <option value="Todas">Todas las bodegas</option>
                                 <option value="Principal">Principal</option>
                                 <option value="PPV">PPV</option>
@@ -5558,8 +5558,8 @@ async function guardarJustificacion(id, texto) {
                 return;
             }
 
-            const sedeFiltro = document.getElementById('filtroSedeGlobal')?.value || 'Todas';
-            const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaGlobal')?.value || 'Todas';
+            const sedeFiltro = document.getElementById('filtroSedeVencimientos')?.value || 'Todas';
+            const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaVencimientos')?.value || 'Todas';
 
             const registrosActualizados = (data || []).map(item => {
                 const diasvidaActual = calcularDiasVidaActual(item.fecha_vencimiento);
