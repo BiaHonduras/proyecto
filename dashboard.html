@@ -2026,7 +2026,6 @@ header.sticky {
 
     <script>
         // ===== VARIABLES GLOBALES =====
-const BODEGA_PFN = '095';
         let currentUser = null;
         window.currentUser = null;
         let scannerActive = false;
@@ -2097,32 +2096,31 @@ const BODEGA_PFN = '095';
             return parts.join('-');
         }
 
-
 		const bodegasPorSede = {
 			    "Amarateca": [
-			        { value: "010", label: "Bodega Principal" },
-			        { value: "013", label: "Bodega PPV" },
-			        { value: "015", label: "Bodega PFN" }
+			        { value: "010", label: "Principal" },
+			        { value: "013", label: "PPV" },
+			        { value: "015", label: "PFN" }
 			    ],
 			    "La Ceiba": [
-			        { value: "040", label: "Bodega Principal" },
-			        { value: "043", label: "Bodega PPV" },
-			        { value: "045", label: "Bodega PFN" }
+			        { value: "040", label: "Principal" },
+			        { value: "043", label: "PPV" },
+			        { value: "045", label: "PFN" }
 			    ],
 			    "San Pedro Sula": [
-			        { value: "030", label: "Bodega Principal" },
-			        { value: "033", label: "Bodega PPV" },
-			        { value: "095", label: "Bodega PFN" }
+			        { value: "030", label: "Principal" },
+			        { value: "033", label: "PPV" },
+			        { value: "095", label: "PFN" }
 			    ],
 			    "Santa Rosa de Copan": [
-			        { value: "050", label: "Bodega Principal" },
-			        { value: "053", label: "Bodega PPV" },
-			        { value: "096", label: "Bodega PFN" }
+			        { value: "050", label: "Principal" },
+			        { value: "053", label: "PPV" },
+			        { value: "096", label: "PFN" }
 			    ],
 			    "Tegucigalpa": [
-			        { value: "060", label: "Bodega Principal" },
-			        { value: "063", label: "Bodega PPV" },
-			        { value: "099", label: "Bodega PFN" }
+			        { value: "060", label: "Principal" },
+			        { value: "063", label: "PPV" },
+			        { value: "099", label: "PFN" }
 			    ]
 			
 };
@@ -2142,8 +2140,49 @@ const BODEGA_PFN = '095';
 		});
 		
 		function obtenerTipoBodegaDesdeId(idBodega) {
-		    const id = String(idBodega).trim().padStart(3, '0');
-		    return mapaTiposBodega[id] || 'Sin clasificar';
+		    const idStr = String(idBodega).trim();
+		    for (const sede in bodegasPorSede) {
+		        const bodega = bodegasPorSede[sede].find(b => b.value === idStr);
+		        if (bodega) {
+		            return bodega.label;
+		        }
+		    }
+		    return "Principal";
+		}
+
+		function obtenerIdBodegaParaFiltro(sedeSeleccionada, tipoBodegaSeleccionada) {
+		    if (!sedeSeleccionada || sedeSeleccionada === "Todas las sedes" || 
+		        !tipoBodegaSeleccionada || tipoBodegaSeleccionada === "Todas las bodegas") {
+		        return null; // Null indica que no se debe restringir por este campo
+		    }
+		    
+		    const listaBodegas = bodegasPorSede[sedeSeleccionada];
+		    if (listaBodegas) {
+		        const bodega = listaBodegas.find(b => b.label === tipoBodegaSeleccionada);
+		        return bodega ? bodega.value : null;
+		    }
+		    return null;
+		}
+
+		function cargarResumenDashboard() {
+		    // 1. Obtener valores de los selects del HTML
+		    const sede = document.getElementById('select-sede').value; // Ej: "San Pedro Sula"
+		    const tipoBodega = document.getElementById('select-tipo-bodega').value; // Ej: "PPV"
+		
+		    // 2. Obtener el ID real que debe buscar en la base de datos
+		    const idBodegaFiltro = obtenerIdBodegaParaFiltro(sede, tipoBodega);
+		
+		    // 3. Construir tu consulta o filtro. 
+		    // Ejemplo si usas una consulta SQL dinámica o llamada a API:
+		    const parametrosConsulta = {
+		        sede: sede === "Todas las sedes" ? null : sede,
+		        idbodega: idBodegaFiltro // Aquí pasas "033" en lugar de "PPV"
+		    };
+		
+		    console.log("Filtros enviados a vw_dashboard_resumen:", parametrosConsulta);
+		    
+		    // Aquí iría tu llamada fetch() o función de filtrado de array...
+		    // fetch('/api/resumen?' + new URLSearchParams(parametrosConsulta))...
 		}
 
         function aplicarFiltrosGlobales(data = []) {
