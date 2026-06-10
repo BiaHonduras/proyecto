@@ -4833,14 +4833,18 @@ tbody.innerHTML = data.map(item => {
 
         let query = supabase
             .from('inventarios_diarios')
-            .select('id, fecha, created_at, sede, idBodega, codigo, descripcion, proveedor')
+            .select('id, fecha, created_at, sede, idBodega, codigo, descripcion, proveedor, tipos_bodega')
             .order('created_at', { ascending: false })
             .limit(25);
 
         if (sedeFiltro !== 'Todas') query = query.eq('sede', sedeFiltro);
         if (tipoBodegaFiltro !== 'Todas') {
-            query = query.eq('idBodega', tipoBodegaFiltro === 'Principal' ? '030' : tipoBodegaFiltro);
-        }
+		    if (tipoBodegaFiltro === 'PRINCIPAL') {
+		        query = query.in('tipos_bodega', ['PRINCIPAL', 'PPV', 'PFN']);
+		    } else {
+		        query = query.eq('tipos_bodega', tipoBodegaFiltro);
+		    }
+		}
 
         const { data, error } = await query;
         const contenedor = document.getElementById('recentItems');
