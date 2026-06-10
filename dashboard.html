@@ -4839,7 +4839,7 @@ tbody.innerHTML = data.map(item => {
 
         if (sedeFiltro !== 'Todas') query = query.eq('sede', sedeFiltro);
         if (tipoBodegaFiltro === 'Principal') {
-		    query = query.in('tipo_bodega', ['PRINCIPAL', 'PPV', 'PFN']);
+		    query = query.in('tipos_bodega', ['PRINCIPAL', 'PPV', 'PFN']);
 		}
 
         const { data, error } = await query;
