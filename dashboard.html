@@ -3457,6 +3457,8 @@ header.sticky {
 
         // ===== VER INVENTARIO =====
 		async function loadInventory() {
+			actualizarLabelFiltrosActivos();
+			
 		    const tbody = document.getElementById('inventoryTableBody');
 		    const searchInput = document.getElementById('searchInventory');
 		    const searchTerm = (searchInput?.value || '').trim().toLowerCase();
@@ -3482,11 +3484,6 @@ header.sticky {
 		
 		    const inventarioOriginal = Array.isArray(data) ? data : [];
 		    let inventario = aplicarFiltrosGlobales(inventarioOriginal);
-		
-		    if (inventario.length === 0 && inventarioOriginal.length > 0) {
-		        console.warn('Los filtros dejaron vacío. Mostrando todo como respaldo.');
-		        inventario = inventarioOriginal;
-		    }
 		
 		    if (searchTerm) {
 		
@@ -3806,9 +3803,11 @@ header.sticky {
             }
 
             const mapaJustificaciones = {};
-            justificaciones.forEach(j => {
-		    const clave = `${String(j.codigo || '').trim()}|${String(j.idBodega || '').trim()}`;
-		    mapaJustificaciones[clave] = j;
+            (justificaciones || []).forEach(j => {
+			    const clave =
+			        `${String(j.codigo || '').trim()}|${String(j.idBodega || j.id_bodega || '').trim()}`;
+			    mapaJustificaciones[clave] = j;
+			});
 		});
 
             const mapaVencimientos = {};
@@ -5211,6 +5210,7 @@ tbody.innerHTML = data.map(item => {
 	}
 		
 			async function loadTransitos() {
+				actualizarLabelFiltrosActivos();
 			    const tbody = document.getElementById('transitosTableBody');
 			
 			    const { data, error: errorInventario } = await supabase
@@ -5588,6 +5588,9 @@ async function guardarJustificacion(id, texto) {
 		}
 		
         async function loadVencimientosData() {
+			
+			actualizarLabelFiltrosActivos();
+			
             const queryResult = await supabase
                 .from('vencimientos_semanales')
                 .select('sede, idbodega, codigo, descripcion, fecha_vencimiento, diasvida');
