@@ -2184,12 +2184,12 @@ header.sticky {
 			    "Amarateca": [
 			        { value: "010", label: "Principal" },
 			        { value: "013", label: "PPV" },
-			        { value: "015", label: "PFN" }
+			        { value: "098", label: "PFN" }
 			    ],
 			    "La Ceiba": [
 			        { value: "040", label: "Principal" },
 			        { value: "043", label: "PPV" },
-			        { value: "045", label: "PFN" }
+			        { value: "096", label: "PFN" }
 			    ],
 			    "San Pedro Sula": [
 			        { value: "030", label: "Principal" },
@@ -2199,7 +2199,7 @@ header.sticky {
 			    "Santa Rosa de Copan": [
 			        { value: "050", label: "Principal" },
 			        { value: "053", label: "PPV" },
-			        { value: "096", label: "PFN" }
+			        { value: "097", label: "PFN" }
 			    ],
 			    "Tegucigalpa": [
 			        { value: "060", label: "Principal" },
@@ -3807,6 +3807,7 @@ header.sticky {
 			    const clave =
 			        `${String(j.codigo || '').trim()}|${String(j.idBodega || j.id_bodega || '').trim()}`;
 			    mapaJustificaciones[clave] = j;
+				console.log('Justificaciones:', justificaciones);			
 			});
 
 			const mapaVencimientos = {};
@@ -5238,6 +5239,7 @@ tbody.innerHTML = data.map(item => {
 			        .from('inventario_justificaciones')
 			        .select('*')
 			        .in('codigo', codigosInventario);
+					console.log(justificaciones[0]);
 			
 			    if (errorJust) {
 			        console.error('Error inventario_justificaciones:', errorJust);
