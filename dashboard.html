@@ -2452,13 +2452,27 @@ header.sticky {
 			const nombreCortoEl = document.getElementById('nombreCorto');
             if (nombreCortoEl) nombreCortoEl.textContent = currentUser.nombre_corto || '';
 
-            aplicarRestriccionGestionUsuarios();
-            aplicarRestriccionCargaVencimientos();
+
+
+			const filtroSedeVenc = document.getElementById('filtroSedeVencimientos');
+		    const filtroBodegaVenc = document.getElementById('filtroTipoBodegaVencimientos');
+		
+		    if (filtroSedeVenc) {
+		        filtroSedeVenc.addEventListener('change', loadVencimientosData);
+		    }
+		
+		    if (filtroBodegaVenc) {
+		        filtroBodegaVenc.addEventListener('change', loadVencimientosData);
+		    }
             
             // Inicializar navegación
             initNavigation();
             cargarResumenCodigos();
 			programarActualizacionVencimientos();
+			aplicarRestriccionGestionUsuarios();
+            aplicarRestriccionCargaVencimientos();
+			loadVencimientosData();
+			
 			document.getElementById('btnEditarRegistros').addEventListener('click', () => {
     			activarModoEdicion();
 				});
