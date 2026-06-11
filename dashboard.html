@@ -3756,6 +3756,23 @@ header.sticky {
 
             const inventario = filtrarInventarioParaExportacion(data, sedeFiltro, tipoBodegaFiltro);
 
+			inventario.sort((a, b) => {
+
+			    const codigoA = Number(a.codigo || 0);
+			    const codigoB = Number(b.codigo || 0);
+			
+			    if (codigoA !== codigoB) {
+			        return codigoA - codigoB;
+			    }
+			
+			    return String(a.idBodega || '').localeCompare(
+			        String(b.idBodega || ''),
+			        undefined,
+			        { numeric: true }
+			    );
+			
+			});
+
             if (!inventario || inventario.length === 0) {
                 showNotification('Advertencia', 'No hay datos para exportar con esos filtros', 'warning');
                 return;
@@ -3782,10 +3799,10 @@ header.sticky {
             }
 
             const mapaJustificaciones = {};
-            (justificaciones || []).forEach(j => {
-                const codigo = String(j.codigo || '').trim();
-                if (codigo) mapaJustificaciones[codigo] = j;
-            });
+            justificaciones.forEach(j => {
+		    const clave = `${String(j.codigo || '').trim()}|${String(j.idBodega || '').trim()}`;
+		    mapaJustificaciones[clave] = j;
+		});
 
             const mapaVencimientos = {};
             (vencimientos || []).forEach(v => {
@@ -3818,8 +3835,11 @@ header.sticky {
                 else if (diferencia < 0) validacion = 'VAL-';
                 else validacion = 'VAL+';
 
-                const codigoItem = String(item.codigo || '').trim();
-                const justificacionData = mapaJustificaciones[codigoItem] || {};
+				const claveJustificacion =
+				    `${String(item.codigo || '').trim()}|${String(item.idBodega || '').trim()}`;
+				
+				const justificacionData =
+				    mapaJustificaciones[claveJustificacion] || {};
 
                 const keyVencimiento = construirClaveVencimiento({
                     sede: item.sede,
@@ -3835,7 +3855,7 @@ header.sticky {
                     'Bodega': item.idBodega || '',
                     'Fecha Actual': formatoFecha(item.fecha),
                     'Fecha Vencimiento': formatoFecha(fechaVencimiento),
-                    'Código de Barra': Number(item.codigo_barra || 0),
+                    'Código de Barra': `="${item.codigo_barra || ''}"`,
                     'Proveedor': item.proveedor || '',
 					'Código': item.codigo || '',
                     'Descripción': item.descripcion || '',
@@ -5189,7 +5209,6 @@ tbody.innerHTML = data.map(item => {
 			    const { data, error: errorInventario } = await supabase
 				    .from('inventarios_diarios')
 				    .select('*')
-				    .eq('tipos_bodega', 'PRINCIPAL');
 			
 			    if (errorInventario) {
 			        console.error('Error inventarios_diarios:', errorInventario);
@@ -5244,8 +5263,10 @@ tbody.innerHTML = data.map(item => {
 			        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
 			        const diferencia = total - Number(item.inventario_reporteria || 0);
 			        const codigo = String(item.codigo || '').trim();
-			
-			        const justificacionRow = mapaJustificaciones[codigo] || null;
+					
+					const clave = `${String(item.codigo || '').trim()}|${String(item.idBodega || '').trim()}`;
+					const justificacionRow = mapaJustificaciones[clave];
+					
 			        const justificacionGuardada = justificacionRow?.justificacion || '';
 			        const cantidadJustificada = justificacionRow?.cantidad_justificada ?? '';
 			        const fechaRegistro = justificacionRow?.fecha_registro || '';
