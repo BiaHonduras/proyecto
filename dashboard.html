@@ -947,7 +947,7 @@ header.sticky {
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
                             <p class="text-sm text-gray-600">Vista activa</p>
-                            <p class="font-semibold text-gray-800" id="labelFiltrosActivos">Todas las sedes, Todas las bodegas</p>
+                            <span class="labelFiltrosActivos">Todas las sedes, Todas las bodegas</span>
                         </div>
                     </div>
                 </div>
@@ -2348,16 +2348,23 @@ header.sticky {
         }
 
         function actualizarLabelFiltrosActivos() {
-            const label = document.getElementById('labelFiltrosActivos');
-            if (!label) return;
-
-            const sedeTexto = filtrosGlobales.sede === 'Todas' ? 'Todas las sedes' : filtrosGlobales.sede;
-            const bodegaTexto = filtrosGlobales.tipoBodega === 'Todas'
-                ? 'Todas las bodegas'
-                : `Bodega ${filtrosGlobales.tipoBodega}`;
-
-            label.textContent = `${sedeTexto}, ${bodegaTexto}`;
-        }
+		    const labels = document.querySelectorAll('.labelFiltrosActivos');
+		
+		    const sedeTexto =
+		        filtrosGlobales.sede === 'Todas'
+		            ? 'Todas las sedes'
+		            : filtrosGlobales.sede;
+		
+		    const bodegaTexto =
+		        filtrosGlobales.tipoBodega === 'Todas'
+		            ? 'Todas las bodegas'
+		            : `Bodega ${filtrosGlobales.tipoBodega}`;
+		
+		    labels.forEach(label => {
+		        label.textContent = `${sedeTexto}, ${bodegaTexto}`;
+		    });
+		
+		}
 
         function configurarFiltrosSegunUsuario() {
 		    const filtroSede = document.getElementById('filtroSedeGlobal');
