@@ -514,6 +514,9 @@
             if (bodegas.length > 0) query = query.in('idBodega', bodegas);
             if (proveedores.length > 0) query = query.in('proveedor', proveedores);
 
+            console.log('Bodegas: ', bodegas);
+            console.log('Proveedores: ', proveedores);
+
             return query;
         }
 
