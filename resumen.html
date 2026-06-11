@@ -511,7 +511,7 @@
                 .select('*');
 
             if (sede) query = query.eq('sede', sede);
-            if (bodegas.length > 0) query = query.in('id_bodega', bodegas);
+            if (bodegas.length > 0) query = query.in('idBodega', bodegas);
             if (proveedores.length > 0) query = query.in('proveedor', proveedores);
 
             return query;
