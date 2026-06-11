@@ -3808,9 +3808,8 @@ header.sticky {
 			        `${String(j.codigo || '').trim()}|${String(j.idBodega || j.id_bodega || '').trim()}`;
 			    mapaJustificaciones[clave] = j;
 			});
-		});
 
-            const mapaVencimientos = {};
+			const mapaVencimientos = {};
             (vencimientos || []).forEach(v => {
                 const normalizado = normalizarRegistroVencimiento(v);
                 const key = construirClaveVencimiento(normalizado);
