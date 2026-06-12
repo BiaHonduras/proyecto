@@ -3793,20 +3793,25 @@ header.sticky {
 
 			inventario.sort((a, b) => {
 
-			    const codigoA = Number(a.codigo || 0);
-			    const codigoB = Number(b.codigo || 0);
-			
-			    if (codigoA !== codigoB) {
-			        return codigoA - codigoB;
-			    }
-			
-			    return String(a.idBodega || '').localeCompare(
-			        String(b.idBodega || ''),
-			        undefined,
-			        { numeric: true }
-			    );
-			
-			});
+		    const bodegaA = String(a.idBodega || '');
+		    const bodegaB = String(b.idBodega || '');
+		
+		    const comparacionBodega = bodegaA.localeCompare(
+		        bodegaB,
+		        undefined,
+		        { numeric: true }
+		    );
+		
+		    if (comparacionBodega !== 0) {
+		        return comparacionBodega;
+		    }
+		
+		    const codigoA = Number(a.codigo || 0);
+		    const codigoB = Number(b.codigo || 0);
+		
+		    return codigoA - codigoB;
+		
+		});
 
             if (!inventario || inventario.length === 0) {
                 showNotification('Advertencia', 'No hay datos para exportar con esos filtros', 'warning');
