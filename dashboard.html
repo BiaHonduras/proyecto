@@ -3891,7 +3891,7 @@ header.sticky {
                     'Bodega': item.idBodega || '',
                     'Fecha Actual': formatoFecha(item.fecha),
                     'Fecha Vencimiento': formatoFecha(fechaVencimiento),
-                    'Código de Barra': `="${item.codigo_barra || ''}"`,
+                    'Código de Barra': String(item.codigo_barra || ''),
                     'Proveedor': item.proveedor || '',
 					'Código': item.codigo || '',
                     'Descripción': item.descripcion || '',
