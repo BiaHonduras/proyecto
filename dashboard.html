@@ -3806,8 +3806,7 @@ header.sticky {
             (justificaciones || []).forEach(j => {
 			    const clave =
 			        `${String(j.codigo || '').trim()}|${String(j.idBodega || j.id_bodega || '').trim()}`;
-			    mapaJustificaciones[clave] = j;
-				console.log('Justificaciones:', justificaciones);			
+			    mapaJustificaciones[clave] = j;			
 			});
 
 			const mapaVencimientos = {};
@@ -5239,7 +5238,6 @@ tbody.innerHTML = data.map(item => {
 			        .from('inventario_justificaciones')
 			        .select('*')
 			        .in('codigo', codigosInventario);
-					console.log(justificaciones[0]);
 			
 			    if (errorJust) {
 			        console.error('Error inventario_justificaciones:', errorJust);
@@ -6076,7 +6074,10 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		            throw error;
 		        }
 		        
-		        console.log('Bodegas cargadas:', data);
+		        console.log('Registro:', item.codigo, 'Sede:', item.sede, 'Bodega:', item.idBodega);
+				console.log('Filtro sede:', sedeFiltro);
+				console.log('Filtro bodega:', tipoBodegaFiltro);
+				console.log(typeof item.idBodega, item.idBodega);
 		        
 		        if (!data || data.length === 0) {
 		            console.warn('La tabla bodegas está vacía');
