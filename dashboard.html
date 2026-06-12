@@ -2262,8 +2262,6 @@ header.sticky {
 		        sede: sede === "Todas las sedes" ? null : sede,
 		        idbodega: idBodegaFiltro // Aquí pasas "033" en lugar de "PPV"
 		    };
-		
-		    console.log("Filtros enviados a vw_dashboard_resumen:", parametrosConsulta);
 		    
 		    // Aquí iría tu llamada fetch() o función de filtrado de array...
 		    // fetch('/api/resumen?' + new URLSearchParams(parametrosConsulta))...
@@ -2442,6 +2440,12 @@ header.sticky {
             
             currentUser = JSON.parse(userData);
             window.currentUser = currentUser;
+
+			document.getElementById('filtroSedeInventarios')
+			    ?.addEventListener('change', loadInventory);
+			
+			document.getElementById('filtroTipoBodegaInventarios')
+			    ?.addEventListener('change', loadInventory);
 
             if (currentUser.must_change_password) {
                 alert('Debe cambiar su contraseña antes de continuar.');
@@ -3484,6 +3488,33 @@ header.sticky {
 		
 		    const inventarioOriginal = Array.isArray(data) ? data : [];
 		    let inventario = aplicarFiltrosGlobales(inventarioOriginal);
+
+			const sedeFiltro =
+			    document.getElementById('filtroSedeInventarios')?.value || 'Todas';
+			
+			const tipoBodegaFiltro =
+			    document.getElementById('filtroTipoBodegaInventarios')?.value || 'Todas';
+			
+			const tiposBodega = {
+			    Principal: ['010', '030', '040', '050', '060'],
+			    PPV: ['013', '033', '043', '053', '063'],
+			    PFN: ['015', '045', '095', '096', '099']
+			};
+
+			inventario = inventario.filter(item => {
+
+		    const cumpleSede =
+		        sedeFiltro === 'Todas' ||
+		        item.sede === sedeFiltro;
+		
+		    const cumpleBodega =
+		        tipoBodegaFiltro === 'Todas' ||
+		        tiposBodega[tipoBodegaFiltro]?.includes(
+		            String(item.idBodega || '').trim()
+		        );
+		
+		    return cumpleSede && cumpleBodega;
+		});
 		
 		    if (searchTerm) {
 		
@@ -6074,10 +6105,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		            throw error;
 		        }
 		        
-		        console.log('Registro:', item.codigo, 'Sede:', item.sede, 'Bodega:', item.idBodega);
-				console.log('Filtro sede:', sedeFiltro);
-				console.log('Filtro bodega:', tipoBodegaFiltro);
-				console.log(typeof item.idBodega, item.idBodega);
+
 		        
 		        if (!data || data.length === 0) {
 		            console.warn('La tabla bodegas está vacía');
@@ -6106,7 +6134,6 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		            select.appendChild(option);
 		        });
 		        
-		        console.log('Bodegas cargadas en el select:', data.length);
 		    } catch (err) {
 		        console.error('Error al cargar bodegas:', err);
 		    }
@@ -6161,8 +6188,6 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		            // Si no hay información, permitir por defecto
 		            permiteVencimiento = true;
 		        }
-		
-		        console.log('Permite vencimiento:', permiteVencimiento);
 		
 		        if (!permiteVencimiento) {
 		            contenedor.classList.add('hidden');
