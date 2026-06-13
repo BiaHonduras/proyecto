@@ -5245,12 +5245,12 @@ tbody.innerHTML = data.map(item => {
 	}
 		
 			async function loadTransitos() {
-				actualizarLabelFiltrosActivos();
+			    actualizarLabelFiltrosActivos();
 			    const tbody = document.getElementById('transitosTableBody');
 			
 			    const { data, error: errorInventario } = await supabase
-				    .from('inventarios_diarios')
-				    .select('*')
+			        .from('inventarios_diarios')
+			        .select('*');
 			
 			    if (errorInventario) {
 			        console.error('Error inventarios_diarios:', errorInventario);
@@ -5281,18 +5281,30 @@ tbody.innerHTML = data.map(item => {
 			        return;
 			    }
 			
+			    // ✅ CORRECCIÓN 1: Construir la clave compuesta (codigo|bodega) al guardar en el mapa
 			    const mapaJustificaciones = {};
 			    (justificaciones || []).forEach(j => {
 			        const codigo = String(j.codigo || '').trim();
-			        if (codigo) mapaJustificaciones[codigo] = j;
+			        // ⚠️ IMPORTANTE: Ajusta 'id_bodega' al nombre EXACTO de la columna en tu tabla de Supabase 
+			        // (puede ser 'id_bodega', 'idBodega', 'bodega', etc.)
+			        const idBodegaJust = String(j.id_bodega || j.idBodega || j.bodega || '').trim(); 
+			        const clave = `${codigo}|${idBodegaJust}`;
+			        
+			        if (codigo) {
+			            mapaJustificaciones[clave] = j;
+			        }
 			    });
 			
+			    // ✅ CORRECCIÓN 2: Usar la misma clave compuesta en el filtro
 			    const filtrados = inventario
 			        .filter(item => {
 			            const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
 			            const diferencia = total - Number(item.inventario_reporteria || 0);
 			            const codigo = String(item.codigo || '').trim();
-			            return diferencia !== 0 || !!mapaJustificaciones[codigo];
+			            const idBodega = String(item.idBodega || '').trim();
+			            const clave = `${codigo}|${idBodega}`; // Usar la clave compuesta
+			            
+			            return diferencia !== 0 || !!mapaJustificaciones[clave];
 			        })
 			        .sort((a, b) => Number(a.codigo || 0) - Number(b.codigo || 0));
 			
@@ -5305,10 +5317,11 @@ tbody.innerHTML = data.map(item => {
 			        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
 			        const diferencia = total - Number(item.inventario_reporteria || 0);
 			        const codigo = String(item.codigo || '').trim();
-					
-					const clave = `${String(item.codigo || '').trim()}|${String(item.idBodega || '').trim()}`;
-					const justificacionRow = mapaJustificaciones[clave];
-					
+			        
+			        // Aquí ya estabas usando la clave compuesta correctamente
+			        const clave = `${codigo}|${String(item.idBodega || '').trim()}`;
+			        const justificacionRow = mapaJustificaciones[clave];
+			        
 			        const justificacionGuardada = justificacionRow?.justificacion || '';
 			        const cantidadJustificada = justificacionRow?.cantidad_justificada ?? '';
 			        const fechaRegistro = justificacionRow?.fecha_registro || '';
@@ -5331,7 +5344,7 @@ tbody.innerHTML = data.map(item => {
 			                <td class="py-3">
 			                    <input
 			                        type="number"
-			                        class="cantidad-justificada w-full px-2 py-1 text-sm input-field w-full px-2 py-1 rounded input-disabled"
+			                        class="cantidad-justificada w-full px-2 py-1 text-sm input-field rounded input-disabled"
 			                        value="${cantidadJustificada}"
 			                        disabled
 			                    >
