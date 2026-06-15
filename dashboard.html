@@ -2225,13 +2225,18 @@ header.sticky {
 		
 		function obtenerTipoBodegaDesdeId(idBodega) {
 		    const idStr = String(idBodega).trim();
+		    
+		    // Si no hay ID, no asumimos "Principal", lo marcamos como vacío para que el filtro lo maneje
+		    if (!idStr) return "Sin Bodega"; 
+		
 		    for (const sede in bodegasPorSede) {
-		        const bodega = bodegasPorSede[sede].find(b => b.value === idStr);
+		        const bodega = bodegasPorSede[sede].find(b => String(b.value).trim() === idStr);
 		        if (bodega) {
-		            return bodega.label;
+		            return bodega.label; // Devuelve "Principal", "PPV" o "PFN"
 		        }
 		    }
-		    return "Principal";
+		    
+		    return "Principal"; // Fallback por defecto si no se encuentra en el mapa
 		}
 
 		function obtenerIdBodegaParaFiltro(sedeSeleccionada, tipoBodegaSeleccionada) {
@@ -2268,24 +2273,33 @@ header.sticky {
 		}
 
         function aplicarFiltrosGlobales(data = []) {
-            return (data || []).filter(item => registroCoincideFiltros(item));
-        }
+		    return (data || []).filter(item => registroCoincideFiltros(item));
+		}
 
-        function registroCoincideFiltros(item = {}, sedeFiltro = filtrosGlobales.sede, tipoBodegaFiltro = filtrosGlobales.tipoBodega) {
-            if (sedeFiltro !== 'Todas' && item.sede !== sedeFiltro) {
-                return false;
-            }
-
-            if (tipoBodegaFiltro !== 'Todas') {
-                const tipo = obtenerTipoBodegaDesdeId(item.idBodega || item.idbodega);
-
-                if (tipo !== tipoBodegaFiltro) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
+        function registroCoincideFiltros(item = {}) {
+		    // 1. Normalizar valores del item (evita errores por "Amarateca " vs "Amarateca")
+		    const itemSede = String(item.sede || item.Sede || '').trim().toLowerCase();
+		    const itemIdBodega = String(item.idBodega || item.idbodega || '').trim();
+		
+		    // 2. Obtener valores de los filtros (con fallback a 'Todas' por seguridad)
+		    const sedeFiltro = String(filtrosGlobales?.sede || 'Todas').trim().toLowerCase();
+		    const tipoBodegaFiltro = String(filtrosGlobales?.tipoBodega || 'Todas').trim().toLowerCase();
+		
+		    // 3. Validar Sede
+		    if (sedeFiltro !== 'todas' && itemSede !== sedeFiltro) {
+		        return false;
+		    }
+		
+		    // 4. Validar Tipo de Bodega
+		    if (tipoBodegaFiltro !== 'todas') {
+		        const tipo = obtenerTipoBodegaDesdeId(itemIdBodega);
+		        if (tipo.toLowerCase() !== tipoBodegaFiltro) {
+		            return false;
+		        }
+		    }
+		
+		    return true;
+		}
 
         function filtrarInventarioParaExportacion(data = [], sede = 'Todas', tipoBodega = 'Todas') {
             return (data || []).filter(item => {
@@ -2390,14 +2404,16 @@ header.sticky {
 		        filtroTipoBodega.classList.add('bg-gray-100');
 		    }
 		
-		    filtroSede.addEventListener('change', function() {
-		        filtrosGlobales.sede = this.value;
+		    filtroSede.addEventListener('change', (e) => {
+		        filtrosGlobales.sede = e.target.value;
+				loadTransitos();
 		        actualizarLabelFiltrosActivos();
 		        recargarDashboardConFiltros();
 		    });
 		
-		    filtroTipoBodega.addEventListener('change', function() {
-		        filtrosGlobales.tipoBodega = this.value;
+		    filtroTipoBodega.addEventListener('change', (e) => {
+		        filtrosGlobales.tipoBodega = e.target.value;
+				loadTransitos();
 		        actualizarLabelFiltrosActivos();
 		        recargarDashboardConFiltros();
 		    });
