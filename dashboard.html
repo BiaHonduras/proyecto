@@ -3836,7 +3836,7 @@ header.sticky {
 
             const { data: justificaciones, error: errorJust } = await supabase
                 .from('inventario_justificaciones')
-                .select('id, codigo, justificacion, cantidad_justificada, usuario, fecha_modificacion');
+                .select('id, codigo, idBodega, sede, justificacion, cantidad_justificada, usuario, fecha_modificacion');
 
             if (errorJust) {
                 console.error(errorJust);
@@ -3855,9 +3855,9 @@ header.sticky {
             }
 
             const mapaJustificaciones = {};
-            (justificaciones || []).forEach(j => {
-			    const clave =
-			        `${String(j.codigo || '').trim()}|${String(j.idBodega || j.id_bodega || '').trim()}`;
+			(justificaciones || []).forEach(j => {
+			    // Clave compuesta: Sede | Bodega | Código
+			    const clave = `${String(j.sede || '').trim()}|${String(j.idBodega || '').trim()}|${String(j.codigo || '').trim()}`;
 			    mapaJustificaciones[clave] = j;			
 			});
 
@@ -3892,11 +3892,8 @@ header.sticky {
                 else if (diferencia < 0) validacion = 'VAL-';
                 else validacion = 'VAL+';
 
-				const claveJustificacion =
-				    `${String(item.codigo || '').trim()}|${String(item.idBodega || '').trim()}`;
-				
-				const justificacionData =
-				    mapaJustificaciones[claveJustificacion] || {};
+				const claveJustificacion = `${String(item.sede || '').trim()}|${String(item.idBodega || '').trim()}|${String(item.codigo || '').trim()}`;
+				const justificacionData = mapaJustificaciones[claveJustificacion] || {};
 
                 const keyVencimiento = construirClaveVencimiento({
                     sede: item.sede,
