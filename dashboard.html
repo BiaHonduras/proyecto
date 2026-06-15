@@ -6306,9 +6306,14 @@ function validarPermiteVencimiento() {
     const select = document.getElementById('idBodega');
     const check = document.getElementById('checkVencimiento');
 
-    if (!select || !check) return true;
-
     const option = select.options[select.selectedIndex];
+
+    console.log({
+        bodega: select.value,
+        checked: check.checked,
+        dataset: option?.dataset?.manejaVencimiento
+    });
+
     const maneja = option?.dataset?.manejaVencimiento === 'true';
 
     if (check.checked && !maneja) {
