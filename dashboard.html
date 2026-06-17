@@ -2562,48 +2562,6 @@ header.sticky {
 		    console.log('[Depuración] Usuario actual:', usuarioActual, '| Autorizado:', esAutorizado);
 		}
 
-		function mostrarSeccion(hash) {
-		    // Lista de secciones válidas (AGREGA 'depuracion' aquí)
-		    const seccionesValidas = [
-		        'resumen', 
-		        'vencimientos', 
-		        'inventario-diario', 
-		        'inventario', 
-		        'transitos', 
-		        'exportar', 
-		        'importar-inventario', 
-		        'importar-codigos',
-		        'depuracion',  // ← AGREGAR ESTA LÍNEA
-		        'usuarios'
-		    ];
-		    
-		    // Si la sección no es válida, no hacer nada
-		    if (!seccionesValidas.includes(hash)) return;
-		    
-		    // Ocultar todas las secciones
-		    document.querySelectorAll('.tab-content, section[id]').forEach(s => {
-		        s.style.display = 'none';
-		    });
-		    
-		    // Mostrar la sección seleccionada
-		    const seccion = document.getElementById(hash);
-		    if (seccion) {
-		        seccion.style.display = 'block';
-		    }
-		}
-		
-		// Escuchar cambios de hash (cuando haces clic en el menú)
-		window.addEventListener('hashchange', function() {
-		    const hash = window.location.hash.substring(1);
-		    mostrarSeccion(hash);
-		});
-		
-		// Cargar la sección inicial al abrir la página
-		window.addEventListener('load', function() {
-		    const hash = window.location.hash.substring(1) || 'resumen';
-		    mostrarSeccion(hash);
-		});
-
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', async function() {
             
