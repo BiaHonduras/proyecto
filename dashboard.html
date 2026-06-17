@@ -884,19 +884,18 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		/* === CARDS DE DEPURACIÓN === */
 		.card-depuracion {
 		    background: #fff;
-		    border: 2px solid #f8d7da;
-		    border-left: 6px solid #dc3545;
-		    border-radius: 12px;
+		    border: 1px solid #f5c6cb;
+		    border-left: 4px solid #dc3545;
+		    border-radius: 8px;
 		    padding: 24px;
 		    margin-bottom: 20px;
-		    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.08);
+		    box-shadow: 0 1px 3px rgba(220, 53, 69, 0.05);
 		    transition: all 0.3s ease;
 		}
 		
 		.card-depuracion:hover {
-		    border-color: #dc3545;
-		    box-shadow: 0 4px 16px rgba(220, 53, 69, 0.15);
-		    transform: translateY(-2px);
+		    border-color: #f1aeb5;
+		    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.1);
 		}
 		
 		.card-depuracion h3 {
@@ -912,6 +911,10 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		    color: #6c757d;
 		    margin-bottom: 20px;
 		    line-height: 1.6;
+		}
+		
+		.card-depuracion.card-eliminar-bdd {
+		    border-left-color: #dc3545;
 		}
 		
 		/* Badge de advertencia */
