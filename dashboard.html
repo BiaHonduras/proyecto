@@ -898,10 +898,6 @@ header.sticky {
                     <i class="fas fa-database"></i>
                     Dashboard
                 </a>
-				<a href="#depuracion" id="menuDepuracion" class="nav-item hidden" data-section="depuracion">
-				    <i class="fas fa-tools"></i>
-				    Depuración
-				</a>
                 <a href="#usuarios" class="nav-item" data-section="usuarios">
                     <i class="fas fa-users-cog"></i>
                     Gestión de Usuarios
@@ -1928,36 +1924,6 @@ header.sticky {
                  </div>
         </section>
 
- <!-- Gestión de Depuracion -->
-<section id="depuracion-section"
-         class="section-content hidden">
-
-    <div class="card p-6">
-
-        <h3 class="text-xl font-semibold mb-6">
-            Depuración del Sistema
-        </h3>
-
-        <div class="space-y-4">
-
-            <button id="btnEliminarInventarios"
-                class="w-full px-4 py-3 bg-red-600 text-white rounded-lg">
-                Eliminar Inventarios Acumulados
-            </button>
-
-            <button id="btnDepurarCodigos"
-                class="w-full px-4 py-3 bg-red-600 text-white rounded-lg">
-                Depurar Base de Códigos
-            </button>
-
-            <button id="btnCargaManualVencimientos"
-                class="w-full px-4 py-3 bg-gray-800 text-white rounded-lg">
-                Carga Manual de Vencimientos
-            </button>
-        </div>
-    </div>
-</section>
-
  <!-- Gestión de Usuarios Section -->
             <section id="usuarios-section" class="section-content hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -2082,6 +2048,7 @@ header.sticky {
             </section>
         </main>
     </div>
+
 
     <div id="modalExportarCSV" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[9999]">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
@@ -2463,20 +2430,13 @@ header.sticky {
 
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', async function() {
-
+            
 			// Verificar autenticación
             const userData = sessionStorage.getItem('currentUser');
             if (!userData) {
                 window.location.href = 'index.html';
                 return;
             }
-			const currentUser = JSON.parse(userData);
-			window.currentUser = currentUser;
-			if (currentUser.username === 'verificadorsps') {
-			    document
-			        .getElementById('menuDepuracion')
-			        ?.classList.remove('hidden');
-			}
 
             try {
                 const { data: authData, error: authError } = await window.supabase.auth.getUser();
@@ -2493,6 +2453,9 @@ header.sticky {
                 window.location.href = 'index.html';
                 return;
             }
+            
+            currentUser = JSON.parse(userData);
+            window.currentUser = currentUser;
 
 			document.getElementById('filtroSedeInventarios')
 			    ?.addEventListener('change', loadInventory);
@@ -2675,12 +2638,7 @@ header.sticky {
                 }
             });
 			
-            const btnEliminarGeneral = document.getElementById('btnEliminarGeneral')
-			.addEventListener('click', async () => {
-			    if (!validarAccesoDepuracion()) return;
-			    // código de eliminación
-			});
-			
+            const btnEliminarGeneral = document.getElementById('btnEliminarGeneral');
 			if (btnEliminarGeneral) {
 			    btnEliminarGeneral.addEventListener('click', eliminarGeneralProtegido);
 			    btnEliminarGeneral.title = 'Realiza respaldo completo antes de eliminar';
@@ -6003,20 +5961,6 @@ async function obtenerAccessToken() {
 		    if (!habilitado) {
 		        fechaInput.value = '';
 		    }
-		}
-		
-		function validarAccesoDepuracion() {
-
-		    const currentUser = JSON.parse(
-		        sessionStorage.getItem('currentUser') || '{}'
-		    );
-		
-		    if (currentUser.username !== 'verificadorsps') {
-		        mostrarError('No autorizado');
-		        return false;
-		    }
-		
-		    return true;
 		}
 
 		async function evaluarVencimiento() {
