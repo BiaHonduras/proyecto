@@ -963,6 +963,28 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		    transform: translateY(-2px);
 		}
 
+		/* Reducir espacio superior de la sección completa */
+		#depuracion-section {
+		    padding-top: 10px !important;
+		}
+		
+		/* Ajustar el título principal h2 */
+		#depuracion-section h2 {
+		    margin-top: 0 !important;
+		    margin-bottom: 15px !important;
+		    padding-top: 0 !important;
+		}
+		
+		/* Espacio controlado entre subtítulo y primera tarjeta */
+		#depuracion-section .card-depuracion:first-of-type {
+		    margin-top: 20px !important;
+		}
+		
+		/* Ajustar párrafo de introducción */
+		#depuracion-section .text-muted {
+		    margin-bottom: 25px !important;
+		}
+
 </style>
 </head>
 	
@@ -2082,7 +2104,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 	    </div>
 	    
 	    <button id="btn-eliminar-inventario-dia" class="btn-danger-depuracion">
-	        ⚠️ Eliminar Inventario del Día
+	        Eliminar Inventario del Día
 	    </button>
 	</div>
     
