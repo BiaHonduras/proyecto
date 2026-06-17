@@ -2464,22 +2464,19 @@ header.sticky {
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', async function() {
 
-			// Menú Depuración 
-			const currentUser = JSON.parse(
-		        sessionStorage.getItem('currentUser') || '{}'
-		    );
-		
-		    if (currentUser.username === 'verificadorsps') {
-		        document
-		            .getElementById('menuDepuracion')
-		            ?.classList.remove('hidden');
-		    }
 			// Verificar autenticación
             const userData = sessionStorage.getItem('currentUser');
             if (!userData) {
                 window.location.href = 'index.html';
                 return;
             }
+			const currentUser = JSON.parse(userData);
+			window.currentUser = currentUser;
+			if (currentUser.username === 'verificadorsps') {
+			    document
+			        .getElementById('menuDepuracion')
+			        ?.classList.remove('hidden');
+			}
 
             try {
                 const { data: authData, error: authError } = await window.supabase.auth.getUser();
