@@ -898,6 +898,11 @@ header.sticky {
                     <i class="fas fa-database"></i>
                     Dashboard
                 </a>
+				</a>
+				<a href="#depuracion" class="nav-item" data-section="depuracion">
+                    <i class="fas fa-database"></i>
+                    Depuración
+                </a>
                 <a href="#usuarios" class="nav-item" data-section="usuarios">
                     <i class="fas fa-users-cog"></i>
                     Gestión de Usuarios
@@ -1924,6 +1929,71 @@ header.sticky {
                  </div>
         </section>
 
+<section id="depuracion" style="display:none;">
+    <h2>🧹 Depuración del Sistema</h2>
+    <p class="text-muted">Esta sección contiene acciones administrativas sensibles. Solo accesible para usuarios autorizados.</p>
+    
+    <!-- === 1. ELIMINAR INVENTARIO DEL DÍA === -->
+    <div class="card-depuracion" style="background:#fff; border:1px solid #dc3545; border-radius:10px; padding:20px; margin:20px 0;">
+        <h3 style="color:#dc3545;">🗑️ Eliminar Inventario del Día</h3>
+        <p>Elimina todos los registros de inventario acumulados hasta el día actual en la sede y bodega seleccionada.</p>
+        <div class="form-group">
+            <label>Sede:</label>
+            <select id="depuracion-sede-inv">
+                <option value="">Seleccione</option>
+                <option>Amarateca</option>
+                <option>La Ceiba</option>
+                <option>San Pedro Sula</option>
+                <option>Santa Rosa de Copan</option>
+                <option>Tegucigalpa</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Bodega:</label>
+            <select id="depuracion-bodega-inv">
+                <option value="">Seleccione</option>
+            </select>
+        </div>
+        <button id="btn-depuracion-eliminar-inv" class="btn btn-danger">
+            Eliminar Inventario del Día
+        </button>
+    </div>
+    
+    <!-- === 2. CARGA MANUAL DE VENCIMIENTOS === -->
+    <div class="card-depuracion" style="background:#fff; border:1px solid #0d6efd; border-radius:10px; padding:20px; margin:20px 0;">
+        <h3 style="color:#0d6efd;">📋 Carga Manual de Vencimientos</h3>
+        <p>Permite cargar manualmente registros de vencimientos mediante archivo CSV. La eliminación asociada realiza respaldo automático en <code>vencimientos_backup</code>.</p>
+        
+        <div class="form-group">
+            <label>Archivo CSV de vencimientos:</label>
+            <input type="file" id="depuracion-csv-vencimientos" accept=".csv">
+        </div>
+        
+        <details>
+            <summary><strong>Formato esperado</strong></summary>
+            <p><strong>Columnas requeridas:</strong> fecha_captura, sede, idbodega, codigo, descripcion, fecha_vencimiento</p>
+            <p><strong>Columnas opcionales:</strong> codigo_barra, proveedor, inventario_reporteria, masterpack, cajas_fardos, unidades, costo_unitario, costototal, total, usuario</p>
+            <code>fecha_captura,sede,idbodega,codigo,descripcion,fecha_vencimiento,codigo_barra,proveedor,inventario_reporteria,masterpack,cajas_fardos,unidades,costo_unitario,costototal,total,usuario</code>
+        </details>
+        
+        <div id="depuracion-preview-vencimientos" style="margin-top:15px;"></div>
+        
+        <div style="margin-top:15px;">
+            <button id="btn-depuracion-importar-venc" class="btn btn-primary">Importar Vencimientos</button>
+            <button id="btn-depuracion-limpiar-venc" class="btn btn-secondary">Limpiar</button>
+        </div>
+    </div>
+    
+    <!-- === 3. ELIMINAR BASE DE CÓDIGOS === -->
+    <div class="card-depuracion" style="background:#fff; border:1px solid #dc3545; border-radius:10px; padding:20px; margin:20px 0;">
+        <h3 style="color:#dc3545;">💾 Eliminar Base de Códigos</h3>
+        <p>Depura completamente la base de datos de códigos. <strong style="color:#dc3545;">⚠️ Esta acción no se puede deshacer.</strong></p>
+        <button id="btn-depuracion-eliminar-bdd" class="btn btn-danger">
+            Eliminar Base de Datos de Códigos
+        </button>
+    </div>
+</section>
+			
  <!-- Gestión de Usuarios Section -->
             <section id="usuarios-section" class="section-content hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -2428,6 +2498,70 @@ header.sticky {
             loadTransitos();
         }
 
+		function controlAccesoDepuracion() {
+		    // Usuario autorizado (ajustar según la variable global de sesión del sistema)
+		    const USUARIO_AUTORIZADO = 'verificadorsps';
+		    
+		    // Obtener el usuario actual desde la sesión (ajusta según tu sistema)
+		    // Opciones comunes: localStorage.getItem('usuario'), currentUser, sessionUser, etc.
+		    function obtenerUsuarioActual() {
+		        // Intenta obtener de localStorage (ajusta la clave según tu sistema)
+		        const userStorage = localStorage.getItem('usuario') 
+		                         || localStorage.getItem('currentUser')
+		                         || localStorage.getItem('sessionUser');
+		        if (userStorage) return userStorage;
+		        
+		        // Si tu sistema usa una variable global, descomenta la siguiente línea:
+		        // if (typeof currentUser !== 'undefined') return currentUser;
+		        
+		        return null;
+		    }
+		    
+		    const usuarioActual = obtenerUsuarioActual();
+		    const esAutorizado = (usuarioActual && usuarioActual.toLowerCase() === USUARIO_AUTORIZADO);
+		    
+		    // 1. Mostrar/ocultar enlace en el menú
+		    const linkDepuracion = document.getElementById('link-depuracion');
+		    if (linkDepuracion) {
+		        linkDepuracion.style.display = esAutorizado ? 'block' : 'none';
+		    }
+		    
+		    // 2. Mostrar/ocultar sección completa de Depuración
+		    const seccionDepuracion = document.getElementById('depuracion');
+		    if (seccionDepuracion) {
+		        seccionDepuracion.style.display = esAutorizado ? 'block' : 'none';
+		    }
+		    
+		    // 3. Mostrar/ocultar botones originales en sus secciones
+		    const btnCargaManualVenc = document.getElementById('btn-carga-manual-venc');
+		    const btnEliminarInv = document.getElementById('btn-eliminar-inventario-dia');
+		    const btnEliminarBDD = document.getElementById('btn-eliminar-bdd');
+		    
+		    if (btnCargaManualVenc) btnCargaManualVenc.style.display = esAutorizado ? 'inline-block' : 'none';
+		    if (btnEliminarInv) btnEliminarInv.style.display = esAutorizado ? 'inline-block' : 'none';
+		    if (btnEliminarBDD) btnEliminarBDD.style.display = esAutorizado ? 'inline-block' : 'none';
+		    
+		    // 4. Mostrar avisos informativos a usuarios NO autorizados
+		    if (!esAutorizado) {
+		        const aviso1 = document.getElementById('aviso-carga-manual-vencimientos');
+		        const aviso2 = document.getElementById('aviso-eliminar-inventario');
+		        const aviso3 = document.getElementById('aviso-eliminar-bdd');
+		        if (aviso1) aviso1.style.display = 'block';
+		        if (aviso2) aviso2.style.display = 'block';
+		        if (aviso3) aviso3.style.display = 'block';
+		    }
+		    
+		    // 5. Bloquear acceso directo por URL (hash)
+		    window.addEventListener('hashchange', function() {
+		        if (window.location.hash === '#depuracion' && !esAutorizado) {
+		            alert('⛔ Acceso denegado: solo el usuario "' + USUARIO_AUTORIZADO + '" puede acceder a Depuración.');
+		            window.location.hash = '#resumen';
+		        }
+		    });
+		    
+		    console.log('[Depuración] Usuario actual:', usuarioActual, '| Autorizado:', esAutorizado);
+		}
+
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', async function() {
             
@@ -2724,6 +2858,52 @@ header.sticky {
 		        toggleFecha(this.checked);
 		        if (this.checked) inputFecha.focus();
 		    });
+
+			const btnElimInv = document.getElementById('btn-depuracion-eliminar-inv');
+			    if (btnElimInv) {
+			        btnElimInv.addEventListener('click', function() {
+			            if (!confirm('¿Está seguro de eliminar el inventario acumulado del día? Esta acción generará respaldo.')) return;
+			            const sede = document.getElementById('depuracion-sede-inv').value;
+			            const bodega = document.getElementById('depuracion-bodega-inv').value;
+			            if (!sede || !bodega) {
+			                alert('Debe seleccionar sede y bodega.');
+			                return;
+			            }
+			            // TODO: Conectar con la función existente de eliminar inventario
+			            // eliminarInventarioDelDia(sede, bodega);
+			            alert('Inventario del día eliminado correctamente (conectar con la función existente).');
+			        });
+			    }
+			    
+			    // Importar vencimientos CSV
+			    const btnImpVenc = document.getElementById('btn-depuracion-importar-venc');
+			    if (btnImpVenc) {
+			        btnImpVenc.addEventListener('click', function() {
+			            // TODO: Conectar con la función existente de importar vencimientos
+			            alert('Función de importación de vencimientos (conectar con la función existente).');
+			        });
+			    }
+			    
+			    // Limpiar preview
+			    const btnLimpiar = document.getElementById('btn-depuracion-limpiar-venc');
+			    if (btnLimpiar) {
+			        btnLimpiar.addEventListener('click', function() {
+			            document.getElementById('depuracion-csv-vencimientos').value = '';
+			            document.getElementById('depuracion-preview-vencimientos').innerHTML = '';
+			        });
+			    }
+			    
+			    // Eliminar base de códigos
+			    const btnElimBDD = document.getElementById('btn-depuracion-eliminar-bdd');
+			    if (btnElimBDD) {
+			        btnElimBDD.addEventListener('click', function() {
+			            if (!confirm('⚠️ ADVERTENCIA: Esta acción eliminará TODA la base de códigos. ¿Continuar?')) return;
+			            if (!confirm('¿Está COMPLETAMENTE seguro? Esta acción no se puede deshacer.')) return;
+			            // TODO: Conectar con la función existente de eliminar base de datos
+			            // eliminarBaseDeCodigos();
+			            alert('Base de códigos eliminada (conectar con la función existente).');
+			        });
+			    }
         });
 
         // ===== NAVEGACIÓN =====
