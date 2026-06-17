@@ -926,6 +926,42 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		    letter-spacing: 0.5px;
 		    margin-left: 8px;
 		}
+		btn-secondary-depuracion {
+		    background: #6c757d;
+		    color: #fff;
+		    border: none;
+		    padding: 10px 20px;
+		    border-radius: 8px;
+		    font-weight: 600;
+		    font-size: 14px;
+		    cursor: pointer;
+		    transition: all 0.3s ease;
+		    margin-left: 10px;
+		}
+		
+		.btn-secondary-depuracion:hover {
+		    background: #5a6268;
+		    transform: translateY(-2px);
+		}
+
+		.btn-outline-depuracion {
+		    background: transparent;
+		    color: #6c757d;
+		    border: 2px solid #6c757d;
+		    padding: 10px 20px;
+		    border-radius: 8px;
+		    font-weight: 600;
+		    font-size: 14px;
+		    cursor: pointer;
+		    transition: all 0.3s ease;
+		    margin-left: 10px;
+		}
+		
+		.btn-outline-depuracion:hover {
+		    background: #6c757d;
+		    color: #fff;
+		    transform: translateY(-2px);
+		}
 
 </style>
 </head>
@@ -2021,30 +2057,34 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
     <p class="text-muted">Esta sección contiene acciones administrativas sensibles. Solo accesible para usuarios autorizados.</p>
     
     <!-- === 1. ELIMINAR INVENTARIO DEL DÍA === -->
-    <div class="card-depuracion" style="background:#fff; border:1px solid #dc3545; border-radius:10px; padding:20px; margin:20px 0;">
-        <h3 style="color:#dc3545;">🗑️ Eliminar Inventario del Día</h3>
-        <p>Elimina todos los registros de inventario acumulados hasta el día actual en la sede y bodega seleccionada.</p>
-        <div class="form-group">
-            <label>Sede:</label>
-            <select id="depuracion-sede-inv">
-                <option value="">Seleccione</option>
-                <option>Amarateca</option>
-                <option>La Ceiba</option>
-                <option>San Pedro Sula</option>
-                <option>Santa Rosa de Copan</option>
-                <option>Tegucigalpa</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Bodega:</label>
-            <select id="depuracion-bodega-inv">
-                <option value="">Seleccione</option>
-            </select>
-        </div>
-        button id="btn-eliminar-inventario-dia" class="btn-danger-depuracion">
-		    Eliminar Inventario del Día
-		</button>
-    </div>
+	<div class="card-depuracion">
+	    <h3>️ Eliminar Inventario del Día</h3>
+	    <p>Elimina todos los registros de inventario acumulados hasta el día actual en la sede y bodega seleccionada.</p>
+	    
+	    <div style="margin-bottom: 20px;">
+	        <label style="display: inline-block; min-width: 80px;">Sede:</label>
+	        <select id="sel-sede-eliminar-inventario" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd;">
+	            <option value="">Seleccione</option>
+	            <option>Amarateca</option>
+	            <option>La Ceiba</option>
+	            <option>San Pedro Sula</option>
+	            <option>Santa Rosa de Copan</option>
+	            <option>Tegucigalpa</option>
+	        </select>
+	        
+	        <label style="display: inline-block; min-width: 80px; margin-left: 20px;">Bodega:</label>
+	        <select id="sel-bodega-eliminar-inventario" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd;">
+	            <option value="">Seleccione</option>
+	            <option>Principal</option>
+	            <option>PPV</option>
+	            <option>PFN</option>
+	        </select>
+	    </div>
+	    
+	    <button id="btn-eliminar-inventario-dia" class="btn-danger-depuracion">
+	        ⚠️ Eliminar Inventario del Día
+	    </button>
+	</div>
     
     <!-- === 2. CARGA MANUAL DE VENCIMIENTOS === -->
     <div class="card-depuracion" style="background:#fff; border:1px solid #0d6efd; border-radius:10px; padding:20px; margin:20px 0;">
@@ -2069,7 +2109,9 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             <button id="btn-importar-vencimientos-depuracion" class="btn-danger-depuracion">
 			    Importar Vencimientos
 			</button>
-            <button id="btn-depuracion-limpiar-venc" class="btn btn-secondary">Limpiar</button>
+            <button id="btn-limpiar-vencimientos" class="btn-secondary-depuracion">
+			    🗑️ Limpiar
+			</button>
         </div>
     </div>
     
