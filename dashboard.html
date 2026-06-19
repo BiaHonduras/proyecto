@@ -2079,20 +2079,13 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
     <!-- === 2. CARGA MANUAL DE VENCIMIENTOS === -->
     <div class="card-depuracion">
          <h3>️Carga Manual | Eliminar Vencimientos</h3>
-        <p>Permite cargar manualmente registros de vencimientos mediante archivo CSV. La eliminación asociada realiza respaldo automático en <code>vencimientos_backup</code>.</p>
+        <p>Permite cargar manualmente registros de vencimientos mediante archivo CSV. La eliminación asociada realiza respaldo automático.</p>
         
         <div class="form-group">
             <label>Archivo CSV de vencimientos:</label>
             <input type="file" id="depuracion-csv-vencimientos" accept=".csv">
         </div>
-        
-        <details>
-            <summary><strong>Formato esperado</strong></summary>
-            <p><strong>Columnas requeridas:</strong> fecha_captura, sede, idbodega, codigo, descripcion, fecha_vencimiento</p>
-            <p><strong>Columnas opcionales:</strong> codigo_barra, proveedor, inventario_reporteria, masterpack, cajas_fardos, unidades, costo_unitario, costototal, total, usuario</p>
-            <code>fecha_captura,sede,idbodega,codigo,descripcion,fecha_vencimiento,codigo_barra,proveedor,inventario_reporteria,masterpack,cajas_fardos,unidades,costo_unitario,costototal,total,usuario</code>
-        </details>
-        
+		
         <div id="depuracion-preview-vencimientos" style="margin-top:15px;"></div>
         
         <div style="margin-top:15px;">
