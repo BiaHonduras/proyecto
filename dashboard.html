@@ -883,12 +883,12 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 
 		/* === CARDS DE DEPURACIÓN === */
 		.card-depuracion {
-		    background: #fff;
-		    border: 1px solid #dbe4f0;
-		    border-left: 4px solid #2563eb;
-		    border-radius: 12px;
-		    padding: 20px;
-		    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+            background: var(--primary-gradient);
+            color: white;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+
 		}
 		
 		.card-depuracion:hover {
@@ -2112,7 +2112,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 	        </select>
 	    </div>
 	    
-	    <button id="btn-eliminar-inventario-dia" class="btn-primary-depuracion">
+	    <button id="btn-eliminar-inventario-dia" class="btn-primary px-6 py-3 rounded-lg text-white">
 	        Eliminar Inventario y Justificaciones
 	    </button>
 	</div>
