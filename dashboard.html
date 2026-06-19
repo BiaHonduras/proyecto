@@ -2117,6 +2117,9 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             <button id="btn-importar-vencimientos-depuracion" class="btn-danger-depuracion">
 			    Importar Vencimientos
 			</button>
+			<button id="btn-eliminar-vencimientos" class="btn btn-danger">
+			    Eliminar Vencimientos
+			</button>
             <button id="btn-limpiar-vencimientos" class="btn-secondary-depuracion">
 			    🗑️ Limpiar
 			</button>
@@ -2752,7 +2755,16 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 			const nombreCortoEl = document.getElementById('nombreCorto');
             if (nombreCortoEl) nombreCortoEl.textContent = currentUser.nombre_corto || '';
 
-
+			const btnVencimientos = document.getElementById(
+			    'btn-importar-vencimientos-depuracion'
+			);
+			
+			if (btnVencimientos) {
+			    btnVencimientos.addEventListener(
+			        'click',
+			        eliminarVencimientosProtegido
+			    );
+			}
 
 			const filtroSedeVenc = document.getElementById('filtroSedeVencimientos');
 		    const filtroBodegaVenc = document.getElementById('filtroTipoBodegaVencimientos');
@@ -4811,6 +4823,52 @@ function normalizarNombreColumnaCSV(nombre = '') {
                 loadTransitos()
             ]);
         }
+		async function eliminarVencimientosProtegido() {
+		    const confirmar = confirm(
+		        '¿Estás seguro que deseas eliminar todos los vencimientos registrados?\n\n' +
+		        'Se realizará un respaldo automático antes de la eliminación.'
+		    );
+		
+		    if (!confirmar) return;
+		
+		    const adminAutorizador = await solicitarAutorizacionAdmin();
+		    if (!adminAutorizador) return;
+		
+		    showNotification(
+		        'Proceso',
+		        'Ejecutando respaldo y eliminación segura de vencimientos...',
+		        'warning'
+		    );
+		
+		    const { data, error } = await supabase.rpc(
+		        'rpc_limpiar_vencimientos_seguro',
+		        {
+		            p_autorizado_por: adminAutorizador,
+		            p_usuario: currentUser?.username || currentUser?.usuario || ''
+		        }
+		    );
+		
+		    if (error || !data?.ok) {
+		        console.error(error || data);
+		
+		        showNotification(
+		            'Error',
+		            error?.message || data?.message || 'No fue posible eliminar los vencimientos',
+		            'error'
+		        );
+		
+		        return;
+		    }
+		
+		    showNotification(
+		        'Éxito',
+		        `Se eliminaron ${data.vencimientos || 0} registros de vencimientos.`,
+		        'success',
+		        9000
+		    );
+		
+		    await loadVencimientosData();
+		}
 
         async function eliminarBaseCodigosProtegida() {
             const confirmar = confirm(
@@ -6660,6 +6718,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+	const btnEliminarVencimientos =
+	    document.getElementById('btn-eliminar-vencimientos');
+	
+	if (btnEliminarVencimientos) {
+	    btnEliminarVencimientos.addEventListener(
+	        'click',
+	        eliminarVencimientosProtegido
+	    );
+	}	
 </script>
 
 
