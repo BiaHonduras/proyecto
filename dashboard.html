@@ -2996,12 +2996,12 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		        if (this.checked) inputFecha.focus();
 		    });
 
-			const btnElimInv = document.getElementById('btn-depuracion-eliminar-inv');
+			const btnElimInv = document.getElementById('btn-eliminar-inventario-dia')
 			    if (btnElimInv) {
 			        btnElimInv.addEventListener('click', function() {
 			            if (!confirm('¿Está seguro de eliminar el inventario acumulado del día? Esta acción generará respaldo.')) return;
-			            const sede = document.getElementById('depuracion-sede-inv').value;
-			            const bodega = document.getElementById('depuracion-bodega-inv').value;
+			            const sede = document.getElementById('sel-sede-eliminar-inventario').value;
+			            const bodega = document.getElementById('sel-bodega-eliminar-inventario').value;
 			            if (!sede || !bodega) {
 			                alert('Debe seleccionar sede y bodega.');
 			                return;
@@ -3013,7 +3013,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 			    }
 			    
 			    // Importar vencimientos CSV
-			    const btnImpVenc = document.getElementById('btn-depuracion-importar-venc');
+			    const btnImpVenc = document.getElementById('btn-importar-vencimientos-depuracion')
 			    if (btnImpVenc) {
 			        btnImpVenc.addEventListener('click', function() {
 			            // TODO: Conectar con la función existente de importar vencimientos
@@ -3031,7 +3031,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 			    }
 			    
 			    // Eliminar base de códigos
-			    const btnElimBDD = document.getElementById('btn-depuracion-eliminar-bdd');
+			    const btnElimBDD = document.getElementById('btn-eliminar-bdd')
 			    if (btnElimBDD) {
 			        btnElimBDD.addEventListener('click', function() {
 			            if (!confirm('⚠️ ADVERTENCIA: Esta acción eliminará TODA la base de códigos. ¿Continuar?')) return;
