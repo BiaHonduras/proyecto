@@ -2064,7 +2064,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
     
     <!-- === 1. ELIMINAR INVENTARIO DEL DÍA === -->
 	<div class="card-depuracion">
-	    <h3>️ Eliminar Inventario del Día</h3>
+	    <h3>️Depuración Completa de Inventario | Justificaciones</h3>
 	    <p>Elimina todos los registros de inventario acumulados hasta el día actual en la sede y bodega seleccionada.</p>
 	    
 	    <div style="margin-bottom: 20px;">
@@ -2090,7 +2090,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 	    </div>
 	    
 	    <button id="btn-eliminar-inventario-dia" class="btn-danger-depuracion">
-	        Eliminar Inventario del Día
+	        Eliminar Inventario y Justificaciones
 	    </button>
 	</div>
     
@@ -3000,19 +3000,10 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 
 			const btnElimInv = document.getElementById('btn-eliminar-inventario-dia')
 			    if (btnElimInv) {
-			        btnElimInv.addEventListener('click', function() {
-			            if (!confirm('¿Está seguro de eliminar el inventario acumulado del día? Esta acción generará respaldo.')) return;
-			            const sede = document.getElementById('sel-sede-eliminar-inventario').value;
-			            const bodega = document.getElementById('sel-bodega-eliminar-inventario').value;
-			            if (!sede || !bodega) {
-			                alert('Debe seleccionar sede y bodega.');
-			                return;
-			            }
-			            // TODO: Conectar con la función existente de eliminar inventario
-			            // eliminarInventarioDelDia(sede, bodega);
-			            alert('Inventario del día eliminado correctamente (conectar con la función existente).');
-			        });
-			    }
+				    btnElimInv.addEventListener('click', async () => {
+				        await eliminarGeneralProtegido();
+				    });
+				}
 			    
 			    // Importar vencimientos CSV
 			    const btnImpVenc = document.getElementById('btn-importar-vencimientos-depuracion')
