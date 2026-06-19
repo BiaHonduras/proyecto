@@ -884,13 +884,11 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		/* === CARDS DE DEPURACIÓN === */
 		.card-depuracion {
 		    background: #fff;
-		    border: 1px solid #f5c6cb;
-		    border-left: 4px solid #dc3545;
-		    border-radius: 8px;
-		    padding: 24px;
-		    margin-bottom: 20px;
-		    box-shadow: 0 1px 3px rgba(220, 53, 69, 0.05);
-		    transition: all 0.3s ease;
+		    border: 1px solid #dbe4f0;
+		    border-left: 4px solid #2563eb;
+		    border-radius: 12px;
+		    padding: 20px;
+		    box-shadow: 0 2px 8px rgba(0,0,0,.05);
 		}
 		
 		.card-depuracion:hover {
@@ -986,6 +984,31 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		/* Ajustar párrafo de introducción */
 		#depuracion-section .text-muted {
 		    margin-bottom: 25px !important;
+		}
+
+		.btn-primary-depuracion {
+		    background: #2563eb;
+		    color: white;
+		    border: none;
+		    border-radius: 8px;
+		    padding: 10px 18px;
+		    font-weight: 600;
+		    cursor: pointer;
+		    transition: .2s;
+		}
+		
+		.btn-primary-depuracion:hover {
+		    opacity: .9;
+		}
+
+		.btn-warning-depuracion {
+		    background: #f8fafc;
+		    color: #475569;
+		    border: 1px solid #cbd5e1;
+		    border-radius: 8px;
+		    padding: 10px 18px;
+		    font-weight: 600;
+		    cursor: pointer;
 		}
 
 </style>
@@ -2114,14 +2137,14 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
         <div id="depuracion-preview-vencimientos" style="margin-top:15px;"></div>
         
         <div style="margin-top:15px;">
-            <button id="btn-importar-vencimientos-depuracion" class="btn-danger-depuracion">
+            <button id="btn-importar-vencimientos-depuracion" class="btn-primary-depuracion">
 			    Importar Vencimientos
 			</button>
-			<button id="btn-eliminar-vencimientos" class="btn-danger-depuracion">
+			<button id="btn-eliminar-vencimientos" class="btn-warninig-depuracion">
 			    Eliminar Vencimientos
 			</button>
             <button id="btn-limpiar-vencimientos" class="btn-secondary-depuracion">
-			    🗑️ Limpiar
+			    Limpiar
 			</button>
         </div>
     </div>
