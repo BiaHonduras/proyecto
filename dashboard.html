@@ -2993,13 +2993,29 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 				}
 			    
 			    // Importar vencimientos CSV
-			    const btnImpVenc = document.getElementById('btn-importar-vencimientos-depuracion')
-			    if (btnImpVenc) {
-			        btnImpVenc.addEventListener('click', function() {
-			            // TODO: Conectar con la función existente de importar vencimientos
-			            alert('Función de importación de vencimientos (conectar con la función existente).');
-			        });
-			    }
+			    const btnImpVenc = document.getElementById('btn-importar-vencimientos-depuracion');
+
+				if (btnImpVenc) {
+				    btnImpVenc.addEventListener('click', async () => {
+				        try {
+				            btnImpVenc.disabled = true;
+				
+				            const datos = await obtenerDatosImportacion(); 
+				            // esto es lo que sea que ya tengas: Excel, API, tabla, etc.
+				
+				            for (const item of datos) {
+				                await guardarVencimientoSemanal(item);
+				            }
+				
+				            alert('Importación completada');
+				        } catch (error) {
+				            console.error(error);
+				            alert('Error en la importación');
+				        } finally {
+				            btnImpVenc.disabled = false;
+				        }
+				    });
+				}
 			    
 			    // Limpiar preview
 			    const btnLimpiar = document.getElementById('btn-depuracion-limpiar-venc');
@@ -3354,35 +3370,18 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 
         async function guardarVencimientoSemanal(payloadVencimiento) {
 		    const { data: { user } } = await supabase.auth.getUser();
-
-			const { data: existentes } = await supabase
-			  .from('vencimientos_semanales')
-			  .select('*')
-			  .eq('sede', payloadVencimiento.sede)
-			  .eq('idbodega', payloadVencimiento.idbodega)
-			  .eq('codigo', payloadVencimiento.codigo);
-
-			if (existentes.length > 0) {
-			  await supabase
-			    .from('vencimientos_semanales')
-			    .delete()
-			    .eq('sede', payloadVencimiento.sede)
-			    .eq('idbodega', payloadVencimiento.idbodega)
-			    .eq('codigo', payloadVencimiento.codigo);
-			}
-			
+		
 		    const { error } = await supabase
 		        .from('vencimientos_semanales')
-		        .upsert([{
-		            ...payloadVencimiento,
-		            user_id: user.id
-		        }], {
-		            onConflict: 'sede,idbodega,codigo'
-		        });
+		        .upsert(
+		            [{
+		                ...payloadVencimiento,
+		                user_id: user.id
+		            }],
+		            { onConflict: 'sede,idbodega,codigo' }
+		        );
 		
-		    if (error) {
-		        throw error;
-		    }
+		    if (error) throw error;
 		}
 
         async function eliminarVencimientoSemanal(clave = {}) {
