@@ -3353,7 +3353,11 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
         }
 
         async function guardarVencimientoSemanal(payloadVencimiento) {
-		    const { data: { user } } = await supabase.auth.getUser();
+		    const { data: { user }, error: userError } = await supabase.auth.getUser();
+		
+		    if (userError || !user) {
+		        throw new Error('Usuario no autenticado');
+		    }
 		
 		    const { error } = await supabase
 		        .from('vencimientos_semanales')
