@@ -2950,11 +2950,10 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 			    // Importar vencimientos CSV
 			    const btnImpVenc = document.getElementById('btn-importar-vencimientos');
 
-				if (btnImpVenc) {
-				    btnImpVenc.addEventListener('click', async () => {
-				        await importVencimientosManual();
-				    });
-				}
+				btnImpVenc.addEventListener('click', () => {
+				    modalCarga.classList.remove('hidden');
+				    modalCarga.classList.add('flex');
+				});
 			    
 			    // Limpiar preview
 			    const btnLimpiar = document.getElementById('btn-depuracion-limpiar-venc');
@@ -4391,6 +4390,10 @@ function normalizarNombreColumnaCSV(nombre = '') {
             };
 
             reader.readAsText(file);
+			modalCarga.classList.add('hidden');
+		    modalCarga.classList.remove('flex');
+		
+		    limpiarImportVencimientos();
         }
 
         function previewInventoryFile(input) {
