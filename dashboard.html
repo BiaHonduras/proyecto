@@ -2018,67 +2018,29 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 	</div>
     
     <!-- === 2. CARGA MANUAL DE VENCIMIENTOS === -->
-    <div id="modalCargaManual" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-                    <div class="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold">Carga Manual de Vencimientos</h3>
-                            <button id="cerrarModalCarga" class="w-10 h-10 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-
-                        <p class="text-sm text-gray-600 mb-4">
-                            Disponible solo para el usuario verificadorsps. La eliminación asociada realiza respaldo automático.
-                        </p>
-
-                        <div style="margin-top:15px;">
-                            <button
-					            id="btnAbrirCargaVencimientos"
-					            class="btn-primary px-6 py-3 rounded-lg text-white">
-					            Cargar Vencimientos
-					        </button>
-					
-					        <button
-					            id="btn-eliminar-vencimientos"
-					            class="btn-primary px-6 py-3 rounded-lg text-white">
-					            Eliminar Vencimientos
-					        </button>
-					    </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
-                                <div class="bg-gray-50 p-4 rounded-lg text-sm text-gray-600 break-all">
-                                    fecha_captura,sede,idbodega,codigo,descripcion,fecha_vencimiento,codigo_barra,proveedor,inventario_reporteria,masterpack,cajas_fardos,unidades,costo_unitario,costototal,total,usuario
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="vencimientosPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
-                            <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm">
-                                    <thead id="vencimientosPreviewHead"></thead>
-                                    <tbody id="vencimientosPreviewBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="flex gap-4 mt-6">
-                            <button id="confirmImportVencimientos"
-                                class="btn-primary px-6 py-2 rounded-lg text-white" disabled>
-                                <i class="fas fa-upload mr-2"></i>
-                                Importar Vencimientos
-                            </button>
-							<button id="btn-eliminar-vencimientos" class="btn-primary px-6 py-3 rounded-lg text-white">
-							    Eliminar Vencimientos
-							</button>
-                            <button id="btnLimpiarImportVencimientos"
-                                class="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
-                                Limpiar
-                            </button>
-                        </div>
-                    </div>
-                </div>
+    <div class="card-depuracion">
+         <h3>️Carga Manual | Eliminar Vencimientos</h3>
+        <p>Permite cargar manualmente registros de vencimientos mediante archivo CSV. La eliminación asociada realiza respaldo automático.</p>
+        
+        <div class="form-group">
+            <label>Archivo CSV de vencimientos:</label>
+            <input type="file" id="depuracion-csv-vencimientos" accept=".csv">
+        </div>
+		
+        <div id="depuracion-preview-vencimientos" style="margin-top:15px;"></div>
+        
+        <div style="margin-top:15px;">
+            <button id="btn-importar-vencimientos" class="btn-primary px-6 py-3 rounded-lg text-white">
+			    Importar Vencimientos
+			</button>
+			<button id="btn-eliminar-vencimientos" class="btn-primary px-6 py-3 rounded-lg text-white">
+			    Eliminar Vencimientos
+			</button>
+            <button id="btn-limpiar-vencimientos" class="px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-600">
+			    Limpiar
+			</button>
+        </div>
+    </div>
     
     <!-- === 3. ELIMINAR BASE DE CÓDIGOS === -->
     <div class="card-depuracion">
