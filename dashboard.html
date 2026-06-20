@@ -2021,28 +2021,29 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
     <div id="modalCargaManual" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
                     <div class="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold">Carga manual de vencimientos</h3>
+                            <h3 class="text-lg font-semibold">Carga Manual de Vencimientos</h3>
                             <button id="cerrarModalCarga" class="w-10 h-10 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
 
                         <p class="text-sm text-gray-600 mb-4">
-                            Disponible solo para el usuario verificadorsps. La eliminación asociada realiza respaldo automático en <code>vencimientos_backup</code>.
+                            Disponible solo para el usuario verificadorsps. La eliminación asociada realiza respaldo automático.
                         </p>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Archivo CSV de vencimientos</label>
-                                <input type="file" id="importVencimientosFile"
-                                       class="input-field w-full px-4 py-3 rounded-lg"
-                                       accept=".csv"
-                                       onchange="previewVencimientosFile(this)">
-                                <p class="text-xs text-gray-500 mt-2">
-                                    Columnas requeridas: fecha_captura, sede, idbodega, codigo, descripcion, fecha_vencimiento.
-                                    Columnas opcionales: codigo_barra, proveedor, inventario_reporteria, masterpack, cajas_fardos, unidades, costo_unitario, costototal, total, usuario.
-                                </p>
-                            </div>
+                        <div style="margin-top:15px;">
+                            <button
+					            id="btnAbrirCargaVencimientos"
+					            class="btn-primary px-6 py-3 rounded-lg text-white">
+					            Cargar Vencimientos
+					        </button>
+					
+					        <button
+					            id="btn-eliminar-vencimientos"
+					            class="btn-primary px-6 py-3 rounded-lg text-white">
+					            Eliminar Vencimientos
+					        </button>
+					    </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
@@ -2718,6 +2719,33 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		    if (filtroBodegaVenc) {
 		        filtroBodegaVenc.addEventListener('change', loadVencimientosData);
 		    }
+
+			const btnAbrir = document.getElementById('btnAbrirCargaVencimientos');
+		    const modal = document.getElementById('modalCargaManual');
+		    const btnCerrar = document.getElementById('cerrarModalCarga');
+		
+		    if (btnAbrir && modal) {
+		        btnAbrir.addEventListener('click', () => {
+		            modal.classList.remove('hidden');
+		            modal.classList.add('flex');
+		        });
+		    }
+		
+		    if (btnCerrar && modal) {
+		        btnCerrar.addEventListener('click', () => {
+		            modal.classList.add('hidden');
+		            modal.classList.remove('flex');
+		        });
+		    }
+		
+		    modal?.addEventListener('click', (e) => {
+		        if (e.target === modal) {
+		            modal.classList.add('hidden');
+		            modal.classList.remove('flex');
+		        }
+		    });
+		
+		});
             
             // Inicializar navegación
             initNavigation();
