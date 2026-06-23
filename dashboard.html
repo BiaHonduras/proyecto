@@ -1471,17 +1471,24 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 						    </p>
 						</div>
 
-						<div>
-	                        <div class="flex flex-col items-end">
-							    <span id="totalUnidadesCalculo" class="text-xl font-bold text-blue-800">0</span>
-							    <input
-							        type="checkbox"
-							        id="checkVencimiento"
-							        onchange="toggleFechaVencimiento()"
-							        class="mt-1"
-							    >
-							</div>
-								<p class="text-sm text-blue-600 mt-1">(Cajas × Masterpack) + Unidades</p>
+						<div class="md:col-span-2">
+						    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+						        <div class="flex items-center justify-between">
+						            <span class="font-semibold text-blue-800">Total Unidades:</span>
+						            <div class="flex flex-col items-end">
+						                <span id="totalUnidadesCalculo" class="text-xl font-bold text-blue-800">0</span>
+						                <input
+						                    type="checkbox"
+						                    id="checkVencimiento"
+						                    onchange="toggleFechaVencimiento()"
+						                    class="mt-1"
+						                >
+						            </div>
+						        </div>
+						        <p class="text-sm text-blue-600 mt-1">
+						            (Cajas × Masterpack) + Unidades
+						        </p>
+						    </div>
 						</div>
 
                         <div class="md:col-span-2 flex flex-wrap gap-4 pt-4">
