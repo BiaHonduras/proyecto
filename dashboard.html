@@ -183,8 +183,8 @@ Fecha,Proveedor,Código de Barra, Codigo,Descripcion,Inventario Reporteria,Maste
 
             function getContextoPantalla() {
                 const section = document.querySelector('.nav-item.active')?.dataset.section || 'resumen';
-                const sede = document.getElementById('filtroSedeGlobal')?.value || document.getElementById('sede')?.value || '';
-                const tipoBodega = document.getElementById('filtroTipoBodegaGlobal')?.value || '';
+                const sede = document.getElementById('filtroSedeResumen')?.value || document.getElementById('sede')?.value || '';
+                const tipoBodega = document.getElementById('filtroTipoBodegaResumen')?.value || '';
                 const codigo = document.getElementById('codigoArticulo')?.value || '';
                 const codigoBarra = document.getElementById('codigoBarra')?.value || '';
                 return { section, sede, tipoBodega, codigo, codigoBarra };
@@ -1065,7 +1065,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Sede</label>
-                            <select id="filtroSedeGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+                            <select id="filtroSedeResumen" class="input-field w-full px-3 py-2 text-sm rounded-lg">
                                 <option value="Todas">Todas las sedes</option>
                                 <option value="Amarateca">Amarateca</option>
                                 <option value="La Ceiba">La Ceiba</option>
@@ -1076,7 +1076,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Tipo de Bodega</label>
-                            <select id="filtroTipoBodegaGlobal" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+                            <select id="filtroTipoBodegaResumen" class="input-field w-full px-3 py-2 text-sm rounded-lg">
                                 <option value="Todas">Todas las bodegas</option>
                                 <option value="Principal">Principal</option>
                                 <option value="PPV">PPV</option>
@@ -1513,7 +1513,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Sede</label>
-                            <select id="filtroSedeInventarios" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+                            <select id="filtroSedeVerInventario" class="input-field w-full px-3 py-2 text-sm rounded-lg">
                                 <option value="Todas">Todas las sedes</option>
                                 <option value="Amarateca">Amarateca</option>
                                 <option value="La Ceiba">La Ceiba</option>
@@ -1524,7 +1524,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Tipo de Bodega</label>
-                            <select id="filtroTipoBodegaInventarios" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+                            <select id="filtroTipoBodegaVerInventario" class="input-field w-full px-3 py-2 text-sm rounded-lg">
                                 <option value="Todas">Todas las bodegas</option>
                                 <option value="Principal">Principal</option>
                                 <option value="PPV">PPV</option>
@@ -2527,8 +2527,8 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		}
 
         function configurarFiltrosSegunUsuario() {
-		    const filtroSede = document.getElementById('filtroSedeGlobal');
-		    const filtroTipoBodega = document.getElementById('filtroTipoBodegaGlobal');
+		    const filtroSede = document.getElementById('filtroSedeResumen');
+		    const filtroTipoBodega = document.getElementById('filtroTipoBodegaResumen');
 		
 		    if (!filtroSede || !filtroTipoBodega) return;
 		
@@ -2669,10 +2669,10 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             currentUser = JSON.parse(userData);
             window.currentUser = currentUser;
 
-			document.getElementById('filtroSedeInventarios')
+			document.getElementById('filtroSedeVerInventario')
 			    ?.addEventListener('change', loadInventory);
 			
-			document.getElementById('filtroTipoBodegaInventarios')
+			document.getElementById('filtroTipoBodegaVerInventario')
 			    ?.addEventListener('change', loadInventory);
 
             if (currentUser.must_change_password) {
@@ -3073,8 +3073,8 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 
         // ===== DASHBOARD =====
         async function loadDashboardData() {
-            const sedeFiltro = document.getElementById('filtroSedeGlobal')?.value || 'Todas';
-            const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaGlobal')?.value || 'Todas';
+            const sedeFiltro = document.getElementById('filtroSedeResumen')?.value || 'Todas';
+            const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaResumen')?.value || 'Todas';
 
             const { data, error } = await supabase
                 .from('vw_dashboard_resumen')
@@ -3762,9 +3762,9 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		    const inventarioOriginal = Array.isArray(data) ? data : [];
 		    let inventario = aplicarFiltrosGlobales(inventarioOriginal);
 
-			const sedeFiltro = document.getElementById('filtroSedeInventarios')?.value || 'Todas';
+			const sedeFiltro = document.getElementById('filtroSedeVerInventario')?.value || 'Todas';
 			
-			const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaInventarios')?.value || 'Todas';
+			const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaVerInventario')?.value || 'Todas';
 			
 			const tiposBodega = {
 			    Principal: ['010', '030', '040', '050', '060'],
@@ -5310,8 +5310,8 @@ tbody.innerHTML = data.map(item => {
     }, duration);
 }
     async function cargarArticulosRecientes() {
-        const sedeFiltro = document.getElementById('filtroSedeGlobal')?.value || 'Todas';
-        const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaGlobal')?.value || 'Todas';
+        const sedeFiltro = document.getElementById('filtroSedeResumen')?.value || 'Todas';
+        const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaResumen')?.value || 'Todas';
 
         let query = supabase
             .from('inventarios_diarios')
@@ -5353,8 +5353,8 @@ tbody.innerHTML = data.map(item => {
     }
 
     async function cargarGraficoProveedores() {
-		  const sedeFiltro = document.getElementById('filtroSedeGlobal')?.value || 'Todas';
-		  const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaGlobal')?.value || 'Todas';
+		  const sedeFiltro = document.getElementById('filtroSedeResumen')?.value || 'Todas';
+		  const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaResumen')?.value || 'Todas';
 		
 		  const { data, error } = await supabase
 		    .from('inventarios_diarios')
