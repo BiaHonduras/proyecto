@@ -5584,10 +5584,15 @@ tbody.innerHTML = data.map(item => {
 				
 				const sede = document.getElementById('filtroSedeJustificaciones').value;
 				const tipo = document.getElementById('filtroTipoBodegaJustificaciones').value;
+				console.log('Sede seleccionada (Antes): ', sede);
+				console.log('Tipo seleccionado (Antes): ', tipo);
 
 				filtrosGlobales.sede = sede;
 				filtrosGlobales.tipoBodega = tipo;
-				console.log('Filtros Globales (2):', filtrosGlobales);
+				
+				console.log('Filtros Globales (Después):', filtrosGlobales);
+				console.log(document.getElementById('filtroSedeJustificaciones'));
+				console.log(document.getElementById('filtroTipoBodegaJustificaciones'));
 				
 			    let inventario = inventarioOriginal.filter(item =>
 				    registroCoincideFiltros(item, sede, tipo)
