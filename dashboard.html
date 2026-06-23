@@ -5593,6 +5593,19 @@ tbody.innerHTML = data.map(item => {
 				console.log('Filtros Globales (Después):', filtrosGlobales);
 				console.log(document.getElementById('filtroSedeJustificaciones'));
 				console.log(document.getElementById('filtroTipoBodegaJustificaciones'));
+
+				document.getElementById('filtroSedeJustificaciones')
+				    .addEventListener('change', function() {
+				        console.log('Sede cambió a:', this.value);
+				    });
+				
+				document.getElementById('filtroTipoBodegaJustificaciones')
+				    .addEventListener('change', function() {
+				        console.log('Tipo cambió a:', this.value);
+				    });
+
+				console.log(document.querySelectorAll('#filtroSedeJustificaciones').length);
+				console.log(document.querySelectorAll('#filtroTipoBodegaJustificaciones').length);
 				
 			    let inventario = inventarioOriginal.filter(item =>
 				    registroCoincideFiltros(item, sede, tipo)
