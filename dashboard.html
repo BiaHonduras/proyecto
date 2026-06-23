@@ -3899,7 +3899,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		        return `
 		            <tr class="border-b border-gray-200 hover:bg-gray-50">
 		                <td class="py-4 px-4 text-sm">${escapeHtml(item.idBodega || '')}</td>
-		                <td class="py-4 px-4 text-sm">${escapeHtml(item.fecha || '')}</td>
+		                <td class="py-4 px-4 text-sm">${item.fecha ? item.fecha.split('-').reverse().join('/') : ''}</td>
 		                <td class="py-4 px-4 font-mono text-sm">${escapeHtml(item.codigo || '')}</td>
 		                <td class="py-4 px-4">${escapeHtml(item.descripcion || '')}</td>
 		                <td class="py-4 px-4 text-center">${inventarioReporteria}</td>
