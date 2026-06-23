@@ -5573,56 +5573,45 @@ tbody.innerHTML = data.map(item => {
 		
 			async function loadTransitos() {
 			    actualizarLabelFiltrosActivos();
-			    const tbody = document.getElementById('transitosTableBody');
-
-				const bodegasFiltradas = [
-				    ...new Set(
-				        inventario.map(item => String(item.idBodega || '').trim())
-				    )
-				];
 			
-			    let queryJustificaciones = supabase
-				    .from('inventario_justificaciones')
-				    .select('*')
-				    .in('codigo', codigosInventario)
-				    .in('idBodega', bodegasFiltradas);
-				
-				if (sede && sede !== 'Todas') {
-				    queryJustificaciones = queryJustificaciones.eq('sede', sede);
-				}
-				
-				if (tipo && tipo !== 'Todas') {
-				    queryJustificaciones = queryJustificaciones.eq('tipos_bodega', tipo);
-				}
-				
-				const { data: justificaciones, error: errorJust } = await queryJustificaciones;
+			    const tbody = document.getElementById('transitosTableBody');
+			
+			    const sede = document.getElementById('filtroSedeJustificaciones').value;
+			    const tipo = document.getElementById('filtroTipoBodegaJustificaciones').value;
+			
+			    filtrosGlobales.sede = sede;
+			    filtrosGlobales.tipoBodega = tipo;
+			
+			    const { data, error: errorInventario } = await supabase
+			        .from('inventarios_diarios')
+			        .select('*');
 			
 			    if (errorInventario) {
 			        console.error('Error inventarios_diarios:', errorInventario);
-			        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-gray-500">Error cargando datos</td></tr>`;
+			        tbody.innerHTML = `
+			            <tr>
+			                <td colspan="9" class="py-8 text-center text-gray-500">
+			                    Error cargando datos
+			                </td>
+			            </tr>
+			        `;
 			        return;
 			    }
 			
 			    const inventarioOriginal = Array.isArray(data) ? data : [];
-				
-				const sede = document.getElementById('filtroSedeJustificaciones').value;
-				const tipo = document.getElementById('filtroTipoBodegaJustificaciones').value;
-
-				filtrosGlobales.sede = sede;
-				filtrosGlobales.tipoBodega = tipo;
-
-				document.getElementById('filtroSedeJustificaciones').addEventListener('change', function() {
-				        console.log('Sede cambió a:', this.value);
-				    });
-				
-				document.getElementById('filtroTipoBodegaJustificaciones').addEventListener('change', function() {
-				        console.log('Tipo cambió a:', this.value);
-				    });
-				
-			    let inventario = inventarioOriginal.filter(item => registroCoincideFiltros(item, sede, tipo));
-
+			
+			    let inventario = inventarioOriginal.filter(item =>
+			        registroCoincideFiltros(item, sede, tipo)
+			    );
+			
 			    if (!inventario.length) {
-			        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6">Sin datos</td></tr>`;
+			        tbody.innerHTML = `
+			            <tr>
+			                <td colspan="9" class="text-center py-6">
+			                    Sin datos
+			                </td>
+			            </tr>
+			        `;
 			        return;
 			    }
 			
@@ -5630,66 +5619,148 @@ tbody.innerHTML = data.map(item => {
 			        .map(item => String(item.codigo || '').trim())
 			        .filter(Boolean);
 			
-			    const { data: justificaciones, error: errorJust } = await supabase
+			    const bodegasFiltradas = [
+			        ...new Set(
+			            inventario
+			                .map(item => String(item.idBodega || '').trim())
+			                .filter(Boolean)
+			        )
+			    ];
+			
+			    let queryJustificaciones = supabase
 			        .from('inventario_justificaciones')
 			        .select('*')
 			        .in('codigo', codigosInventario);
 			
+			    if (bodegasFiltradas.length > 0) {
+			        queryJustificaciones = queryJustificaciones.in(
+			            'idBodega',
+			            bodegasFiltradas
+			        );
+			    }
+			
+			    if (sede && sede !== 'Todas') {
+			        queryJustificaciones = queryJustificaciones.eq('sede', sede);
+			    }
+			
+			    if (tipo && tipo !== 'Todas') {
+			        queryJustificaciones = queryJustificaciones.eq(
+			            'tipos_bodega',
+			            tipo
+			        );
+			    }
+			
+			    const {
+			        data: justificaciones,
+			        error: errorJust
+			    } = await queryJustificaciones;
+			
 			    if (errorJust) {
 			        console.error('Error inventario_justificaciones:', errorJust);
-			        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-gray-500">Error cargando justificaciones</td></tr>`;
+			        tbody.innerHTML = `
+			            <tr>
+			                <td colspan="9" class="py-8 text-center text-gray-500">
+			                    Error cargando justificaciones
+			                </td>
+			            </tr>
+			        `;
 			        return;
 			    }
 			
-			    // ✅ CORRECCIÓN 1: Construir la clave compuesta (codigo|bodega) al guardar en el mapa
 			    const mapaJustificaciones = {};
+			
 			    (justificaciones || []).forEach(j => {
 			        const codigo = String(j.codigo || '').trim();
-			        // ⚠️ IMPORTANTE: Ajusta 'id_bodega' al nombre EXACTO de la columna en tu tabla de Supabase 
-			        // (puede ser 'id_bodega', 'idBodega', 'bodega', etc.)
-			        const idBodegaJust = String(j.id_bodega || j.idBodega || j.bodega || '').trim(); 
-			        const clave = `${codigo}|${idBodegaJust}`;
-			        
-			        if (codigo) {
+			        const idBodega = String(
+			            j.idBodega || j.id_bodega || j.bodega || ''
+			        ).trim();
+			
+			        const clave = `${codigo}|${idBodega}`;
+			
+			        if (codigo && idBodega) {
 			            mapaJustificaciones[clave] = j;
 			        }
 			    });
 			
 			    const filtrados = inventario
 			        .filter(item => {
-			            const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-			            const diferencia = total - Number(item.inventario_reporteria || 0);
+			            const total =
+			                (Number(item.cajas_fardos || 0) *
+			                    Number(item.masterpack || 1)) +
+			                Number(item.unidades || 0);
+			
+			            const diferencia =
+			                total - Number(item.inventario_reporteria || 0);
+			
 			            const codigo = String(item.codigo || '').trim();
 			            const idBodega = String(item.idBodega || '').trim();
-			            const clave = `${codigo}|${idBodega}`; // Usar la clave compuesta
-
-						const cumpleSede = filtrosGlobales.sede === 'Todas' || item.sede === filtrosGlobales.sede;
-			        	const cumpleTipoBodega = filtrosGlobales.tipoBodega === 'Todas' || item.tipoBodega === filtrosGlobales.tipoBodega;
-			        	const cumpleDiferencia = diferencia !== 0 || !!mapaJustificaciones[clave];
 			
-			        	return cumpleSede && cumpleTipoBodega && cumpleDiferencia;
-			            return diferencia !== 0 || !!mapaJustificaciones[clave];
+			            const clave = `${codigo}|${idBodega}`;
+			
+			            const cumpleSede =
+			                filtrosGlobales.sede === 'Todas' ||
+			                item.sede === filtrosGlobales.sede;
+			
+			            const cumpleTipoBodega =
+			                filtrosGlobales.tipoBodega === 'Todas' ||
+			                item.tipoBodega === filtrosGlobales.tipoBodega;
+			
+			            const cumpleDiferencia =
+			                diferencia !== 0 || !!mapaJustificaciones[clave];
+			
+			            return (
+			                cumpleSede &&
+			                cumpleTipoBodega &&
+			                cumpleDiferencia
+			            );
 			        })
-			        .sort((a, b) => Number(a.codigo || 0) - Number(b.codigo || 0));
+			        .sort(
+			            (a, b) =>
+			                Number(a.codigo || 0) -
+			                Number(b.codigo || 0)
+			        );
 			
 			    if (!filtrados.length) {
-			        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6">Sin diferencias ni justificaciones guardadas</td></tr>`;
+			        tbody.innerHTML = `
+			            <tr>
+			                <td colspan="9" class="text-center py-6">
+			                    Sin diferencias ni justificaciones guardadas
+			                </td>
+			            </tr>
+			        `;
 			        return;
 			    }
 			
 			    tbody.innerHTML = filtrados.map(item => {
-			        const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-			        const diferencia = total - Number(item.inventario_reporteria || 0);
+			        const total =
+			            (Number(item.cajas_fardos || 0) *
+			                Number(item.masterpack || 1)) +
+			            Number(item.unidades || 0);
+			
+			        const diferencia =
+			            total - Number(item.inventario_reporteria || 0);
+			
 			        const codigo = String(item.codigo || '').trim();
-			        
-			        // Aquí ya estabas usando la clave compuesta correctamente
-			        const clave = `${codigo}|${String(item.idBodega || '').trim()}`;
-			        const justificacionRow = mapaJustificaciones[clave];
-			        
-			        const justificacionGuardada = justificacionRow?.justificacion || '';
-			        const cantidadJustificada = justificacionRow?.cantidad_justificada ?? '';
-			        const fechaRegistro = justificacionRow?.fecha_registro || '';
-			        const costoUnitario = Number(item.costo_unitario || 0);
+			
+			        const clave = `${codigo}|${String(
+			            item.idBodega || ''
+			        ).trim()}`;
+			
+			        const justificacionRow =
+			            mapaJustificaciones[clave];
+			
+			        const justificacionGuardada =
+			            justificacionRow?.justificacion || '';
+			
+			        const cantidadJustificada =
+			            justificacionRow?.cantidad_justificada ?? '';
+			
+			        const fechaRegistro =
+			            justificacionRow?.fecha_registro || '';
+			
+			        const costoUnitario = Number(
+			            item.costo_unitario || 0
+			        );
 			
 			        return `
 			            <tr class="border-b hover:bg-gray-50"
@@ -5699,20 +5770,22 @@ tbody.innerHTML = data.map(item => {
 			                data-id-bodega="${escapeHtml(item.idBodega || '')}"
 			                data-fecha-registro="${fechaRegistro}"
 			                data-costo-unitario="${costoUnitario}">
+			
 			                <td class="py-3">${escapeHtml(item.idBodega || '')}</td>
 			                <td class="py-3 codigo">${codigo}</td>
 			                <td class="py-3 descripcion">${escapeHtml(item.descripcion || '')}</td>
 			                <td class="py-3 costo">${formatearMoneda(costoUnitario)}</td>
 			                <td class="py-3 reporteria">${Number(item.inventario_reporteria || 0)}</td>
 			                <td class="py-3 font-bold diferencia">${diferencia}</td>
+			
 			                <td class="py-3">
 			                    <input
 			                        type="number"
 			                        class="cantidad-justificada w-full px-2 py-1 text-sm input-field rounded input-disabled"
 			                        value="${cantidadJustificada}"
-			                        disabled
-			                    >
+			                        disabled>
 			                </td>
+			
 			                <td class="py-3">
 			                    <select
 			                        class="justificacion input-field w-full px-2 py-1 rounded input-disabled"
@@ -5721,8 +5794,10 @@ tbody.innerHTML = data.map(item => {
 			                        ${construirOpcionesJustificacion(justificacionGuardada)}
 			                    </select>
 			                </td>
+			
 			                <td class="py-3">
-			                    <button type="button"
+			                    <button
+			                        type="button"
 			                        class="btnEditarFila px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
 			                        Editar
 			                    </button>
