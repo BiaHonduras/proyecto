@@ -2415,6 +2415,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 
         function aplicarFiltrosGlobales(data = []) {
 		    return (data || []).filter(item => registroCoincideFiltros(item));
+			console.log('Filtros Globales: ', filtrosGlobales);
 		}
 
         function registroCoincideFiltros(item = {}) {
@@ -2434,6 +2435,12 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		    // 4. Validar Tipo de Bodega
 		    if (tipoBodegaFiltro !== 'todas') {
 		        const tipo = obtenerTipoBodegaDesdeId(itemIdBodega);
+				console.log({
+				    idBodega: itemIdBodega,
+				    tipoDetectado: tipo,
+				    filtro: tipoBodegaFiltro
+				});
+				
 		        if (tipo.toLowerCase() !== tipoBodegaFiltro) {
 		            return false;
 		        }
@@ -5579,7 +5586,8 @@ tbody.innerHTML = data.map(item => {
 			    const inventarioOriginal = Array.isArray(data) ? data : [];
 				const sede = document.getElementById('filtroSedeJustificaciones').value;
 				const tipo = document.getElementById('filtroTipoBodegaJustificaciones').value;
-				
+
+				console.log('Filtros Globales:', filtrosGlobales);
 			    let inventario = aplicarFiltrosGlobales(inventarioOriginal);
 
 			    if (!inventario.length) {
