@@ -5594,32 +5594,19 @@ tbody.innerHTML = data.map(item => {
 				
 				const sede = document.getElementById('filtroSedeJustificaciones').value;
 				const tipo = document.getElementById('filtroTipoBodegaJustificaciones').value;
-				console.log('Sede seleccionada (Antes): ', sede);
-				console.log('Tipo seleccionado (Antes): ', tipo);
 
 				filtrosGlobales.sede = sede;
 				filtrosGlobales.tipoBodega = tipo;
-				
-				console.log('Filtros Globales (Después):', filtrosGlobales);
-				console.log(document.getElementById('filtroSedeJustificaciones'));
-				console.log(document.getElementById('filtroTipoBodegaJustificaciones'));
 
-				document.getElementById('filtroSedeJustificaciones')
-				    .addEventListener('change', function() {
+				document.getElementById('filtroSedeJustificaciones').addEventListener('change', function() {
 				        console.log('Sede cambió a:', this.value);
 				    });
 				
-				document.getElementById('filtroTipoBodegaJustificaciones')
-				    .addEventListener('change', function() {
+				document.getElementById('filtroTipoBodegaJustificaciones').addEventListener('change', function() {
 				        console.log('Tipo cambió a:', this.value);
 				    });
-
-				console.log(document.querySelectorAll('#filtroSedeJustificaciones').length);
-				console.log(document.querySelectorAll('#filtroTipoBodegaJustificaciones').length);
 				
-			    let inventario = inventarioOriginal.filter(item =>
-				    registroCoincideFiltros(item, sede, tipo)
-				);
+			    let inventario = inventarioOriginal.filter(item => registroCoincideFiltros(item, sede, tipo));
 
 			    if (!inventario.length) {
 			        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6">Sin datos</td></tr>`;
@@ -5655,7 +5642,6 @@ tbody.innerHTML = data.map(item => {
 			        }
 			    });
 			
-			    // ✅ CORRECCIÓN 2: Usar la misma clave compuesta en el filtro
 			    const filtrados = inventario
 			        .filter(item => {
 			            const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
@@ -5663,7 +5649,12 @@ tbody.innerHTML = data.map(item => {
 			            const codigo = String(item.codigo || '').trim();
 			            const idBodega = String(item.idBodega || '').trim();
 			            const clave = `${codigo}|${idBodega}`; // Usar la clave compuesta
-			            
+
+						const cumpleSede = filtrosGlobales.sede === 'Todas' || item.sede === filtrosGlobales.sede;
+			        	const cumpleTipoBodega = filtrosGlobales.tipoBodega === 'Todas' || item.tipoBodega === filtrosGlobales.tipoBodega;
+			        	const cumpleDiferencia = diferencia !== 0 || !!mapaJustificaciones[clave];
+			
+			        	return cumpleSede && cumpleTipoBodega && cumpleDiferencia;
 			            return diferencia !== 0 || !!mapaJustificaciones[clave];
 			        })
 			        .sort((a, b) => Number(a.codigo || 0) - Number(b.codigo || 0));
