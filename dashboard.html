@@ -2260,8 +2260,8 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
         const HISTORIAL_RESPALDOS_TABLE = 'historial_respaldos';
 
         let filtrosGlobales = {
-            sede: 'Todas - (CAMBIAR)',
-            tipoBodega: 'Todas - (CAMBIAR)'
+            sede: 'Todas',
+            tipoBodega: 'Todas'
         };
 
         const DNI_REGEX = /^\d{4}-\d{4}-\d{5}$/;
@@ -3763,7 +3763,6 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		    let inventario = aplicarFiltrosGlobales(inventarioOriginal);
 
 			const sedeFiltro = document.getElementById('filtroSedeVerInventario')?.value || 'Todas';
-			
 			const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaVerInventario')?.value || 'Todas';
 			
 			const tiposBodega = {
@@ -5588,7 +5587,7 @@ tbody.innerHTML = data.map(item => {
 
 				filtrosGlobales.sede = sede;
 				filtrosGlobales.tipoBodega = tipo;
-				console.log('Filtros Globales:', filtrosGlobales);
+				console.log('Filtros Globales (2):', filtrosGlobales);
 				
 			    let inventario = inventarioOriginal.filter(item =>
 				    registroCoincideFiltros(item, sede, tipo)
