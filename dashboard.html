@@ -2418,7 +2418,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 			console.log('Filtros Globales: ', filtrosGlobales);
 		}
 
-        function registroCoincideFiltros(item = {}, sedeFiltro, tipoBodegaFiltro) {
+        function registroCoincideFiltros(item = {}) {
 		    // 1. Normalizar valores del item (evita errores por "Amarateca " vs "Amarateca")
 		    const itemSede = String(item.sede || item.Sede || '').trim().toLowerCase();
 		    const itemIdBodega = String(item.idBodega || item.idbodega || '').trim();
