@@ -5574,10 +5574,28 @@ tbody.innerHTML = data.map(item => {
 			async function loadTransitos() {
 			    actualizarLabelFiltrosActivos();
 			    const tbody = document.getElementById('transitosTableBody');
+
+				const bodegasFiltradas = [
+				    ...new Set(
+				        inventario.map(item => String(item.idBodega || '').trim())
+				    )
+				];
 			
-			    const { data, error: errorInventario } = await supabase
-			        .from('inventarios_diarios')
-			        .select('*');
+			    let queryJustificaciones = supabase
+				    .from('inventario_justificaciones')
+				    .select('*')
+				    .in('codigo', codigosInventario)
+				    .in('idBodega', bodegasFiltradas);
+				
+				if (sede && sede !== 'Todas') {
+				    queryJustificaciones = queryJustificaciones.eq('sede', sede);
+				}
+				
+				if (tipo && tipo !== 'Todas') {
+				    queryJustificaciones = queryJustificaciones.eq('tipos_bodega', tipo);
+				}
+				
+				const { data: justificaciones, error: errorJust } = await queryJustificaciones;
 			
 			    if (errorInventario) {
 			        console.error('Error inventarios_diarios:', errorInventario);
