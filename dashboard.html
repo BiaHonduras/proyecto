@@ -2669,11 +2669,10 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             currentUser = JSON.parse(userData);
             window.currentUser = currentUser;
 
-			document.getElementById('filtroSedeVerInventario')
-			    ?.addEventListener('change', loadInventory);
-			
-			document.getElementById('filtroTipoBodegaVerInventario')
-			    ?.addEventListener('change', loadInventory);
+			document.getElementById('filtroSedeVerInventario')?.addEventListener('change', loadInventory);
+			document.getElementById('filtroTipoBodegaVerInventario')?.addEventListener('change', loadInventory);
+			document.getElementById('filtroSedeJustificaciones').addEventListener('change', aplicarFiltrosJustificaciones);
+			document.getElementById('filtroTipoBodegaJustificaciones').addEventListener('change', aplicarFiltrosJustificaciones);
 
             if (currentUser.must_change_password) {
                 alert('Debe cambiar su contraseña antes de continuar.');
@@ -5565,6 +5564,17 @@ tbody.innerHTML = data.map(item => {
 	        `).join('')}
 	    `;
 	}
+		function aplicarFiltrosJustificaciones() {
+		    const sede = document.getElementById('filtroSedeJustificaciones').value;
+		    const tipo = document.getElementById('filtroTipoBodegaJustificaciones').value;
+		
+		    filtrosGlobales.sede = sede;
+		    filtrosGlobales.tipoBodega = tipo;
+		
+		    console.log('Filtros Globales:', filtrosGlobales);
+		
+		    cargarJustificaciones();
+		}
 		
 			async function loadTransitos() {
 			    actualizarLabelFiltrosActivos();
