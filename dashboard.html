@@ -2415,7 +2415,6 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 
         function aplicarFiltrosGlobales(data = []) {
 		    return (data || []).filter(item => registroCoincideFiltros(item));
-			console.log('Filtros Globales: ', filtrosGlobales);
 		}
 
         function registroCoincideFiltros(item = {}) {
@@ -5570,10 +5569,6 @@ tbody.innerHTML = data.map(item => {
 		
 		    filtrosGlobales.sede = sede;
 		    filtrosGlobales.tipoBodega = tipo;
-		
-		    console.log('Sede:', sede);
-		    console.log('Tipo:', tipo);
-		    console.log('Filtros Globales:', filtrosGlobales);
 		}
 		
 			async function loadTransitos() {
