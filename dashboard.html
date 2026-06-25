@@ -4737,8 +4737,8 @@ function normalizarNombreColumnaCSV(nombre = '') {
             const { data, error } = await supabase.rpc(
 			  'rpc_eliminar_inventarios_completo_seguro',
 			  {
-			    p_sede: sedeSeleccionada,
-			    p_tipo_bodega: tipoBodegaSeleccionada,
+			    p_sede: sede,
+			    p_tipo_bodega: bodega,
 			    p_autorizado_por: autorizadoPor,
 			    p_usuario: usuarioActual
 			  }
