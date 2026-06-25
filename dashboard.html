@@ -4733,6 +4733,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
 
 			const sede = document.getElementById('sel-sede-eliminar-inventario').value;
 			const bodega = document.getElementById('sel-bodega-eliminar-inventario').value;
+			const usuarioActual = localStorage.getItem('usuario'); 
 
             const { data, error } = await supabase.rpc(
 			  'rpc_eliminar_inventarios_completo_seguro',
