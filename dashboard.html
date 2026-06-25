@@ -4734,12 +4734,15 @@ function normalizarNombreColumnaCSV(nombre = '') {
 			const sede = document.getElementById('sel-sede-eliminar-inventario').value;
 			const bodega = document.getElementById('sel-bodega-eliminar-inventario').value;
 
-            const { data, error } = await supabase.rpc('rpc_eliminar_inventarios_completo_seguro', {
-                p_autorizado_por: adminAutorizador,
-                p_usuario: currentUser?.username || currentUser?.usuario || '',
-				p_sede: sede,
-				p_bodega: bodega
-            });
+            const { data, error } = await supabase.rpc(
+			  'rpc_eliminar_inventarios_completo_seguro',
+			  {
+			    p_sede: sedeSeleccionada,
+			    p_tipo_bodega: tipoBodegaSeleccionada,
+			    p_autorizado_por: autorizadoPor,
+			    p_usuario: usuarioActual
+			  }
+			);
 
             if (error || !data?.ok) {
                 console.error('Error RPC eliminación general:', error || data);
