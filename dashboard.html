@@ -4745,18 +4745,22 @@ function normalizarNombreColumnaCSV(nombre = '') {
 			  }
 			);
 
-            if (error || !data?.ok) {
-                console.error('Error RPC eliminación general:', error || data);
-                showNotification('Error', data?.mensaje || error?.message || 'No se pudo completar la eliminación segura', 'error');
-                return;
-            }
-
-            showNotification(
-                'Éxito',
-                `Eliminación segura completada. Inventarios: ${data.inventarios || 0}, Justificaciones: ${data.justificaciones || 0}, Reportería: ${data.reporteria || 0}.`,
-                'success',
-                9000
-            );
+            if (error || !data?.success) {
+			    console.error('Error RPC eliminación general:', error || data);
+			    showNotification(
+			        'Error',
+			        error?.message || 'No se pudo completar la eliminación segura',
+			        'error'
+			    );
+			    return;
+			}
+			
+			showNotification(
+			    'Éxito',
+			    `Eliminación segura completada. Inventarios: ${data.inventarios_eliminados || 0}, Justificaciones: ${data.justificaciones_eliminadas || 0}, Reportería: ${data.reporteria_eliminada || 0}.`,
+			    'success',
+			    9000
+			);
 
             limpiarFormulario();
             await Promise.all([
