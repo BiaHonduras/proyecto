@@ -3803,11 +3803,13 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             }
 
             async function getAssistantResponse(question) {
-                if (!window.supabase?.functions?.invoke) {
-                    return getFallbackResponse(question);
-                }
-
                 try {
+                    // Verificar que la función de Supabase esté disponible
+                    if (!window.supabase?.functions?.invoke) {
+                        console.warn('Supabase functions no disponible, usando fallback local');
+                        return getFallbackResponse(question);
+                    }
+            
                     const payload = {
                         question: String(question || '').trim(),
                         context: getContextoPantalla(),
@@ -3817,21 +3819,30 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                             sede: window.currentUser?.sede || window.currentUser?.Sede || ''
                         }
                     };
-
-                    const { data, error } = await window.supabase.functions.invoke(AI_FUNCTION_NAME, {
+            
+                    console.log('Enviando a Edge Function:', payload);
+            
+                    const { data, error } = await window.supabase.functions.invoke('assistant-inventario', {
                         body: payload
                     });
-
-                    if (error) throw error;
-
+            
+                    console.log('Respuesta de Edge Function:', { data, error });
+            
+                    if (error) {
+                        console.error('Error invocando Edge Function:', error);
+                        return getFallbackResponse(question);
+                    }
+            
+                    // La función devuelve { answer: "..." }
                     const text = data?.answer || data?.respuesta || data?.message || '';
                     if (text && String(text).trim()) {
                         return String(text).trim();
                     }
-
+            
+                    // Si no hay texto, usar fallback
                     return getFallbackResponse(question);
                 } catch (err) {
-                    console.warn('Asistente IA no disponible, usando fallback local:', err);
+                    console.error('Excepción en getAssistantResponse:', err);
                     return getFallbackResponse(question);
                 }
             }
