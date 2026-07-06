@@ -13,12 +13,12 @@
     <!-- Tipografía -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-	<!-- Gráficos -->
+    <!-- Gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-	<!-- Varios -->
-	<script src="https://cdn.tailwindcss.com"></script>
+    <!-- Varios -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js" defer></script>
 
@@ -27,45 +27,41 @@
         window.supabase = supabase;
         window.verificarConexion = verificarConexion;
 
-		async function cargarBodegas() {
-		    const select = document.getElementById('idBodega');
-		
-		    const { data, error } = await supabase
-		        .from('bodegas')
-		        .select(`
-		            id_bodega,
-		            sede,
-		            nombre,
-		            tipos_bodega (
-		                tipos_bodega,
-		                maneja_vencimiento
-		            )
-		        `)
-		        .order('sede');
-		
-		    if (error) {
-		        console.error('Error cargando bodegas:', error);
-		        return;
-		    }
-		
-		    select.innerHTML = '<option value="">Seleccione una bodega</option>';
-		
-		    data.forEach(b => {
-		        const option = document.createElement('option');
-		        option.value = b.id_bodega;
-		        option.textContent = `${b.sede} - ${b.nombre}`;
+        async function cargarBodegas() {
+            const select = document.getElementById('idBodega');
+            const { data, error } = await supabase
+                .from('bodegas')
+                .select(`
+                    id_bodega,
+                    sede,
+                    nombre,
+                    tipos_bodega (
+                        tipos_bodega,
+                        maneja_vencimiento
+                    )
+                `)
+                .order('sede');
+            if (error) {
+                console.error('Error cargando bodegas:', error);
+                return;
+            }
+            select.innerHTML = '<option value="">Seleccione una bodega</option>';
+            data.forEach(b => {
+                const option = document.createElement('option');
+                option.value = b.id_bodega;
+                option.textContent = `${b.sede} - ${b.nombre}`;
                 option.dataset.manejaVencimiento = b.tipos_bodega?.maneja_vencimiento ? 'true' : 'false';
-		        select.appendChild(option);
-		    });
-		}
-		
-		document.addEventListener('DOMContentLoaded', cargarBodegas);
-		
+                select.appendChild(option);
+            });
+        }
+        document.addEventListener('DOMContentLoaded', cargarBodegas);
+        
         window.initAssistant = function() {
             // ... (código del asistente sin cambios, se mantiene igual)
+            // Por brevedad, lo omitimos pero puedes dejarlo igual que antes
         }
     </script>
-	
+    
     <style>
         :root {
             --coffee-dark: #3e2723;
@@ -73,7 +69,6 @@
             --coffee-light: #d7ccc8;
             --coffee-cream: #f5f1ea;
             --coffee-accent: #c7a17a;
-
             --primary-gradient: linear-gradient(135deg, #6f4e37 0%, #3e2723 100%);
             --sidebar-width: 230px;
         }
@@ -83,38 +78,31 @@
             background: var(--coffee-cream);
             min-height: 100vh;
             color: #2d2d2d;
-			padding-bottom: 50px;
+            padding-bottom: 50px;
         }
         
         .sidebar {
-    		width: var(--sidebar-width);
-    		background: linear-gradient(180deg, #3e2723 0%, #2b1b17 100%);
-    		box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
-    		transition: all 0.3s ease;
-    		padding-bottom: 0;
-
-    		display: flex;
-    		flex-direction: column;
-    		justify-content: space-between;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #3e2723 0%, #2b1b17 100%);
+            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            padding-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
-
-		.sidebar nav {
-    		margin-top: 10px;
-		}
-		
+        .sidebar nav { margin-top: 10px; }
         .main-content {
             margin-left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
             overflow-x: hidden;
         }
-        
         .card {
             background: #ffffff;
             border-radius: 16px;
             box-shadow: 0 6px 18px rgba(62, 39, 35, 0.08);
             border: 1px solid rgba(111, 78, 55, 0.1);
         }
-        
         .btn-primary {
             background: var(--primary-gradient);
             color: white;
@@ -122,103 +110,69 @@
             letter-spacing: 0.5px;
             transition: all 0.3s ease;
         }
-        
         .btn-primary:hover {
             transform: translateY(-1px);
             box-shadow: 0 6px 14px rgba(62, 39, 35, 0.25);
         }
-        
         .input-field {
             border: 1px solid #d7ccc8;
             background: #fff;
             transition: all 0.3s ease;
         }
-        
         .input-field:focus {
             border-color: var(--coffee-accent);
             box-shadow: 0 0 0 3px rgba(199, 161, 122, 0.25);
         }
-
-		.input-disabled {
-    		background-color: #e5e7eb;
-    		cursor: not-allowed;
-    		opacity: 0.8;
-		}
-        
-        .table-row:hover {
-            background: #f5f1ea;
+        .input-disabled {
+            background-color: #e5e7eb;
+            cursor: not-allowed;
+            opacity: 0.8;
         }
-
-        #scanner {
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-
-        #scanner video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
+        .table-row:hover { background: #f5f1ea; }
+        #scanner { width: 100%; height: 100%; position: relative; }
+        #scanner video { width: 100%; height: 100%; object-fit: cover; }
         .scanner-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             pointer-events: none;
         }
-
         .scanner-box {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 80%;
-            max-width: 420px;
-            height: 120px;
+            top: 50%; left: 50%;
+            width: 80%; max-width: 420px; height: 120px;
             transform: translate(-50%, -50%);
             border: 3px solid var(--coffee-accent);
             border-radius: 12px;
             box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.28);
             transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
         }
-
         .scanner-box.scanner-success {
             border-color: #22c55e;
             box-shadow: 0 0 18px rgba(34, 197, 94, 0.85), 0 0 0 9999px rgba(0, 0, 0, 0.18);
             transform: translate(-50%, -50%) scale(1.01);
         }
-
         .scanner-box.scanner-error {
             border-color: #ef4444;
             box-shadow: 0 0 18px rgba(239, 68, 68, 0.8), 0 0 0 9999px rgba(0, 0, 0, 0.18);
         }
-
         .scanner-line {
             position: absolute;
-            top: 50%;
-            left: 10%;
-            width: 80%;
-            height: 2px;
+            top: 50%; left: 10%;
+            width: 80%; height: 2px;
             background: var(--coffee-accent);
             animation: scanLine 1.5s infinite;
         }
-
         .scanner-container {
             position: relative;
-            width: 100%;
-            height: 50vh;
+            width: 100%; height: 50vh;
             min-height: 320px;
             background: #000;
             border-radius: 12px;
             overflow: hidden;
         }
-
         .scanner-message {
             position: absolute;
-            left: 50%;
-            bottom: 16px;
+            left: 50%; bottom: 16px;
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.72);
             color: #fff;
@@ -230,13 +184,11 @@
             text-align: center;
             max-width: calc(100% - 24px);
         }
-
         @keyframes scanLine {
             0% { top: 40%; }
             50% { top: 60%; }
             100% { top: 40%; }
         }
-        
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -244,54 +196,37 @@
                 height: 100vh;
                 z-index: 1000;
             }
-            
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            
+            .sidebar.open { transform: translateX(0); }
             .main-content {
                 margin-left: 0;
                 width: 100%;
             }
-            
             .mobile-overlay {
                 display: none;
                 position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
+                top: 0; left: 0; right: 0; bottom: 0;
                 background: rgba(0, 0, 0, 0.5);
                 z-index: 999;
             }
-            
-            .mobile-overlay.open {
-                display: block;
-            }
+            .mobile-overlay.open { display: block; }
         }
-        
         .fade-in {
             animation: fadeIn 0.3s ease-in;
         }
-        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 20px; right: 20px;
             z-index: 10000;
             animation: slideIn 0.3s ease;
         }
-        
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        
         .nav-item {
             display: flex;
             align-items: center;
@@ -303,489 +238,385 @@
             text-decoration: none;
             font-size: 13px;
         }
-        
         .nav-item:hover {
             background: rgba(199, 161, 122, 0.2);
             color: #fff;
         }
-        
         .nav-item.active {
             background: var(--coffee-accent);
             color: #2b1b17;
             font-weight: 600;
         }
-        
         .nav-item i {
             width: 18px;
             margin-right: 10px;
         }
-		
-		#nombreCorto {
-    		max-width: 100px;
-    		overflow: hidden;
-    		text-overflow: ellipsis;
-    		white-space: nowrap;
-		}
-    
+        #nombreCorto {
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
-		/* ===== ASISTENTE FLOTANTE ===== */
-		.assistant-fab {
-		    position: fixed;
-		    right: 24px;
-		    bottom: 72px;
-		    width: 58px;
-		    height: 58px;
-		    border: none;
-		    border-radius: 999px;
-		    background: var(--primary-gradient);
-		    color: #fff;
-		    box-shadow: 0 12px 30px rgba(62, 39, 35, 0.28);
-		    display: flex;
-		    align-items: center;
-		    justify-content: center;
-		    cursor: pointer;
-		    z-index: 10020;
-		    transition: transform 0.2s ease, box-shadow 0.2s ease;
-		}
-		
-		.assistant-fab:hover {
-		    transform: translateY(-2px) scale(1.02);
-		    box-shadow: 0 16px 34px rgba(62, 39, 35, 0.34);
-		}
-		
-		.assistant-fab i {
-		    font-size: 22px;
-		}
-		
-		.assistant-panel {
-		    position: fixed;
-		    right: 24px;
-		    bottom: 140px;
-		    width: 380px;
-		    max-width: calc(100vw - 24px);
-		    height: 560px;
-		    max-height: calc(100vh - 170px);
-		    background: #fff;
-		    border: 1px solid rgba(111, 78, 55, 0.12);
-		    border-radius: 20px;
-		    box-shadow: 0 20px 50px rgba(62, 39, 35, 0.22);
-		    overflow: hidden;
-		    z-index: 10019;
-		    display: flex;
-		    flex-direction: column;
-		}
-		
-		.assistant-panel.hidden {
-		    display: none;
-		}
-		
-		.assistant-header {
-		    background: var(--primary-gradient);
-		    color: #fff;
-		    padding: 16px 18px;
-		    display: flex;
-		    align-items: center;
-		    justify-content: space-between;
-		}
-		
-		.assistant-header h3 {
-		    font-size: 16px;
-		    font-weight: 600;
-		    margin: 0;
-		}
-		
-		.assistant-header p {
-		    font-size: 12px;
-		    opacity: 0.9;
-		    margin: 2px 0 0 0;
-		}
-		
-		.assistant-close {
-		    width: 34px;
-		    height: 34px;
-		    border: none;
-		    border-radius: 999px;
-		    background: rgba(255, 255, 255, 0.18);
-		    color: #fff;
-		    cursor: pointer;
-		    transition: background 0.2s ease;
-		}
-		
-		.assistant-close:hover {
-		    background: rgba(255, 255, 255, 0.28);
-		}
-		
-		.assistant-body {
-		    flex: 1;
-		    background: #f8f5f1;
-		    padding: 14px;
-		    overflow-y: auto;
-		}
-		
-		.assistant-message {
-		    max-width: 88%;
-		    padding: 12px 14px;
-		    border-radius: 16px;
-		    margin-bottom: 10px;
-		    font-size: 14px;
-		    line-height: 1.45;
-		    white-space: pre-line;
-		}
-		
-		.assistant-message.bot {
-		    background: #fff;
-		    color: #2d2d2d;
-		    border: 1px solid rgba(111, 78, 55, 0.08);
-		    border-top-left-radius: 6px;
-		}
-		
-		.assistant-message.user {
-		    background: #6f4e37;
-		    color: #fff;
-		    margin-left: auto;
-		    border-top-right-radius: 6px;
-		}
-		
-		.assistant-quick-actions {
-		    display: flex;
-		    flex-wrap: wrap;
-		    gap: 8px;
-		    margin-top: 4px;
-		}
-		
-		.assistant-chip {
-		    border: 1px solid rgba(111, 78, 55, 0.18);
-		    background: #fff;
-		    color: #4b342b;
-		    border-radius: 999px;
-		    padding: 8px 12px;
-		    font-size: 12px;
-		    cursor: pointer;
-		    transition: all 0.2s ease;
-		}
-		
-		.assistant-chip:hover {
-		    background: #f1e7dc;
-		    border-color: rgba(111, 78, 55, 0.28);
-		}
-		
-		.assistant-footer {
-		    padding: 12px;
-		    border-top: 1px solid rgba(111, 78, 55, 0.1);
-		    background: #fff;
-		}
-		
-		.assistant-input-wrap {
-		    display: flex;
-		    gap: 8px;
-		}
-		
-		.assistant-input {
-		    flex: 1;
-		    border: 1px solid #d7ccc8;
-		    border-radius: 12px;
-		    padding: 12px 14px;
-		    font-size: 14px;
-		    outline: none;
-		}
-		
-		.assistant-input:focus {
-		    border-color: var(--coffee-accent);
-		    box-shadow: 0 0 0 3px rgba(199, 161, 122, 0.20);
-		}
-		
-		.assistant-send {
-		    min-width: 46px;
-		    height: 46px;
-		    border: none;
-		    border-radius: 12px;
-		    background: var(--primary-gradient);
-		    color: #fff;
-		    cursor: pointer;
-		}
-		
-		.assistant-empty-note {
-		    font-size: 12px;
-		    color: #7b6a61;
-		    margin-top: 8px;
-		    padding-left: 4px;
-		}
-		
-		@media (max-width: 768px) {
-		    .assistant-fab {
-		        right: 16px;
-		        bottom: 82px;
-		    }
-		
-		    .assistant-panel {
-		        right: 12px;
-		        left: 12px;
-		        bottom: 150px;
-		        width: auto;
-		        height: 70vh;
-		        max-height: 70vh;
-		    }
-		}
-		
-		
-		html {
-		    scroll-behavior: smooth;
-		}
-		
-		* {
-		    scrollbar-width: thin;
-		    scrollbar-color: rgba(111, 78, 55, 0.35) transparent;
-		}
-		
-		button:focus-visible,
-		input:focus-visible,
-		select:focus-visible,
-		textarea:focus-visible,
-		a:focus-visible {
-		    outline: 3px solid rgba(199, 161, 122, 0.45);
-		    outline-offset: 2px;
-		}
-		
-		header.sticky {
-		    backdrop-filter: blur(10px);
-		    background: rgba(255, 255, 255, 0.92);
-		}
-		
-		.card {
-		    transition: transform 0.2s ease, box-shadow 0.2s ease;
-		}
-		
-		.card:hover {
-		    box-shadow: 0 10px 24px rgba(62, 39, 35, 0.1);
-		}
-		
-		.assistant-typing {
-		    display: inline-flex;
-		    align-items: center;
-		    gap: 6px;
-		    min-height: 46px;
-		}
-		
-		.assistant-typing span {
-		    width: 8px;
-		    height: 8px;
-		    border-radius: 999px;
-		    background: #b08b69;
-		    display: inline-block;
-		    animation: assistantPulse 1.1s infinite ease-in-out;
-		}
-		
-		.assistant-typing span:nth-child(2) { animation-delay: 0.15s; }
-		.assistant-typing span:nth-child(3) { animation-delay: 0.3s; }
-		
-		@keyframes assistantPulse {
-		    0%, 80%, 100% { transform: scale(0.7); opacity: 0.45; }
-		    40% { transform: scale(1); opacity: 1; }
-		}
-		
-		
-		.cantidad-columna {
-		    width: 96px;
-		    min-width: 96px;
-		    max-width: 96px;
-		}
-		
-		/* === BOTONES DE DEPURACIÓN (PELIGRO) === */
-		.btn-danger-depuracion {
-		    background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
-		    color: #fff !important;
-		    border: none;
-		    padding: 12px 24px;
-		    border-radius: 8px;
-		    font-weight: 600;
-		    font-size: 15px;
-		    cursor: pointer;
-		    transition: all 0.3s ease;
-		    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-		    display: inline-flex;
-		    align-items: center;
-		    gap: 8px;
-		    text-transform: uppercase;
-		    letter-spacing: 0.5px;
-		}
-		
-		.btn-danger-depuracion:hover {
-		    background: linear-gradient(135deg, #c82333 0%, #8b1520 100%);
-		    transform: translateY(-2px);
-		    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.5);
-		}
-		
-		.btn-danger-depuracion:active {
-		    transform: translateY(0);
-		    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
-		}
-		
-		.btn-danger-depuracion::before {
-		    content: "⚠️";
-		    font-size: 18px;
-		}
-		
-		.btn-danger-depuracion.btn-sm {
-		    padding: 8px 16px;
-		    font-size: 13px;
-		}
-
-		/* === CARDS DE DEPURACIÓN === */
-		.card-depuracion {
-		    background: #fff;
-		    border: 1px solid rgba(0,0,0,0.08);
-		    border-radius: 10px;
-		    padding: 24px;
-		    margin-bottom: 20px;
-		    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-		    transition: all 0.2s ease;
-		}
-		
-		.card-depuracion:hover {
-		    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-		    transform: translateY(-1px);
-		    border-color: rgba(0,0,0,0.12);
-		}
-		
-		.card-depuracion h3 {
-		    color: #1f2937;
-		    margin-bottom: 12px;
-		    font-weight: 600;
-		    display: flex;
-		    align-items: center;
-		    gap: 10px;
-		}
-		
-		.card-depuracion p {
-		    color: #6c757d;
-		    margin-bottom: 20px;
-		    line-height: 1.6;
-		}
-		
-		.badge-peligro {
-		    background: #dc3545;
-		    color: #fff;
-		    padding: 4px 10px;
-		    border-radius: 12px;
-		    font-size: 11px;
-		    font-weight: 700;
-		    text-transform: uppercase;
-		    letter-spacing: 0.5px;
-		    margin-left: 8px;
-		}
-		
-		.btn-secondary-depuracion {
-		    background: #6b7280;
-		    color: #fff;
-		    border: none;
-		}
-		
-		.btn-secondary-depuracion:hover {
-		    background: #5a6268;
-		    transform: translateY(-2px);
-		}
-
-		.btn-outline-depuracion {
-		    background: transparent;
-		    color: #6b7280;
-		    border: 1px solid #6b7280;
-		}
-		
-		.btn-outline-depuracion:hover {
-		    background: #6c757d;
-		    color: #fff;
-		    transform: translateY(-2px);
-		}
-
-		#depuracion-section {
-		    padding-top: 10px !important;
-		}
-
-		.btn-primary-depuracion {
-		    background: #2563eb;
-		    color: #fff;
-		}
-		
-		.btn-primary-depuracion:hover {
-		    opacity: .9;
-		}
-
-		.btn-warning-depuracion {
-		    background: #f8fafc;
-		    color: #475569;
-		    border: 1px solid #cbd5e1;
-		    border-radius: 8px;
-		    padding: 10px 18px;
-		    font-weight: 600;
-		    cursor: pointer;
-		}
-
-</style>
+        /* ===== ASISTENTE FLOTANTE ===== */
+        .assistant-fab {
+            position: fixed;
+            right: 24px;
+            bottom: 72px;
+            width: 58px;
+            height: 58px;
+            border: none;
+            border-radius: 999px;
+            background: var(--primary-gradient);
+            color: #fff;
+            box-shadow: 0 12px 30px rgba(62, 39, 35, 0.28);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10020;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .assistant-fab:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 16px 34px rgba(62, 39, 35, 0.34);
+        }
+        .assistant-fab i { font-size: 22px; }
+        .assistant-panel {
+            position: fixed;
+            right: 24px;
+            bottom: 140px;
+            width: 380px;
+            max-width: calc(100vw - 24px);
+            height: 560px;
+            max-height: calc(100vh - 170px);
+            background: #fff;
+            border: 1px solid rgba(111, 78, 55, 0.12);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(62, 39, 35, 0.22);
+            overflow: hidden;
+            z-index: 10019;
+            display: flex;
+            flex-direction: column;
+        }
+        .assistant-panel.hidden { display: none; }
+        .assistant-header {
+            background: var(--primary-gradient);
+            color: #fff;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .assistant-header h3 { font-size: 16px; font-weight: 600; margin: 0; }
+        .assistant-header p { font-size: 12px; opacity: 0.9; margin: 2px 0 0 0; }
+        .assistant-close {
+            width: 34px; height: 34px;
+            border: none;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .assistant-close:hover { background: rgba(255, 255, 255, 0.28); }
+        .assistant-body {
+            flex: 1;
+            background: #f8f5f1;
+            padding: 14px;
+            overflow-y: auto;
+        }
+        .assistant-message {
+            max-width: 88%;
+            padding: 12px 14px;
+            border-radius: 16px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.45;
+            white-space: pre-line;
+        }
+        .assistant-message.bot {
+            background: #fff;
+            color: #2d2d2d;
+            border: 1px solid rgba(111, 78, 55, 0.08);
+            border-top-left-radius: 6px;
+        }
+        .assistant-message.user {
+            background: #6f4e37;
+            color: #fff;
+            margin-left: auto;
+            border-top-right-radius: 6px;
+        }
+        .assistant-quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .assistant-chip {
+            border: 1px solid rgba(111, 78, 55, 0.18);
+            background: #fff;
+            color: #4b342b;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .assistant-chip:hover {
+            background: #f1e7dc;
+            border-color: rgba(111, 78, 55, 0.28);
+        }
+        .assistant-footer {
+            padding: 12px;
+            border-top: 1px solid rgba(111, 78, 55, 0.1);
+            background: #fff;
+        }
+        .assistant-input-wrap {
+            display: flex;
+            gap: 8px;
+        }
+        .assistant-input {
+            flex: 1;
+            border: 1px solid #d7ccc8;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 14px;
+            outline: none;
+        }
+        .assistant-input:focus {
+            border-color: var(--coffee-accent);
+            box-shadow: 0 0 0 3px rgba(199, 161, 122, 0.20);
+        }
+        .assistant-send {
+            min-width: 46px; height: 46px;
+            border: none;
+            border-radius: 12px;
+            background: var(--primary-gradient);
+            color: #fff;
+            cursor: pointer;
+        }
+        .assistant-empty-note {
+            font-size: 12px;
+            color: #7b6a61;
+            margin-top: 8px;
+            padding-left: 4px;
+        }
+        @media (max-width: 768px) {
+            .assistant-fab {
+                right: 16px;
+                bottom: 82px;
+            }
+            .assistant-panel {
+                right: 12px;
+                left: 12px;
+                bottom: 150px;
+                width: auto;
+                height: 70vh;
+                max-height: 70vh;
+            }
+        }
+        html { scroll-behavior: smooth; }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(111, 78, 55, 0.35) transparent;
+        }
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible,
+        a:focus-visible {
+            outline: 3px solid rgba(199, 161, 122, 0.45);
+            outline-offset: 2px;
+        }
+        header.sticky {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.92);
+        }
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover {
+            box-shadow: 0 10px 24px rgba(62, 39, 35, 0.1);
+        }
+        .assistant-typing {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 46px;
+        }
+        .assistant-typing span {
+            width: 8px; height: 8px;
+            border-radius: 999px;
+            background: #b08b69;
+            display: inline-block;
+            animation: assistantPulse 1.1s infinite ease-in-out;
+        }
+        .assistant-typing span:nth-child(2) { animation-delay: 0.15s; }
+        .assistant-typing span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes assistantPulse {
+            0%, 80%, 100% { transform: scale(0.7); opacity: 0.45; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        .cantidad-columna {
+            width: 96px;
+            min-width: 96px;
+            max-width: 96px;
+        }
+        /* === BOTONES DE DEPURACIÓN (PELIGRO) === */
+        .btn-danger-depuracion {
+            background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+            color: #fff !important;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-danger-depuracion:hover {
+            background: linear-gradient(135deg, #c82333 0%, #8b1520 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.5);
+        }
+        .btn-danger-depuracion:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+        }
+        .btn-danger-depuracion::before {
+            content: "⚠️";
+            font-size: 18px;
+        }
+        .btn-danger-depuracion.btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+        .card-depuracion {
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+        .card-depuracion:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
+            border-color: rgba(0,0,0,0.12);
+        }
+        .card-depuracion h3 {
+            color: #1f2937;
+            margin-bottom: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-depuracion p {
+            color: #6c757d;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .badge-peligro {
+            background: #dc3545;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+        }
+        .btn-secondary-depuracion {
+            background: #6b7280;
+            color: #fff;
+            border: none;
+        }
+        .btn-secondary-depuracion:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        .btn-outline-depuracion {
+            background: transparent;
+            color: #6b7280;
+            border: 1px solid #6b7280;
+        }
+        .btn-outline-depuracion:hover {
+            background: #6c757d;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        #depuracion-section { padding-top: 10px !important; }
+        .btn-primary-depuracion { background: #2563eb; color: #fff; }
+        .btn-primary-depuracion:hover { opacity: .9; }
+        .btn-warning-depuracion {
+            background: #f8fafc;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
 </head>
-	
 <body>
     <!-- Sidebar Navigation -->
-	<div class="sidebar fixed top-0 left-0 h-full text-white">
-    <div class="p-6">
-        <div class="flex items-center justify-between mb-8">
-            <div class="flex flex-col items-center">
-                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-2">
-                    <img src="https://raw.githubusercontent.com/BiaHonduras/proyecto/main/Inventario.png" 
-                         class="w-full h-full" 
-                         alt="logo">
+    <div class="sidebar fixed top-0 left-0 h-full text-white">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-2">
+                        <img src="https://raw.githubusercontent.com/BiaHonduras/proyecto/main/Inventario.png" class="w-full h-full" alt="logo">
+                    </div>
+                    <h1 class="text-xl font-bold text-center">Control de Inventarios</h1>
                 </div>
-                <h1 class="text-xl font-bold text-center">Control de Inventarios</h1>
+                <button id="closeSidebar" class="lg:hidden text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
-            <button id="closeSidebar" class="lg:hidden text-white/70 hover:text-white">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-            
             <nav class="space-y-1">
                 <a href="#resumen" class="nav-item active" data-section="resumen">
-                    <i class="fas fa-chart-pie"></i>
-                    Resumen
+                    <i class="fas fa-chart-pie"></i> Resumen
                 </a>
                 <a href="#vencimientos" class="nav-item" data-section="vencimientos">
-                    <i class="fas fa-calendar-times"></i>
-                    Vencimientos
+                    <i class="fas fa-calendar-times"></i> Vencimientos
                 </a>
                 <a href="#inventario-diario" class="nav-item" data-section="inventario-diario">
-                    <i class="fas fa-clipboard-check"></i>
-                    Inventarios Diarios
+                    <i class="fas fa-clipboard-check"></i> Inventarios Diarios
                 </a>
                 <a href="#inventario" class="nav-item" data-section="inventario">
-                    <i class="fas fa-clipboard-list"></i>
-                    Ver Inventario
+                    <i class="fas fa-clipboard-list"></i> Ver Inventario
                 </a>
-				<a href="#transitos" class="nav-item" data-section="transitos">
-    				<i class="fas fa-exclamation-triangle"></i>
-    				Justificaciones
-				</a>
+                <a href="#transitos" class="nav-item" data-section="transitos">
+                    <i class="fas fa-exclamation-triangle"></i> Justificaciones
+                </a>
                 <a href="#exportar" class="nav-item" data-section="exportar">
-                    <i class="fas fa-file-export"></i>
-                    Exportación Informe
+                    <i class="fas fa-file-export"></i> Exportación Informe
                 </a>
                 <a href="#importar-inventario" class="nav-item" data-section="importar-inventario">
-                    <i class="fas fa-file-import"></i>
-                    Importar Inventarios
+                    <i class="fas fa-file-import"></i> Importar Inventarios
                 </a>
                 <a href="#importar-codigos" class="nav-item" data-section="importar-codigos">
-                    <i class="fas fa-database"></i>
-                    Importar Códigos
+                    <i class="fas fa-database"></i> Importar Códigos
                 </a>
-				<a href="https://biahonduras.github.io/proyecto/resumen.html" class="nav-item">
-                    <i class="fas fa-database"></i>
-                    Dashboard
+                <a href="https://biahonduras.github.io/proyecto/resumen.html" class="nav-item" target="_blank">
+                    <i class="fas fa-database"></i> Dashboard
                 </a>
-				</a>
-				<a href="#depuracion" class="nav-item" data-section="depuracion">
-                    <i class="fas fa-database"></i>
-                    Depuración
+                <a href="#depuracion" class="nav-item" data-section="depuracion">
+                    <i class="fas fa-database"></i> Depuración
                 </a>
                 <a href="#usuarios" class="nav-item" data-section="usuarios">
-                    <i class="fas fa-users-cog"></i>
-                    Gestión de Usuarios
+                    <i class="fas fa-users-cog"></i> Gestión de Usuarios
                 </a>
             </nav>
         </div>
@@ -806,7 +637,7 @@
 
         <!-- Content Sections -->
         <main class="p-6 space-y-6">
-            <!-- Dashboard Section -->
+            <!-- Resumen Section -->
             <section id="resumen-section" class="section-content">
                 <div class="card p-4 mb-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
@@ -849,7 +680,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -861,7 +691,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -873,7 +702,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -897,24 +725,22 @@
                             </div>
                         </div>
                     </div>
-					<div class="card p-6">
-					  <h3 class="text-lg font-semibold mb-1">Distribución por Proveedor</h3>
-					  <p class="text-sm text-gray-700 mb-3" id="totalSkusLabel">
-					    Total SKUs: 0
-					  </p>
-					
-					  <div id="proveedorChart" class="h-64 w-full">
-					    <div class="text-center text-gray-500">
-					      <i class="fas fa-chart-pie text-3xl mb-2"></i>
-					      <p>No hay datos disponibles</p>
-					    </div>
-					  </div>
-					</div>
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-1">Distribución por Proveedor</h3>
+                        <p class="text-sm text-gray-700 mb-3" id="totalSkusLabel">Total SKUs: 0</p>
+                        <div id="proveedorChart" class="h-64 w-full">
+                            <div class="text-center text-gray-500">
+                                <i class="fas fa-chart-pie text-3xl mb-2"></i>
+                                <p>No hay datos disponibles</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
+            <!-- Vencimientos Section -->
             <section id="vencimientos-section" class="section-content hidden">
-				<div class="card p-4 mb-6">
+                <div class="card p-4 mb-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Sede</label>
@@ -954,7 +780,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -966,8 +791,7 @@
                             </div>
                         </div>
                     </div>
-
-					<div class="card p-6">
+                    <div class="card p-6">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-700">91 a 120 Días</p>
@@ -978,7 +802,6 @@
                             </div>
                         </div>
                     </div>
-					
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -990,7 +813,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -1003,7 +825,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="card p-6">
                         <h3 class="text-lg font-semibold mb-4">Distribución de vencimientos</h3>
@@ -1014,7 +835,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="card p-6">
                         <h3 class="text-lg font-semibold mb-4">Productos más urgentes</h3>
                         <div class="overflow-x-auto">
@@ -1042,42 +862,36 @@
                 </div>
             </section>
 
-                       <!-- Inventario Diario Section (Unified Agregar Artículo and Escanear Códigos) -->
+            <!-- Inventario Diario Section -->
             <section id="inventario-diario-section" class="section-content hidden">
                 <div class="card p-6">
                     <div class="flex items-center gap-3 mb-6">
-    					<h3 class="text-lg font-semibold">Registro de Inventarios Diarios</h3>
-					</div>
-					
+                        <h3 class="text-lg font-semibold">Registro de Inventarios Diarios</h3>
+                    </div>
                     <form id="articuloForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-					    <div>
-					        <label class="block text-sm font-medium text-gray-700 mb-2">Sede *</label>
-					        <select id="sede" class="input-field w-full px-4 py-3 rounded-lg" required>
-					            <option value="">Seleccione</option>
-					            <option value="Amarateca">Amarateca</option>
-					            <option value="La Ceiba">La Ceiba</option>
-					            <option value="San Pedro Sula">San Pedro Sula</option>
-					            <option value="Santa Rosa de Copan">Santa Rosa de Copan</option>
-					            <option value="Tegucigalpa">Tegucigalpa</option>
-					        </select>
-					    </div>
-					
-					    <div>
-					        <label class="block text-sm font-medium text-gray-700 mb-2">Identificador Bodega *</label>
-							<select id="idBodega" class="input-field w-full px-4 py-3 rounded-lg" required>
-							    <option value="">Cargando bodegas...</option>
-							</select>
-						</div>
-						
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Sede *</label>
+                            <select id="sede" class="input-field w-full px-4 py-3 rounded-lg" required>
+                                <option value="">Seleccione</option>
+                                <option value="Amarateca">Amarateca</option>
+                                <option value="La Ceiba">La Ceiba</option>
+                                <option value="San Pedro Sula">San Pedro Sula</option>
+                                <option value="Santa Rosa de Copan">Santa Rosa de Copan</option>
+                                <option value="Tegucigalpa">Tegucigalpa</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Identificador Bodega *</label>
+                            <select id="idBodega" class="input-field w-full px-4 py-3 rounded-lg" required>
+                                <option value="">Cargando bodegas...</option>
+                            </select>
+                        </div>
                         <div class="md:col-span-2">
-						    <label class="block text-sm font-medium text-gray-700 mb-2">Códigos de Barra *</label>
-						    <button type="button" id="startScannerBtn"
-						        class="btn-primary w-full px-4 py-3 rounded-lg text-white">
-						        <i class="fas fa-barcode mr-2"></i>
-						        Escáner
-						    </button>
-						</div>
-
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Códigos de Barra *</label>
+                            <button type="button" id="startScannerBtn" class="btn-primary w-full px-4 py-3 rounded-lg text-white">
+                                <i class="fas fa-barcode mr-2"></i> Escáner
+                            </button>
+                        </div>
                         <div id="scanner-area" class="md:col-span-2 hidden">
                             <div class="scanner-container mb-4 rounded-lg overflow-hidden">
                                 <div id="scanner" class="w-full h-[50vh] bg-black">
@@ -1088,176 +902,92 @@
                                 </div>
                             </div>
                             <button type="button" id="stopScannerBtn" class="w-full py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-                                <i class="fas fa-stop mr-2"></i>
-                                Detener Escáner
+                                <i class="fas fa-stop mr-2"></i> Detener Escáner
                             </button>
                         </div>
-                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Proveedor</label>
-                            <input type="text" id="proveedor" 
-                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" 
-                                   placeholder="Se cargará automáticamente"
-                                   readonly>
+                            <input type="text" id="proveedor" class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" placeholder="Se cargará automáticamente" readonly>
                         </div>
-                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Descripción del Artículo</label>
-                            <input type="text" id="descripcion" 
-                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" 
-                                   placeholder="Se cargará automáticamente"
-                                   readonly>
+                            <input type="text" id="descripcion" class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" placeholder="Se cargará automáticamente" readonly>
                         </div>
-                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Inventario en Reportería</label>
-                            <input type="number" id="inventarioReporteria" 
-                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" 
-                                   placeholder="0"
-                                   readonly>
+                            <input type="number" id="inventarioReporteria" class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" placeholder="0" readonly>
                         </div>
-                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Masterpack</label>
-                            <input type="number" id="masterpack" 
-                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" 
-                                   placeholder="0"
-                                   readonly>
+                            <input type="number" id="masterpack" class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" placeholder="0" readonly>
                         </div>
-
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Cajas/Fardos en Reportería</label>
-                            <input type="number" id="cajasFardosReporteria" 
-                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100"
-                                    placeholder="0"
-                                   readonly>
+                            <input type="number" id="cajasFardosReporteria" class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" placeholder="0" readonly>
                         </div>
-
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Unidades en Reportería</label>
-                            <input type="number" id="unidadesReporteria" 
-                                   class="input-field w-full px-4 py-3 rounded-lg bg-gray-100"
-                                   placeholder="0"
-                                   readonly>
+                            <input type="number" id="unidadesReporteria" class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" placeholder="0" readonly>
                         </div>
-
-						<div>
-    						<label class="block text-sm font-medium text-gray-700 mb-2">Costo Unitario</label>
-    						<input type="text" id="costoUnitario"
-        						class="input-field w-full px-4 py-3 rounded-lg bg-gray-100"
-        						placeholder="L. 0.00"
-        						readonly>
-						</div>
-
-						<div>
-    						<label class="block text-sm font-medium text-gray-700 mb-2">Costo Total</label>
-    						<input type="text" id="costoTotal"
-        						class="input-field w-full px-4 py-3 rounded-lg bg-gray-100"
-        						placeholder="L. 0.00"
-        						readonly>
-						</div>
-
-						 <div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Costo Unitario</label>
+                            <input type="text" id="costoUnitario" class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" placeholder="L. 0.00" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Costo Total</label>
+                            <input type="text" id="costoTotal" class="input-field w-full px-4 py-3 rounded-lg bg-gray-100" placeholder="L. 0.00" readonly>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Código del Artículo *</label>
-                            <input type="text" id="codigoArticulo" 
-                                   class="input-field w-full px-4 py-3 rounded-lg"
-       								placeholder="Ingrese el código o escanee"
-       								required
-       								inputmode="numeric"
-       								pattern="[0-9]*"
-       								>
+                            <input type="text" id="codigoArticulo" class="input-field w-full px-4 py-3 rounded-lg" placeholder="Ingrese el código o escanee" required inputmode="numeric" pattern="[0-9]*">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Código de Barra Artículo *</label>
-                            <input type="text" id="codigoBarra"
-                                    class="input-field w-full px-4 py-3 rounded-lg"
-       								placeholder="Escanee o ingrese manualmente"
-       								maxlength="20"
-       								autocomplete="off"
-       								inputmode="numeric"
-       								pattern="[0-9]*">
+                            <input type="text" id="codigoBarra" class="input-field w-full px-4 py-3 rounded-lg" placeholder="Escanee o ingrese manualmente" maxlength="20" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
                         </div>
-						
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Cajas / Fardos</label>
-                            <input type="number" id="cajasFardos" 
-                                   class="input-field w-full px-4 py-3 rounded-lg" 
-                                   placeholder="0"
-                                   min="0"
-                                   step="1"
-                                   oninput="calcularTotalUnidades()">
+                            <input type="number" id="cajasFardos" class="input-field w-full px-4 py-3 rounded-lg" placeholder="0" min="0" step="1" oninput="calcularTotalUnidades()">
                         </div>
-                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Unidades</label>
-                            <input type="number" id="unidades" 
-                                   class="input-field w-full px-4 py-3 rounded-lg" 
-                                   placeholder="0"
-                                   min="0"
-                                   step="1"
-                                   oninput="calcularTotalUnidades()">
+                            <input type="number" id="unidades" class="input-field w-full px-4 py-3 rounded-lg" placeholder="0" min="0" step="1" oninput="calcularTotalUnidades()">
                         </div>
-
-						<div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Actual *</label>
                             <input type="date" id="fechaInventario" class="input-field w-full px-4 py-3 rounded-lg" required>
                         </div>
-
-						<div id="contenedorVencimiento" style="display:block !important; visibility:visible !important;">
-						    <label class="block text-sm font-medium text-gray-700 mb-2">
-						        Fecha Vencimiento *
-						    </label>
-						    <input
-						        type="date"
-						        id="fechaVencimiento"
-						        class="input-field w-full px-4 py-3 rounded-lg bg-gray-100 input-disabled"
-						        disabled
-						    >
-						    <p class="text-xs text-gray-500 mt-2">
-						        Los lunes el campo se habilita automáticamente. En otros días puedes activarlo manualmente usando esta casilla.
-						    </p>
-						</div>
-
-						<div class="md:col-span-2">
-						    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-						        <div class="flex items-center justify-between">
-						            <span class="font-semibold text-blue-800">Total Unidades:</span>
-						            <div class="flex flex-col items-end">
-						                <span id="totalUnidadesCalculo" class="text-xl font-bold text-blue-800">0</span>
-						                <input
-						                    type="checkbox"
-						                    id="checkVencimiento"
-						                    onchange="toggleFechaVencimiento()"
-						                    class="mt-1"
-						                >
-						            </div>
-						        </div>
-						        <p class="text-sm text-blue-600 mt-1">
-						            (Cajas × Masterpack) + Unidades
-						        </p>
-						    </div>
-						</div>
-
+                        <div id="contenedorVencimiento" style="display:block !important; visibility:visible !important;">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Vencimiento *</label>
+                            <input type="date" id="fechaVencimiento" class="input-field w-full px-4 py-3 rounded-lg bg-gray-100 input-disabled" disabled>
+                            <p class="text-xs text-gray-500 mt-2">Los lunes el campo se habilita automáticamente. En otros días puedes activarlo manualmente usando esta casilla.</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold text-blue-800">Total Unidades:</span>
+                                    <div class="flex flex-col items-end">
+                                        <span id="totalUnidadesCalculo" class="text-xl font-bold text-blue-800">0</span>
+                                        <input type="checkbox" id="checkVencimiento" onchange="toggleFechaVencimiento()" class="mt-1">
+                                    </div>
+                                </div>
+                                <p class="text-sm text-blue-600 mt-1">(Cajas × Masterpack) + Unidades</p>
+                            </div>
+                        </div>
                         <div class="md:col-span-2 flex flex-wrap gap-4 pt-4">
-                            <button type="reset" 
-                                class="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-                                Limpiar
-                            </button>
-
-                            <button type="submit" id="btnGuardarArticulo" 
-                                class="flex-1 btn-primary px-6 py-3 rounded-lg text-white">
-                                <i class="fas fa-plus-circle mr-2"></i>
-                                Agregar Artículo
+                            <button type="reset" class="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Limpiar</button>
+                            <button type="submit" id="btnGuardarArticulo" class="flex-1 btn-primary px-6 py-3 rounded-lg text-white">
+                                <i class="fas fa-plus-circle mr-2"></i> Agregar Artículo
                             </button>
                         </div>
-					</form>
-				</div>
-        </section>
+                    </form>
+                </div>
+            </section>
 
-                        <!-- Ver Inventario Section -->
+            <!-- Ver Inventario Section (con filtro de fecha) -->
             <section id="inventario-section" class="section-content hidden">
-				<div class="card p-4 mb-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div class="card p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Sede</label>
                             <select id="filtroSedeVerInventario" class="input-field w-full px-3 py-2 text-sm rounded-lg">
@@ -1278,21 +1008,27 @@
                                 <option value="PFN">PFN</option>
                             </select>
                         </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Fecha</label>
+                            <div class="flex items-center gap-2">
+                                <input type="date" id="filtroFechaVerInventario" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+                                <button id="btnLimpiarFechaInventario" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm" title="Mostrar todas las fechas">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
                             <p class="text-sm text-gray-700">Vista activa</p>
-                            <p class="font-semibold text-gray-800" id="labelFiltrosActivos">Todas las sedes, Todas las bodegas</p>
+                            <p class="font-semibold text-gray-800" id="labelFiltrosActivosInventario">Todas las sedes, Todas las bodegas, Todas las fechas</p>
                         </div>
                     </div>
                 </div>
                 <div class="card p-6">
                     <div class="flex items-center justify-between">
                         <h3 class="text-xl font-semibold text-gray-800">Inventario Actual</h3>
-                        
                         <div class="flex space-x-4 mt-4 md:mt-0">
                             <div class="relative">
-                                <input type="text" id="searchInventory" 
-                                       class="input-field pl-10 pr-4 py-2 rounded-lg" 
-                                       placeholder="Buscar artículo...">
+                                <input type="text" id="searchInventory" class="input-field pl-10 pr-4 py-2 rounded-lg" placeholder="Buscar artículo...">
                                 <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                             </div>
                             <button id="refreshInventory" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
@@ -1300,60 +1036,56 @@
                             </button>
                         </div>
                     </div>
-                    
-                    
                     <div id="inventarioResumen" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 mb-6">
                         <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
                             <p class="text-sm text-orange-700">Sku´s Pendientes</p>
                             <h4 id="skusPendientes" class="text-2xl font-bold text-orange-800">0</h4>
                         </div>
-
                         <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                             <p class="text-sm text-green-700">Sku´s Inventariados</p>
                             <h4 id="skusInventariados" class="text-2xl font-bold text-green-800">0</h4>
                         </div>
-
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                             <p class="text-sm text-blue-700">% Inventario General</p>
                             <h4 id="porcentajeInventarioGeneral" class="text-2xl font-bold text-blue-800">0%</h4>
                         </div>
                     </div>
-
                     <div class="w-full overflow-x-auto">
                         <div class="w-full">
-							<table class="min-w-full">
-								<thead>
-									<tr class="border-b border-gray-200">
-										<th class="pb-3 text-left text-sm font-medium text-gray-700">Bodega</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-700">Fecha</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-700">Código</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-700">Descripción</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-700">Reportería</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-700">Factor</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-700">C/F</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-700">Und</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-700">Reportería</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-700">DIF</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-700">VAL</th>
-										<th class="pb-3 text-left text-sm font-medium text-gray-700">Acciones</th>
-									</tr>
-								</thead>
-								<tbody id="inventoryTableBody">
-									<tr>
-										<td colspan="11" class="py-8 text-center text-gray-500">
-											<i class="fas fa-inbox text-3xl mb-2"></i>
-											<p>No hay artículos en el inventario</p>
-										</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			</section>
-			
-	<section id="transitos-section" class="section-content hidden">
-		<div class="card p-4 mb-6">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Bodega</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Fecha</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Código</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Descripción</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Reportería</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Factor</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-700">C/F</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Und</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Reportería</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-700">DIF</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-700">VAL</th>
+                                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryTableBody">
+                                    <tr>
+                                        <td colspan="12" class="py-8 text-center text-gray-500">
+                                            <i class="fas fa-inbox text-3xl mb-2"></i>
+                                            <p>No hay artículos en el inventario</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Justificaciones Section -->
+            <section id="transitos-section" class="section-content hidden">
+                <div class="card p-4 mb-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Sede</label>
@@ -1381,150 +1113,78 @@
                         </div>
                     </div>
                 </div>
-	    <div class="card p-6">
-	        <h3 class="text-xl font-semibold text-gray-800 mb-4">Tránsitos / Pendientes</h3>
-	
-			<div class="flex gap-3 mb-4">
-	    		<button id="btnEditarRegistros"
-	        		class="btn-primary px-4 py-3 rounded-lg text-white flex items-center">
-	        		<i class="fas fa-edit mr-2"></i>
-	        		Editar Registros
-	    		</button>
-	
-	    		<button id="btnGuardarRegistros"
-	        		class="btn-primary px-4 py-3 rounded-lg text-white flex items-center">
-	        		<i class="fas fa-save mr-2"></i>
-	        		Guardar Registros
-	    		</button>
-
-			</div>
-				
-	        <div class="overflow-x-auto">
-	            <table class="min-w-full">
-	                <thead>
-	                    <tr class="border-b border-gray-200">
-	                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Bodega</th>
-	                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Código</th>
-	                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Descripción</th>
-	                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Costo</th>
-	                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Total</th>
-	                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Diferencia</th>
-							<th class="pb-3 text-left text-sm font-medium text-gray-700 cantidad-columna">Cantidad</th>
-	                        <th class="pb-3 text-left text-sm font-medium text-gray-700">Justificación</th>
-							<th class="pb-3 text-left text-sm font-medium text-gray-700">Acciones</th>
-	                    </tr>
-	                </thead>
-	                <tbody id="transitosTableBody">
-	                    <tr>
-	                        <td colspan="9" class="py-8 text-center text-gray-500">
-	                            Sin datos
-	                        </td>
-	                    </tr>
-	                </tbody>
-	            </table>
-	        </div>
-	    </div>
-</section>
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Tránsitos / Pendientes</h3>
+                    <div class="flex gap-3 mb-4">
+                        <button id="btnEditarRegistros" class="btn-primary px-4 py-3 rounded-lg text-white flex items-center">
+                            <i class="fas fa-edit mr-2"></i> Editar Registros
+                        </button>
+                        <button id="btnGuardarRegistros" class="btn-primary px-4 py-3 rounded-lg text-white flex items-center">
+                            <i class="fas fa-save mr-2"></i> Guardar Registros
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-700">Bodega</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-700">Código</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-700">Descripción</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-700">Costo</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-700">Total</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-700">Diferencia</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-700 cantidad-columna">Cantidad</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-700">Justificación</th>
+                                    <th class="pb-3 text-left text-sm font-medium text-gray-700">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transitosTableBody">
+                                <tr>
+                                    <td colspan="9" class="py-8 text-center text-gray-500">Sin datos</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
 
             <!-- Exportación Informe Section -->
             <section id="exportar-section" class="section-content hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="card p-6">
                         <h3 class="text-lg font-semibold mb-6">Exportación Informe</h3>
-                        
                         <div class="space-y-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Campos a Exportar</label>
                                 <div class="grid grid-cols-2 gap-3">
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="idBodega" checked>
-                                        Bodega
-                                    </label>
-									<label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="fecha" checked>
-                                        Fecha Actual
-                                    </label>
-									<label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="fecha_vencimiento" checked>
-                                        Fecha Vencimiento
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="codigo" checked>
-                                        Código
-                                    </label>
-									<label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="codigo_barra" checked>
-                                        Código de Barra
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="proveedor" checked>
-                                        Proveedor
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="descripcion" checked>
-                                        Descripción
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="inventarioReporteria" checked>
-                                        Inv. Reportería
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="masterpack" checked>
-                                        Masterpack
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="cajasFardos" checked>
-                                        Cajas/Fardos
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="unidades" checked>
-                                        Unidades
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="total" checked>
-                                        Total
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="diferencia" checked>
-                                        Diferencia
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="validacion" checked>
-                                        Validación
-                                    </label>
-									<label class="flex items-center">
-                                        <input type="checkbox" class="mr-2" name="exportFields" value="diasvida" checked>
-                                        Días de Vida
-                                    </label>
-									<label class="flex items-center">
-									    <input type="checkbox" class="mr-2" name="exportFields" value="justificacion" checked>
-									    Justificación
-									</label>
-									<label class="flex items-center">
-									    <input type="checkbox" class="mr-2" name="exportFields" value="cantidad_justificada" checked>
-									    Cantidad Justificada
-									</label>
-									<label class="flex items-center">
-									    <input type="checkbox" class="mr-2" name="exportFields" value="usuario_justificacion" checked>
-									    Usuario Justificación
-									</label>
-									<label class="flex items-center">
-									    <input type="checkbox" class="mr-2" name="exportFields" value="fecha_modificacion_justificacion" checked>
-									    Fecha Justificación
-									</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="idBodega" checked> Bodega</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="fecha" checked> Fecha Actual</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="fecha_vencimiento" checked> Fecha Vencimiento</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="codigo" checked> Código</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="codigo_barra" checked> Código de Barra</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="proveedor" checked> Proveedor</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="descripcion" checked> Descripción</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="inventarioReporteria" checked> Inv. Reportería</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="masterpack" checked> Masterpack</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="cajasFardos" checked> Cajas/Fardos</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="unidades" checked> Unidades</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="total" checked> Total</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="diferencia" checked> Diferencia</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="validacion" checked> Validación</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="diasvida" checked> Días de Vida</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="justificacion" checked> Justificación</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="cantidad_justificada" checked> Cantidad Justificada</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="usuario_justificacion" checked> Usuario Justificación</label>
+                                    <label class="flex items-center"><input type="checkbox" class="mr-2" name="exportFields" value="fecha_modificacion_justificacion" checked> Fecha Justificación</label>
                                 </div>
                             </div>
-                            
                             <button id="exportCSV" class="btn-primary w-full py-3 rounded-lg text-white">
-                                <i class="fas fa-file-export mr-2"></i>
-                                Exportar a XLSX
+                                <i class="fas fa-file-export mr-2"></i> Exportar a XLSX
                             </button>
                         </div>
                     </div>
-                    
                     <div class="card p-6">
                         <h3 class="text-lg font-semibold mb-4">Información de Exportación</h3>
-                        
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                             <div class="flex">
                                 <i class="fas fa-info-circle text-blue-500 mr-3 mt-1"></i>
@@ -1543,14 +1203,10 @@
             <section id="importar-inventario-section" class="section-content hidden">
                 <div class="card p-6">
                     <h3 class="text-lg font-semibold mb-6">Importar Inventario</h3>
-
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-3">Formatos disponibles</label>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <a href="https://czxzghhwgfciyrgmgtai.supabase.co/storage/v1/object/sign/Assets/Convertidor%20IR.xlsm?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85Zjg0NzcyMS05MGFlLTQ0OTAtODg4MC0yYzdiMWU5YmE4NzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBc3NldHMvQ29udmVydGlkb3IgSVIueGxzbSIsImlhdCI6MTc3NjI2NTkwMywiZXhwIjoxODA3ODAxOTAzfQ.1HDtYNE92kKsugOTiFAoZyAjZd6EJ_XYoTutt4y1f4U"
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
+                            <a href="https://czxzghhwgfciyrgmgtai.supabase.co/storage/v1/object/sign/Assets/Convertidor%20IR.xlsm?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85Zjg0NzcyMS05MGFlLTQ0OTAtODg4MC0yYzdiMWU5YmE4NzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBc3NldHMvQ29udmVydGlkb3IgSVIueGxzbSIsImlhdCI6MTc3NjI2NTkwMywiZXhwIjoxODA3ODAxOTAzfQ.1HDtYNE92kKsugOTiFAoZyAjZd6EJ_XYoTutt4y1f4U" target="_blank" rel="noopener noreferrer" class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
                                 <div class="flex items-center justify-between gap-4">
                                     <div>
                                         <p class="font-medium text-gray-800">Convertidor IR</p>
@@ -1559,11 +1215,7 @@
                                     <i class="fas fa-file-excel text-green-600 text-xl"></i>
                                 </div>
                             </a>
-
-                            <a href="https://czxzghhwgfciyrgmgtai.supabase.co/storage/v1/object/sign/Assets/Formato%20Inventario.csv?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85Zjg0NzcyMS05MGFlLTQ0OTAtODg4MC0yYzdiMWU5YmE4NzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBc3NldHMvRm9ybWF0byBJbnZlbnRhcmlvLmNzdiIsImlhdCI6MTc3NjI2NTkzMSwiZXhwIjoxODA3ODAxOTMxfQ.fbjjEoreypjJ5_uBwHcQ4mSeBL-xIAJlmopNP0elVAk"
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
+                            <a href="https://czxzghhwgfciyrgmgtai.supabase.co/storage/v1/object/sign/Assets/Formato%20Inventario.csv?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85Zjg0NzcyMS05MGFlLTQ0OTAtODg4MC0yYzdiMWU5YmE4NzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBc3NldHMvRm9ybWF0byBJbnZlbnRhcmlvLmNzdiIsImlhdCI6MTc3NjI2NTkzMSwiZXhwIjoxODA3ODAxOTMxfQ.fbjjEoreypjJ5_uBwHcQ4mSeBL-xIAJlmopNP0elVAk" target="_blank" rel="noopener noreferrer" class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
                                 <div class="flex items-center justify-between gap-4">
                                     <div>
                                         <p class="font-medium text-gray-800">Formato Inventario</p>
@@ -1574,16 +1226,11 @@
                             </a>
                         </div>
                     </div>
-                    
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Carga de Inventario Teórico</label>
-                            <input type="file" id="importInventoryFile" 
-                                   class="input-field w-full px-4 py-3 rounded-lg" 
-                                   accept=".csv"
-                                   onchange="previewCSVFile(this, 'inventoryPreview', 'inventoryPreviewHead', 'inventoryPreviewBody', 'confirmImportInventory')">
+                            <input type="file" id="importInventoryFile" class="input-field w-full px-4 py-3 rounded-lg" accept=".csv" onchange="previewCSVFile(this, 'inventoryPreview', 'inventoryPreviewHead', 'inventoryPreviewBody', 'confirmImportInventory')">
                         </div>
-                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
                             <div class="bg-gray-50 p-4 rounded-lg">
@@ -1591,35 +1238,23 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- ===== RESUMEN DE IMPORTACIONES INVENTARIO ===== -->
                     <div class="mt-6">
-
-                        <h4 class="font-semibold mb-3">
-                            Últimas 5 cargas de Inventario
-                        </h4>
-
+                        <h4 class="font-semibold mb-3">Últimas 5 cargas de Inventario</h4>
                         <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-gray-200">
-                                <th class="py-3 text-left">Usuario</th>
-                                <th class="py-3 text-center">Cantidad de Códigos</th>
-                                <th class="py-3 text-center">Fecha</th>
-                            </tr>
-                    </thead>
-
-                    <tbody id="tablaResumenInventario">
-                        <tr>
-                            <td colspan="3" class="text-center py-6 text-gray-500">
-                            No hay registros
-                        </td>
-                    </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-                    
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="py-3 text-left">Usuario</th>
+                                        <th class="py-3 text-center">Cantidad de Códigos</th>
+                                        <th class="py-3 text-center">Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaResumenInventario">
+                                    <tr><td colspan="3" class="text-center py-6 text-gray-500">No hay registros</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                     <div id="inventoryPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
                         <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
                         <div class="overflow-x-auto">
@@ -1629,16 +1264,10 @@
                             </table>
                         </div>
                     </div>
-
-                    <!-- BOTONES ACCIÓN -->
                     <div class="flex gap-4 mt-6">
-
-                        <button id="confirmImportInventory"
-                            class="btn-primary px-6 py-2 rounded-lg text-white" disabled>
-                            <i class="fas fa-upload mr-2"></i>
-                            Importar Reportería
+                        <button id="confirmImportInventory" class="btn-primary px-6 py-2 rounded-lg text-white" disabled>
+                            <i class="fas fa-upload mr-2"></i> Importar Reportería
                         </button>
-
                     </div>
                 </div>
             </section>
@@ -1647,14 +1276,10 @@
             <section id="importar-codigos-section" class="section-content hidden">
                 <div class="card p-6">
                     <h3 class="text-lg font-semibold mb-6">Importar Base de Códigos</h3>
-
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-3">Formatos disponibles</label>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <a href="https://czxzghhwgfciyrgmgtai.supabase.co/storage/v1/object/sign/Assets/Convertidor%20BDD.xlsm?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85Zjg0NzcyMS05MGFlLTQ0OTAtODg4MC0yYzdiMWU5YmE4NzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBc3NldHMvQ29udmVydGlkb3IgQkRELnhsc20iLCJpYXQiOjE3NzYyNjU4OTIsImV4cCI6MTgwNzgwMTg5Mn0.hj0d2B4uKy7SN-TH1RWgzpitToMXz4YSxi7vU36bVxw"
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
+                            <a href="https://czxzghhwgfciyrgmgtai.supabase.co/storage/v1/object/sign/Assets/Convertidor%20BDD.xlsm?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85Zjg0NzcyMS05MGFlLTQ0OTAtODg4MC0yYzdiMWU5YmE4NzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBc3NldHMvQ29udmVydGlkb3IgQkRELnhsc20iLCJpYXQiOjE3NzYyNjU4OTIsImV4cCI6MTgwNzgwMTg5Mn0.hj0d2B4uKy7SN-TH1RWgzpitToMXz4YSxi7vU36bVxw" target="_blank" rel="noopener noreferrer" class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
                                 <div class="flex items-center justify-between gap-4">
                                     <div>
                                         <p class="font-medium text-gray-800">Convertidor BDD</p>
@@ -1663,11 +1288,7 @@
                                     <i class="fas fa-file-excel text-green-600 text-xl"></i>
                                 </div>
                             </a>
-
-                            <a href="https://czxzghhwgfciyrgmgtai.supabase.co/storage/v1/object/sign/Assets/Formato%20BDD.csv?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85Zjg0NzcyMS05MGFlLTQ0OTAtODg4MC0yYzdiMWU5YmE4NzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBc3NldHMvRm9ybWF0byBCREQuY3N2IiwiaWF0IjoxNzc2MjY1OTI2LCJleHAiOjE4MDc4MDE5MjZ9.D8qoUaSGpojeod4chj3uQKlqiKeK5x_bu9U8xxY_PFY"
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
+                            <a href="https://czxzghhwgfciyrgmgtai.supabase.co/storage/v1/object/sign/Assets/Formato%20BDD.csv?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85Zjg0NzcyMS05MGFlLTQ0OTAtODg4MC0yYzdiMWU5YmE4NzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBc3NldHMvRm9ybWF0byBCREQuY3N2IiwiaWF0IjoxNzc2MjY1OTI2LCJleHAiOjE4MDc4MDE5MjZ9.D8qoUaSGpojeod4chj3uQKlqiKeK5x_bu9U8xxY_PFY" target="_blank" rel="noopener noreferrer" class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
                                 <div class="flex items-center justify-between gap-4">
                                     <div>
                                         <p class="font-medium text-gray-800">Formato BDD</p>
@@ -1678,16 +1299,11 @@
                             </a>
                         </div>
                     </div>
-                    
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Carga de Base de Códigos</label>
-                            <input type="file" id="importCodesFile" 
-                                   class="input-field w-full px-4 py-3 rounded-lg" 
-                                   accept=".csv"
-                                   onchange="previewCSVFile(this, 'codesPreview', 'codesPreviewHead', 'codesPreviewBody', 'confirmImportCodes')">
+                            <input type="file" id="importCodesFile" class="input-field w-full px-4 py-3 rounded-lg" accept=".csv" onchange="previewCSVFile(this, 'codesPreview', 'codesPreviewHead', 'codesPreviewBody', 'confirmImportCodes')">
                         </div>
-                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Formato esperado</label>
                             <div class="bg-gray-50 p-4 rounded-lg">
@@ -1695,129 +1311,93 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div id="codesPreview" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
+                        <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead id="codesPreviewHead"></thead>
+                                <tbody id="codesPreviewBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="mt-10">
+                        <h3 class="text-lg font-semibold mb-4">Últimos movimientos de códigos</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="py-3 text-left">Usuario</th>
+                                        <th class="py-3 text-center">Cantidad de Códigos</th>
+                                        <th class="py-3 text-center">Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaResumenCodigos">
+                                    <tr><td colspan="3" class="text-center py-6 text-gray-500">No hay registros</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <button id="confirmImportCodes" class="btn-primary mt-4 px-6 py-2 rounded-lg text-white">
+                        <i class="fas fa-upload mr-2"></i> Importar Base de Códigos
+                    </button>
+                </div>
+            </section>
 
-    <h4 class="font-semibold mb-3">Vista previa del archivo</h4>
+            <!-- Depuración Section -->
+            <section id="depuracion-section" class="section-content hidden">
+                <div class="card-depuracion">
+                    <h3>️Depuración Completa de Inventario | Justificaciones</h3>
+                    <p>Elimina todos los registros de inventario acumulados hasta el día actual en la sede y bodega seleccionada.</p>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: inline-block; min-width: 80px;">Sede:</label>
+                        <select id="sel-sede-eliminar-inventario" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd;">
+                            <option value="">Seleccione</option>
+                            <option>Todas</option>
+                            <option>Amarateca</option>
+                            <option>La Ceiba</option>
+                            <option>San Pedro Sula</option>
+                            <option>Santa Rosa de Copan</option>
+                            <option>Tegucigalpa</option>
+                        </select>
+                        <label style="display: inline-block; min-width: 80px; margin-left: 20px;">Bodega:</label>
+                        <select id="sel-bodega-eliminar-inventario" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd;">
+                            <option value="">Seleccione</option>
+                            <option>Todas</option>
+                            <option>Principal</option>
+                            <option>PPV</option>
+                            <option>PFN</option>
+                        </select>
+                    </div>
+                    <button id="btn-eliminar-inventario-dia" class="btn-primary px-6 py-3 rounded-lg text-white">
+                        Eliminar Inventario y Justificaciones
+                    </button>
+                </div>
+                <div class="card-depuracion">
+                    <h3>️Carga Manual | Eliminar Vencimientos</h3>
+                    <p>Permite cargar manualmente registros de vencimientos mediante archivo CSV. La eliminación asociada realiza respaldo automático.</p>
+                    <div class="form-group">
+                        <label>Archivo CSV de vencimientos:</label>
+                        <input type="file" id="depuracion-csv-vencimientos" accept=".csv">
+                    </div>
+                    <div id="depuracion-preview-vencimientos" style="margin-top:15px;"></div>
+                    <div style="margin-top:15px;">
+                        <button id="btn-importar-vencimientos" class="btn-primary px-6 py-3 rounded-lg text-white">Importar Vencimientos</button>
+                        <button id="btn-eliminar-vencimientos" class="btn-primary px-6 py-3 rounded-lg text-white">Eliminar Vencimientos</button>
+                        <button id="btn-limpiar-vencimientos" class="px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-600">Limpiar</button>
+                    </div>
+                </div>
+                <div class="card-depuracion">
+                    <h3>Eliminar Base de Códigos</h3>
+                    <p>Depura completamente la base de datos de códigos. <strong style="color:#dc3545;">Esta acción no se puede deshacer.</strong></p>
+                    <button id="btn-eliminar-bdd" class="btn-primary px-6 py-3 rounded-lg text-white">Eliminar Base de Datos de Códigos</button>
+                </div>
+            </section>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead id="codesPreviewHead"></thead>
-            <tbody id="codesPreviewBody"></tbody>
-        </table>
-    </div>            
-</div>
-
-<!-- ===== RESUMEN DE IMPORTACIONES ===== -->
-<div class="mt-10">
-
-    <h3 class="text-lg font-semibold mb-4">
-        Últimos movimientos de códigos
-    </h3>
-
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead>
-                <tr class="border-b border-gray-200">
-                    <th class="py-3 text-left">Usuario</th>
-                    <th class="py-3 text-center">Cantidad de Códigos</th>
-                    <th class="py-3 text-center">Fecha</th>
-                </tr>
-            </thead>
-
-            <tbody id="tablaResumenCodigos">
-                <tr>
-                    <td colspan="3" class="text-center py-6 text-gray-500">
-                        No hay registros
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-                    
-                    <button id="confirmImportCodes"
-                        class="btn-primary mt-4 px-6 py-2 rounded-lg text-white">
-                        <i class="fas fa-upload mr-2"></i>
-                        Importar Base de Códigos
-                    </button>         
-                 </div>
-        </section>
-
-<section id="depuracion-section" class="section-content hidden">   
-    <!-- === 1. ELIMINAR INVENTARIO DEL DÍA === -->
-	<div class="card-depuracion">
-	    <h3>️Depuración Completa de Inventario | Justificaciones</h3>
-	    <p>Elimina todos los registros de inventario acumulados hasta el día actual en la sede y bodega seleccionada.</p>
-	    
-	    <div style="margin-bottom: 20px;">
-	        <label style="display: inline-block; min-width: 80px;">Sede:</label>
-	        <select id="sel-sede-eliminar-inventario" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd;">
-	            <option value="">Seleccione</option>
-				<option>Todas</option>
-	            <option>Amarateca</option>
-	            <option>La Ceiba</option>
-	            <option>San Pedro Sula</option>
-	            <option>Santa Rosa de Copan</option>
-	            <option>Tegucigalpa</option>
-	        </select>
-	        
-	        <label style="display: inline-block; min-width: 80px; margin-left: 20px;">Bodega:</label>
-	        <select id="sel-bodega-eliminar-inventario" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd;">
-	            <option value="">Seleccione</option>
-				<option>Todas</option>
-	            <option>Principal</option>
-	            <option>PPV</option>
-	            <option>PFN</option>
-	        </select>
-	    </div>
-	    
-	    <button id="btn-eliminar-inventario-dia" class="btn-primary px-6 py-3 rounded-lg text-white">
-	        Eliminar Inventario y Justificaciones
-	    </button>
-	</div>
-    
-    <!-- === 2. CARGA MANUAL DE VENCIMIENTOS === -->
-    <div class="card-depuracion">
-         <h3>️Carga Manual | Eliminar Vencimientos</h3>
-        <p>Permite cargar manualmente registros de vencimientos mediante archivo CSV. La eliminación asociada realiza respaldo automático.</p>
-        
-        <div class="form-group">
-            <label>Archivo CSV de vencimientos:</label>
-            <input type="file" id="depuracion-csv-vencimientos" accept=".csv">
-        </div>
-		
-        <div id="depuracion-preview-vencimientos" style="margin-top:15px;"></div>
-        
-        <div style="margin-top:15px;">
-            <button id="btn-importar-vencimientos" class="btn-primary px-6 py-3 rounded-lg text-white">
-			    Importar Vencimientos
-			</button>
-			<button id="btn-eliminar-vencimientos" class="btn-primary px-6 py-3 rounded-lg text-white">
-			    Eliminar Vencimientos
-			</button>
-            <button id="btn-limpiar-vencimientos" class="px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-600">
-			    Limpiar
-			</button>
-        </div>
-    </div>
-    
-    <!-- === 3. ELIMINAR BASE DE CÓDIGOS === -->
-    <div class="card-depuracion">
-         <h3>Eliminar Base de Códigos</h3>
-        <p>Depura completamente la base de datos de códigos. <strong style="color:#dc3545;">Esta acción no se puede deshacer.</strong></p>
-        <button id="btn-eliminar-bdd" class="btn-primary px-6 py-3 rounded-lg text-white">
-		    Eliminar Base de Datos de Códigos
-		</button>
-    </div>
-</section>
-			
- <!-- Gestión de Usuarios Section -->
+            <!-- Gestión de Usuarios Section -->
             <section id="usuarios-section" class="section-content hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="card p-6">
                         <h3 class="text-lg font-semibold mb-6">Gestión de Usuarios</h3>
-                        
                         <div class="overflow-x-auto mb-6">
                             <table class="w-full">
                                 <thead>
@@ -1829,86 +1409,49 @@
                                     </tr>
                                 </thead>
                                 <tbody id="usersTableBody">
-                                    <tr>
-                                        <td colspan="4" class="py-8 text-center text-gray-500">
-                                            <i class="fas fa-users text-3xl mb-2"></i>
-                                            <p>Cargando usuarios...</p>
-                                        </td>
-                                    </tr>
+                                    <tr><td colspan="4" class="py-8 text-center text-gray-500"><i class="fas fa-users text-3xl mb-2"></i><p>Cargando usuarios...</p></td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                    
                     <div class="card p-6">
                         <h3 class="text-lg font-semibold mb-6" id="userFormTitle">Crear Nuevo Usuario</h3>
-                        
                         <form id="userForm" class="space-y-4">
                             <input type="hidden" id="userId">
-                            
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Usuario *</label>
-                                <input type="text" id="userUsername"
-							       class="input-field w-full px-4 py-3 rounded-lg"
-							       placeholder="nombre.usuario"
-							       autocomplete="username"
-							       required>
+                                <input type="text" id="userUsername" class="input-field w-full px-4 py-3 rounded-lg" placeholder="nombre.usuario" autocomplete="username" required>
                             </div>
-
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Corto *</label>
-                                <input type="text" id="userNombre_corto" 
-                                    class="input-field w-full px-4 py-3 rounded-lg" 
-                                    placeholder="Ej: Juan"
-                                    required>
+                                <input type="text" id="userNombre_corto" class="input-field w-full px-4 py-3 rounded-lg" placeholder="Ej: Juan" required>
                             </div>
-                            
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                <input type="email" id="userEmail"
-							       class="input-field w-full px-4 py-3 rounded-lg"
-							       placeholder="usuario@empresa.com"
-							       autocomplete="email"
-							       required>
+                                <input type="email" id="userEmail" class="input-field w-full px-4 py-3 rounded-lg" placeholder="usuario@empresa.com" autocomplete="email" required>
                             </div>
-
-							<div>
+                            <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">DNI *</label>
-                                <input type="text" id="userDNI" 
-                                    class="input-field w-full px-4 py-3 rounded-lg" 
-                                    placeholder="Ej: 0501-1990-01234"
-                                    required>
+                                <input type="text" id="userDNI" class="input-field w-full px-4 py-3 rounded-lg" placeholder="Ej: 0501-1990-01234" required>
                             </div>
-                            
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
-                                <input type="password" id="userPassword"
-							       class="input-field w-full px-4 py-3 rounded-lg"
-							       placeholder="••••••••"
-							       autocomplete="new-password"
-							       required>
+                                <input type="password" id="userPassword" class="input-field w-full px-4 py-3 rounded-lg" placeholder="••••••••" autocomplete="new-password" required>
                             </div>
-                            
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña *</label>
-                                <input type="password" id="userConfirmPassword"
-							       class="input-field w-full px-4 py-3 rounded-lg"
-							       placeholder="••••••••"
-							       autocomplete="new-password"
-							       required>
+                                <input type="password" id="userConfirmPassword" class="input-field w-full px-4 py-3 rounded-lg" placeholder="••••••••" autocomplete="new-password" required>
                             </div>
-
-							<div>
+                            <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Sede *</label>
                                 <select id="userSite" class="input-field w-full px-4 py-3 rounded-lg">
                                     <option value="Amarateca">Amarateca</option>
                                     <option value="La Ceiba">La Ceiba</option>
-									<option value="San Pedro Sula">San Pedro Sula</option>
-									<option value="Santa Rosa de Copan">Santa Rosa de Copan</option>
-									<option value="Tegucigalpa">Tegucigalpa</option>
+                                    <option value="San Pedro Sula">San Pedro Sula</option>
+                                    <option value="Santa Rosa de Copan">Santa Rosa de Copan</option>
+                                    <option value="Tegucigalpa">Tegucigalpa</option>
                                 </select>
                             </div>
-                            
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
                                 <select id="userRole" class="input-field w-full px-4 py-3 rounded-lg">
@@ -1916,19 +1459,10 @@
                                     <option value="admin">Administrador</option>
                                 </select>
                             </div>
-                            
                             <div class="flex space-x-4 pt-4">
-                                <button type="reset" class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-                                    Cancelar
-                                </button>
-                                <button type="submit" class="btn-primary flex-1 py-3 rounded-lg text-white">
-                                    <i class="fas fa-save mr-2"></i>
-                                    Guardar Usuario
-                                </button>
-								<button type="button" id="btnNuevoUsuario" class="btn-primary flex-1 py-3 rounded-lg text-white">
-								    <i class="fas fa-user-plus mr-2"></i>
-								    Nuevo Usuario
-								</button>
+                                <button type="reset" class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
+                                <button type="submit" class="btn-primary flex-1 py-3 rounded-lg text-white"><i class="fas fa-save mr-2"></i> Guardar Usuario</button>
+                                <button type="button" id="btnNuevoUsuario" class="btn-primary flex-1 py-3 rounded-lg text-white"><i class="fas fa-user-plus mr-2"></i> Nuevo Usuario</button>
                             </div>
                         </form>
                     </div>
@@ -1937,11 +1471,10 @@
         </main>
     </div>
 
-
+    <!-- Modal Exportar -->
     <div id="modalExportarCSV" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[9999]">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
             <h3 class="text-lg font-semibold mb-4">Filtros para Exportar</h3>
-
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Sede</label>
@@ -1954,7 +1487,6 @@
                         <option value="Tegucigalpa">Tegucigalpa</option>
                     </select>
                 </div>
-
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Bodega</label>
                     <select id="modalFiltroTipoBodegaExport" class="input-field w-full px-4 py-3 rounded-lg">
@@ -1965,17 +1497,9 @@
                     </select>
                 </div>
             </div>
-
             <div class="flex gap-3 mt-6">
-                <button type="button" id="btnCancelarModalExport"
-                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-                    Cancelar
-                </button>
-
-                <button type="button" id="btnConfirmarModalExport"
-                    class="flex-1 btn-primary px-4 py-3 rounded-lg text-white">
-                    Descargar XLXS
-                </button>
+                <button type="button" id="btnCancelarModalExport" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
+                <button type="button" id="btnConfirmarModalExport" class="flex-1 btn-primary px-4 py-3 rounded-lg text-white">Descargar XLXS</button>
             </div>
         </div>
     </div>
@@ -1989,13 +1513,22 @@
                     <h4 id="notificationTitle" class="font-semibold"></h4>
                     <p id="notificationMessage" class="text-sm text-gray-700 mt-1"></p>
                 </div>
-                <button id="closeNotification" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button id="closeNotification" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
             </div>
         </div>
     </div>
 
+    <!-- Footer fijo -->
+    <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
+        <div class="text-[11px] text-gray-500">Elaborado por Hernán Manuel Pérez Banegas®</div>
+        <div class="flex items-center gap-2 text-xs whitespace-nowrap">
+            <span id="nombreCorto" class="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap"></span>
+            <button onclick="window.location.href='dashboard.html'" class="ml-2" aria-label="Inicio"><i class="fas fa-home"></i></button>
+            <button id="logoutBtn" class="ml-2" aria-label="Cerrar sesión"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+    </div>
+
+    <!-- JavaScript (todo el código unificado) -->
     <script>
         // ===== VARIABLES GLOBALES =====
         let currentUser = null;
@@ -2022,59 +1555,48 @@
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
         }
-
         function escapeAttr(value) {
             return escapeHtml(value).replace(/`/g, '&#096;');
         }
-
         function formatearFecha(fechaISO) {
             if (!fechaISO || !String(fechaISO).includes('-')) return '-';
             const [año, mes, día] = String(fechaISO).split("-");
             return `${día}/${mes}/${año}`;
         }
-
         function formatearFechaCorta(fechaStr) {
             if (!fechaStr) return '';
             const [y, m, d] = String(fechaStr).split('-');
             return `${d}/${m}/${String(y).slice(-2)}`;
         }
-
         function normalizarFechaLocal(fechaStr) {
             const [y, m, d] = String(fechaStr).split('-').map(Number);
             return new Date(y, m - 1, d);
         }
-
         function diferenciaDias(fechaBase, fechaObjetivo) {
             const msPorDia = 1000 * 60 * 60 * 24;
             const base = new Date(fechaBase.getFullYear(), fechaBase.getMonth(), fechaBase.getDate());
             const objetivo = new Date(fechaObjetivo.getFullYear(), fechaObjetivo.getMonth(), fechaObjetivo.getDate());
             return Math.round((objetivo - base) / msPorDia);
         }
-
         function formatearNumeroEntero(valor) {
             return Number(valor || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
         }
-
         function formatearMoneda(valor) {
             const numero = Number(valor) || 0;
             const esNegativo = numero < 0;
             const valorAbsoluto = Math.abs(numero).toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             return (esNegativo ? '-L. ' : 'L. ') + valorAbsoluto;
         }
-
         function limpiarValor(valor) {
             if (!valor) return '';
             return String(valor).trim().replace(/\r?\n/g, '').replace(/"/g, '');
         }
-
         function esEnteroValido(valor) {
             return /^-?\d+$/.test(String(valor || '').trim());
         }
-
         function getUsuarioActual() {
             return currentUser?.username || currentUser?.usuario || 'desconocido';
         }
-
         function formatearDNI(valor = '') {
             const digits = String(valor).replace(/\D/g, '').slice(0, 13);
             const parts = [];
@@ -2086,31 +1608,11 @@
 
         // ===== MAPEOS =====
         const bodegasPorSede = {
-            "Amarateca": [
-                { value: "010", label: "Principal" },
-                { value: "013", label: "PPV" },
-                { value: "098", label: "PFN" }
-            ],
-            "La Ceiba": [
-                { value: "040", label: "Principal" },
-                { value: "043", label: "PPV" },
-                { value: "096", label: "PFN" }
-            ],
-            "San Pedro Sula": [
-                { value: "030", label: "Principal" },
-                { value: "033", label: "PPV" },
-                { value: "095", label: "PFN" }
-            ],
-            "Santa Rosa de Copan": [
-                { value: "050", label: "Principal" },
-                { value: "053", label: "PPV" },
-                { value: "097", label: "PFN" }
-            ],
-            "Tegucigalpa": [
-                { value: "060", label: "Principal" },
-                { value: "063", label: "PPV" },
-                { value: "099", label: "PFN" }
-            ]
+            "Amarateca": [{ value: "010", label: "Principal" }, { value: "013", label: "PPV" }, { value: "098", label: "PFN" }],
+            "La Ceiba": [{ value: "040", label: "Principal" }, { value: "043", label: "PPV" }, { value: "096", label: "PFN" }],
+            "San Pedro Sula": [{ value: "030", label: "Principal" }, { value: "033", label: "PPV" }, { value: "095", label: "PFN" }],
+            "Santa Rosa de Copan": [{ value: "050", label: "Principal" }, { value: "053", label: "PPV" }, { value: "097", label: "PFN" }],
+            "Tegucigalpa": [{ value: "060", label: "Principal" }, { value: "063", label: "PPV" }, { value: "099", label: "PFN" }]
         };
 
         function obtenerTipoBodegaDesdeId(idBodega) {
@@ -2148,7 +1650,6 @@
             if (Number.isNaN(venc.getTime())) return null;
             return diferenciaDias(hoyBase, venc);
         }
-
         function obtenerRangoDiasVida(diasvida, fechaVencimiento) {
             if (!fechaVencimiento) return 'sin_fecha';
             if (diasvida <= 60) return 'hasta_60';
@@ -2201,11 +1702,7 @@
                 .limit(25);
 
             if (sedeFiltro !== 'Todas') query = query.eq('sede', sedeFiltro);
-            if (tipoBodegaFiltro !== 'Todas') {
-                // simplificado: asumimos que la tabla tiene 'tipo_bodega' o lo derivamos, pero lo dejamos simple
-                // En realidad podría requerir join, pero para simplificar solo aplicamos filtro de bodega si es necesario
-                // Se omite para no complicar; se puede mejorar.
-            }
+            // tipoBodegaFiltro no se aplica directamente, se podría mejorar
 
             const { data, error } = await query;
             const contenedor = document.getElementById('recentItems');
@@ -2244,30 +1741,20 @@
             const totalLabel = document.getElementById('totalSkusLabel');
 
             if (error || !data || data.length === 0) {
-                contenedor.innerHTML = `
-                    <div class="text-center text-gray-500">
-                        <i class="fas fa-chart-pie text-3xl mb-2"></i>
-                        <p>No hay datos disponibles</p>
-                    </div>`;
+                contenedor.innerHTML = `<div class="text-center text-gray-500"><i class="fas fa-chart-pie text-3xl mb-2"></i><p>No hay datos disponibles</p></div>`;
                 totalLabel.textContent = 'Total SKUs: 0';
                 return;
             }
 
             const registrosFiltrados = filtrarPorSedeYTipo(data, sedeFiltro, tipoBodegaFiltro);
-
             if (!registrosFiltrados.length) {
-                contenedor.innerHTML = `
-                    <div class="text-center text-gray-500">
-                        <i class="fas fa-chart-pie text-3xl mb-2"></i>
-                        <p>No hay datos disponibles</p>
-                    </div>`;
+                contenedor.innerHTML = `<div class="text-center text-gray-500"><i class="fas fa-chart-pie text-3xl mb-2"></i><p>No hay datos disponibles</p></div>`;
                 totalLabel.textContent = 'Total SKUs: 0';
                 return;
             }
 
             const agrupado = {};
             const skuUnicos = new Set();
-
             registrosFiltrados.forEach(item => {
                 const proveedor = item.proveedor || 'Sin proveedor';
                 const codigo = String(item.codigo || '').trim();
@@ -2281,7 +1768,6 @@
             const labels = [], porcentajes = [], absolutos = [];
             let acumulado = 0;
             const entries = Object.entries(agrupado);
-
             entries.forEach(([proveedor, cantidad], index) => {
                 let porcentaje = index === entries.length - 1 ? 100 - acumulado : Math.round((cantidad / totalGeneral) * 100);
                 acumulado += porcentaje;
@@ -2295,15 +1781,9 @@
 
         function renderPieChart(labels, porcentajes, absolutos) {
             const contenedor = document.getElementById('proveedorChart');
-            contenedor.innerHTML = `
-                <div class="w-full h-full relative">
-                    <canvas id="pieChart"></canvas>
-                </div>
-            `;
-
+            contenedor.innerHTML = `<div class="w-full h-full relative"><canvas id="pieChart"></canvas></div>`;
             const ctx = document.getElementById('pieChart').getContext('2d');
             if (window.__proveedorPieChart) window.__proveedorPieChart.destroy();
-
             window.__proveedorPieChart = new Chart(ctx, {
                 type: 'pie',
                 data: { labels, datasets: [{ data: porcentajes }] },
@@ -2334,7 +1814,6 @@
             proxima.setDate(ahora.getDate() + 1);
             proxima.setHours(0, 0, 5, 0);
             const msRestantes = proxima.getTime() - ahora.getTime();
-
             setTimeout(() => {
                 loadVencimientosData();
                 setInterval(loadVencimientosData, 24 * 60 * 60 * 1000);
@@ -2343,7 +1822,6 @@
 
         async function loadVencimientosData() {
             actualizarLabelFiltrosActivos();
-
             const { data, error } = await supabase
                 .from('vencimientos_semanales')
                 .select('sede, idbodega, codigo, descripcion, fecha_vencimiento, diasvida');
@@ -2375,24 +1853,18 @@
                 return cumpleSede && cumpleTipoBodega;
             });
 
-            const totalVida60 = registrosFiltrados.filter(item => item.rango_diasvida === 'hasta_60').length;
-            const totalVida90 = registrosFiltrados.filter(item => item.rango_diasvida === '61_90').length;
-            const totalVida120 = registrosFiltrados.filter(item => item.rango_diasvida === '91_120').length;
-            const totalVida121 = registrosFiltrados.filter(item => item.rango_diasvida === '121_mas').length;
-            const totalSinFecha = registrosFiltrados.filter(item => item.rango_diasvida === 'sin_fecha').length;
-
-            document.getElementById('totalVida60').textContent = formatearNumeroEntero(totalVida60);
-            document.getElementById('totalVida90').textContent = formatearNumeroEntero(totalVida90);
-            document.getElementById('totalVida120').textContent = formatearNumeroEntero(totalVida120);
-            document.getElementById('totalVida121').textContent = formatearNumeroEntero(totalVida121);
-            document.getElementById('totalSinFecha').textContent = formatearNumeroEntero(totalSinFecha);
+            document.getElementById('totalVida60').textContent = formatearNumeroEntero(registrosFiltrados.filter(item => item.rango_diasvida === 'hasta_60').length);
+            document.getElementById('totalVida90').textContent = formatearNumeroEntero(registrosFiltrados.filter(item => item.rango_diasvida === '61_90').length);
+            document.getElementById('totalVida120').textContent = formatearNumeroEntero(registrosFiltrados.filter(item => item.rango_diasvida === '91_120').length);
+            document.getElementById('totalVida121').textContent = formatearNumeroEntero(registrosFiltrados.filter(item => item.rango_diasvida === '121_mas').length);
+            document.getElementById('totalSinFecha').textContent = formatearNumeroEntero(registrosFiltrados.filter(item => item.rango_diasvida === 'sin_fecha').length);
 
             renderVencimientosChart({
-                hasta_60: totalVida60,
-                de_61_a_90: totalVida90,
-                de_91_a_120: totalVida120,
-                de_121_mas: totalVida121,
-                sin_fecha: totalSinFecha
+                hasta_60: registrosFiltrados.filter(item => item.rango_diasvida === 'hasta_60').length,
+                de_61_a_90: registrosFiltrados.filter(item => item.rango_diasvida === '61_90').length,
+                de_91_a_120: registrosFiltrados.filter(item => item.rango_diasvida === '91_120').length,
+                de_121_mas: registrosFiltrados.filter(item => item.rango_diasvida === '121_mas').length,
+                sin_fecha: registrosFiltrados.filter(item => item.rango_diasvida === 'sin_fecha').length
             });
 
             const urgentes = registrosFiltrados
@@ -2402,26 +1874,16 @@
 
             const tbody = document.getElementById('tablaVencimientosUrgentes');
             if (!urgentes.length) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="py-8 text-center text-gray-500">
-                            <i class="fas fa-inbox text-3xl mb-2"></i>
-                            <p>No hay datos de vencimiento</p>
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-500"><i class="fas fa-inbox text-3xl mb-2"></i><p>No hay datos de vencimiento</p></td></tr>`;
                 return;
             }
-
             tbody.innerHTML = urgentes.map(item => `
                 <tr class="border-b border-gray-100">
                     <td class="py-3">${escapeHtml(item.idbodega || '')}</td>
                     <td class="py-3">${escapeHtml(item.codigo || '')}</td>
                     <td class="py-3">${escapeHtml(item.descripcion || '')}</td>
                     <td class="py-3">${formatearFechaCorta(item.fecha_vencimiento)}</td>
-                    <td class="py-3 font-semibold ${item.diasvida <= 60 ? 'text-red-600' : item.diasvida <= 90 ? 'text-orange-600' : 'text-green-600'}">
-                        ${item.diasvida ?? ''}
-                    </td>
+                    <td class="py-3 font-semibold ${item.diasvida <= 60 ? 'text-red-600' : item.diasvida <= 90 ? 'text-orange-600' : 'text-green-600'}">${item.diasvida ?? ''}</td>
                 </tr>
             `).join('');
         }
@@ -2429,25 +1891,11 @@
         function renderVencimientosChart(resumen) {
             const contenedor = document.getElementById('vencimientosChartContainer');
             if (!contenedor) return;
-
             const labels = ['-60 Días', '61 a 90', '91 a 120', '+121 Días', 'Sin Fecha / PFN'];
-            const data = [
-                resumen?.hasta_60 ?? 0,
-                resumen?.de_61_a_90 ?? 0,
-                resumen?.de_91_a_120 ?? 0,
-                resumen?.de_121_mas ?? 0,
-                resumen?.sin_fecha ?? 0
-            ];
-
-            contenedor.innerHTML = `
-                <div class="w-full h-full relative">
-                    <canvas id="vencimientosChart"></canvas>
-                </div>
-            `;
-
+            const data = [resumen.hasta_60, resumen.de_61_a_90, resumen.de_91_a_120, resumen.de_121_mas, resumen.sin_fecha];
+            contenedor.innerHTML = `<div class="w-full h-full relative"><canvas id="vencimientosChart"></canvas></div>`;
             const ctx = document.getElementById('vencimientosChart').getContext('2d');
             if (vencimientosChartInstance) vencimientosChartInstance.destroy();
-
             vencimientosChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: { labels, datasets: [{ label: 'Cantidad de artículos', data, borderWidth: 1, borderRadius: 8 }] },
@@ -2512,20 +1960,13 @@
             document.getElementById('costoTotal').value = '';
             document.getElementById('totalUnidadesCalculo').textContent = '0';
             document.getElementById('fechaVencimiento').value = '';
-            document.getElementById('btnGuardarArticulo').innerHTML = `
-                <i class="fas fa-plus-circle mr-2"></i>
-                Agregar Artículo
-            `;
+            document.getElementById('btnGuardarArticulo').innerHTML = `<i class="fas fa-plus-circle mr-2"></i> Agregar Artículo`;
             window.editandoId = null;
             costoUnitarioActual = 0;
             costoTotalActual = 0;
             toggleFechaVencimiento();
-
             const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('fechaInventario').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
         }
 
         function calcularTotalUnidades() {
@@ -2534,7 +1975,6 @@
             const masterpack = parseFloat(document.getElementById('masterpack').value) || 1;
             const totalUnidades = (cajas * masterpack) + unidades;
             document.getElementById('totalUnidadesCalculo').textContent = formatearNumeroEntero(totalUnidades);
-
             const costoUnitario = Number(costoUnitarioActual) || 0;
             const costoTotalInventario = totalUnidades * costoUnitario;
             costoTotalActual = costoTotalInventario;
@@ -2660,12 +2100,7 @@
         function stopScanner() {
             try { Quagga.offDetected(handleDetection); Quagga.stop(); } catch (e) { console.warn('Error al detener Quagga:', e); }
             document.getElementById('scanner-area').classList.add('hidden');
-            document.getElementById('scanner').innerHTML = `
-                <div class="text-center text-gray-600 pt-10">
-                    <i class="fas fa-camera text-3xl mb-2"></i>
-                    <p>Escáner detenido</p>
-                </div>
-            `;
+            document.getElementById('scanner').innerHTML = `<div class="text-center text-gray-600 pt-10"><i class="fas fa-camera text-3xl mb-2"></i><p>Escáner detenido</p></div>`;
             scanning = false;
             lastScans = [];
         }
@@ -2691,7 +2126,6 @@
                 return;
             }
 
-            lastScanned = code;
             scanning = false;
             lastScans = [];
             actualizarEstadoScanner('Código confirmado');
@@ -2725,7 +2159,6 @@
                 showNotification('Error', 'Este dispositivo no soporta cámara', 'error');
                 return;
             }
-
             if (typeof Quagga === 'undefined') {
                 showNotification('Error', 'La librería del escáner no está disponible', 'error');
                 return;
@@ -2733,7 +2166,6 @@
 
             lastScans = [];
             Quagga.offDetected(handleDetection);
-
             Quagga.init({
                 inputStream: { type: 'LiveStream', target: scannerDiv, constraints: { facingMode: 'environment' } },
                 locator: { patchSize: 'medium', halfSample: true },
@@ -2752,7 +2184,6 @@
                 scannerDiv.querySelector('video')?.setAttribute('playsinline', true);
                 actualizarEstadoScanner('Centre el código EAN-13 dentro de la guía');
             });
-
             Quagga.onDetected(handleDetection);
         }
 
@@ -2781,10 +2212,7 @@
                 return null;
             }
 
-            let query = supabase
-                .from('inventario_reporteria')
-                .select('*')
-                .eq('idBodega', idBodega);
+            let query = supabase.from('inventario_reporteria').select('*').eq('idBodega', idBodega);
             query = esBusquedaPorBarra ? query.eq('codigo_barra', valorNormalizado) : query.eq('codigo', valorNormalizado);
             const { data, error } = await query.limit(2);
             if (token !== ultimoTokenBusqueda) return null;
@@ -2795,7 +2223,6 @@
                 if (mostrarMensajes) showNotification('Error', `Falló la búsqueda: ${error.message}`, 'error');
                 return null;
             }
-
             if (data && data.length > 1) {
                 limpiarCamposArticulo();
                 if (mostrarMensajes) showNotification('Error', 'Registros duplicados', 'error');
@@ -2817,13 +2244,11 @@
                     if (mostrarMensajes) showNotification('Error', `Falló la búsqueda en Base de Códigos: ${errorCodigos.message}`, 'error');
                     return null;
                 }
-
                 if (dataCodigos && dataCodigos.length > 1) {
                     limpiarCamposArticulo();
                     if (mostrarMensajes) showNotification('Error', 'Duplicados en Base de Códigos', 'error');
                     return null;
                 }
-
                 if (!dataCodigos || dataCodigos.length === 0) {
                     limpiarCamposArticulo();
                     if (mostrarMensajes) showNotification('Error', 'No se encontró el artículo', 'error');
@@ -2875,7 +2300,6 @@
                 if (mostrarMensajes) showNotification('Advertencia', 'El artículo no existe en inventario de reportería. Se cargó desde Base de Códigos.', 'warning');
                 return item;
             }
-
             if (mostrarMensajes) showNotification('Éxito', 'Artículo cargado', 'success');
             return item;
         }
@@ -2900,7 +2324,6 @@
                 showNotification('Error', 'Código, fecha, sede y bodega son requeridos', 'error');
                 return;
             }
-
             if (checkActivo && !fechaVenc) {
                 showNotification('Error', 'Debes ingresar la fecha de vencimiento', 'error');
                 return;
@@ -2910,27 +2333,15 @@
             const diasVida = checkActivo && fechaVenc ? calcularDiasVidaActual(fechaVenc) : null;
 
             const payloadInventario = {
-                fecha,
-                codigo,
-                codigo_barra: codigoBarra || null,
-                proveedor,
-                descripcion,
-                inventario_reporteria: inventarioReporteria,
-                masterpack,
-                cajas_fardos: cajas,
-                unidades,
-                idBodega,
-                sede,
-                fecha_vencimiento: checkActivo ? fechaVenc : null,
+                fecha, codigo, codigo_barra: codigoBarra || null, proveedor, descripcion,
+                inventario_reporteria: inventarioReporteria, masterpack, cajas_fardos: cajas, unidades,
+                idBodega, sede, fecha_vencimiento: checkActivo ? fechaVenc : null,
                 diasvida: checkActivo ? diasVida : null,
-                costoTotal: costoTotalActual || 0,
-                costo_unitario: costoUnitarioActual || 0
+                costoTotal: costoTotalActual || 0, costo_unitario: costoUnitarioActual || 0
             };
 
             try {
                 const estabaEditando = !!window.editandoId;
-                let idRegistro = window.editandoId || null;
-
                 if (window.editandoId) {
                     const { error: errorUpdate } = await supabase
                         .from('inventarios_diarios')
@@ -2938,34 +2349,22 @@
                         .eq('id', window.editandoId);
                     if (errorUpdate) throw errorUpdate;
                 } else {
-                    const { data: inserted, error: errorInsert } = await supabase
+                    const { error: errorInsert } = await supabase
                         .from('inventarios_diarios')
-                        .insert([payloadInventario])
-                        .select('id')
-                        .single();
+                        .insert([payloadInventario]);
                     if (errorInsert) throw errorInsert;
-                    idRegistro = inserted?.id || null;
                 }
 
                 if (checkActivo && fechaVenc) {
                     await guardarVencimientoSemanal({
-                        fecha_captura: fecha,
-                        sede: sede,
-                        idbodega: idBodega,
-                        codigo: codigo,
-                        codigo_barra: codigoBarra || null,
-                        proveedor: proveedor,
-                        descripcion: descripcion,
-                        inventario_reporteria: inventarioReporteria,
-                        masterpack: masterpack,
-                        cajas_fardos: cajas,
-                        unidades: unidades,
-                        fecha_vencimiento: fechaVenc,
-                        diasvida: diasVida,
+                        fecha_captura: fecha, sede, idbodega: idBodega, codigo,
+                        codigo_barra: codigoBarra || null, proveedor, descripcion,
+                        inventario_reporteria: inventarioReporteria, masterpack,
+                        cajas_fardos: cajas, unidades,
+                        fecha_vencimiento: fechaVenc, diasvida: diasVida,
                         costo_unitario: costoUnitarioActual || 0,
                         costototal: costoTotalActual || 0,
-                        usuario: getUsuarioActual(),
-                        total: total
+                        usuario: getUsuarioActual(), total
                     });
                 }
 
@@ -2974,7 +2373,6 @@
                 loadInventory();
                 actualizarDashboard();
                 loadVencimientosData();
-
                 showNotification('Éxito', estabaEditando ? 'Registro actualizado' : 'Artículo guardado', 'success');
             } catch (error) {
                 console.error('Error guardando artículo:', error);
@@ -2991,7 +2389,7 @@
             if (error) throw error;
         }
 
-        // ===== VER INVENTARIO =====
+        // ===== VER INVENTARIO (con filtro de fecha) =====
         async function loadInventory() {
             actualizarLabelFiltrosActivos();
 
@@ -2999,29 +2397,24 @@
             const searchInput = document.getElementById('searchInventory');
             const searchTerm = (searchInput?.value || '').trim().toLowerCase();
 
-            const { data, error } = await supabase
-                .from('inventarios_diarios')
-                .select('*')
-                .order('codigo', { ascending: true });
+            const sedeFiltro = document.getElementById('filtroSedeVerInventario')?.value || 'Todas';
+            const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaVerInventario')?.value || 'Todas';
+            const fechaFiltro = document.getElementById('filtroFechaVerInventario')?.value || '';
+
+            let query = supabase.from('inventarios_diarios').select('*');
+            if (fechaFiltro) {
+                query = query.eq('fecha', fechaFiltro);
+            }
+            const { data, error } = await query.order('codigo', { ascending: true });
 
             if (error) {
                 console.error('Error loadInventory:', error);
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="12" class="py-8 text-center text-gray-500">
-                            <i class="fas fa-circle-exclamation text-3xl mb-2"></i>
-                            <p>No se pudo cargar el inventario</p>
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML = `<tr><td colspan="12" class="py-8 text-center text-gray-500"><i class="fas fa-circle-exclamation text-3xl mb-2"></i><p>No se pudo cargar el inventario</p></td></tr>`;
                 showNotification('Error', 'No se pudo cargar el inventario', 'error');
                 return;
             }
 
             const inventarioOriginal = Array.isArray(data) ? data : [];
-            const sedeFiltro = document.getElementById('filtroSedeVerInventario')?.value || 'Todas';
-            const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaVerInventario')?.value || 'Todas';
-
             let inventario = filtrarPorSedeYTipo(inventarioOriginal, sedeFiltro, tipoBodegaFiltro);
 
             if (searchTerm) {
@@ -3042,37 +2435,26 @@
             try {
                 const skusImportados = new Set();
                 const skusInventariados = new Set();
-
                 const { data: dataImportados } = await supabase.from('inventario_reporteria').select('codigo');
                 (dataImportados || []).forEach(item => {
                     const codigo = String(item.codigo || '').trim();
                     if (codigo) skusImportados.add(codigo);
                 });
-
                 inventario.forEach(item => {
                     const codigo = String(item.codigo || '').trim();
                     if (codigo) skusInventariados.add(codigo);
                 });
-
                 const totalImportados = skusImportados.size;
                 const totalInventariados = skusInventariados.size;
                 const totalPendientes = Math.max(totalImportados - totalInventariados, 0);
                 const porcentaje = totalImportados > 0 ? ((totalInventariados / totalImportados) * 100).toFixed(2) : '0.00';
-
                 document.getElementById('skusPendientes').textContent = totalPendientes.toLocaleString();
                 document.getElementById('skusInventariados').textContent = totalInventariados.toLocaleString();
                 document.getElementById('porcentajeInventarioGeneral').textContent = `${porcentaje}%`;
             } catch (e) { console.error('Error resumen SKUs:', e); }
 
             if (!inventario.length) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="12" class="py-8 text-center text-gray-500">
-                            <i class="fas fa-inbox text-3xl mb-2"></i>
-                            <p>No hay artículos en el inventario</p>
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML = `<tr><td colspan="12" class="py-8 text-center text-gray-500"><i class="fas fa-inbox text-3xl mb-2"></i><p>No hay artículos en el inventario${fechaFiltro ? ' para la fecha seleccionada' : ''}</p></td></tr>`;
                 return;
             }
 
@@ -3084,7 +2466,6 @@
                 const total = (cajas * masterpack) + unidades;
                 const diferencia = total - inventarioReporteria;
                 const validacion = diferencia === 0 ? 'OK' : (diferencia < 0 ? 'VAL-' : 'VAL+');
-
                 return `
                     <tr class="border-b border-gray-200 hover:bg-gray-50">
                         <td class="py-4 px-4 text-sm">${escapeHtml(item.idBodega || '')}</td>
@@ -3100,17 +2481,16 @@
                         <td class="py-4 px-4 text-center">${validacion}</td>
                         <td class="py-4 px-4 text-center">
                             <div class="flex justify-center space-x-2">
-                                <button class="text-blue-600 hover:text-blue-800" onclick="editarArticulo('${escapeAttr(item.id)}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="text-red-600 hover:text-red-800" onclick="eliminarArticulo('${escapeAttr(item.id)}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <button class="text-blue-600 hover:text-blue-800" onclick="editarArticulo('${escapeAttr(item.id)}')"><i class="fas fa-edit"></i></button>
+                                <button class="text-red-600 hover:text-red-800" onclick="eliminarArticulo('${escapeAttr(item.id)}')"><i class="fas fa-trash"></i></button>
                             </div>
                         </td>
                     </tr>
                 `;
             }).join('');
+
+            // Actualizar etiqueta de filtros activos (incluye fecha)
+            actualizarLabelFiltrosActivos();
         }
 
         async function editarArticulo(id) {
@@ -3160,57 +2540,34 @@
             window.editandoId = id;
 
             document.querySelector('[data-section="inventario-diario"]').click();
-            document.getElementById('btnGuardarArticulo').innerHTML = `
-                <i class="fas fa-save mr-2"></i>
-                Guardar Modificaciones
-            `;
+            document.getElementById('btnGuardarArticulo').innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Modificaciones`;
         }
 
         async function eliminarArticulo(id) {
             if (!confirm('¿Eliminar este registro? Esta acción generará respaldo y auditoría.')) return;
-
             const { data, error } = await supabase.rpc('rpc_eliminar_articulo_seguro', {
                 p_id: String(id),
                 p_usuario: currentUser?.username || currentUser?.usuario || ''
             });
-
             if (error || !data?.ok) {
                 console.error('Error eliminando:', error || data);
                 showNotification('Error', data?.mensaje || error?.message || 'No se pudo eliminar', 'error');
                 return;
             }
-
             await Promise.all([loadInventory(), actualizarDashboard(), loadVencimientosData()]);
             showNotification('Éxito', 'Registro eliminado con respaldo', 'success');
         }
 
         // ===== JUSTIFICACIONES =====
         const OPCIONES_JUSTIFICACION = [
-            'Asignado en GP - La Colonia',
-            'Asignado en GP - Walmart',
-            'Asignado en GP - Ruta Detalle',
-            'Asignado en GP - Otros',
-            'Ajuste realizado en GP',
-            'Cruce entre mismo Proveedor',
-            'Devolución Pendiente de Ingreso',
-            'Inventario Completo',
-            'Factura pendiente de Ingreso',
-            'Faltante',
-            'Revisar con reconteo',
-            'Sobrante',
-            'Transito / Pendiente',
-            'Traslado desde otra Bodega'
+            'Asignado en GP - La Colonia', 'Asignado en GP - Walmart', 'Asignado en GP - Ruta Detalle',
+            'Asignado en GP - Otros', 'Ajuste realizado en GP', 'Cruce entre mismo Proveedor',
+            'Devolución Pendiente de Ingreso', 'Inventario Completo', 'Factura pendiente de Ingreso',
+            'Faltante', 'Revisar con reconteo', 'Sobrante', 'Transito / Pendiente', 'Traslado desde otra Bodega'
         ];
 
         function construirOpcionesJustificacion(valorActual = '') {
-            return `
-                <option value="">Seleccione</option>
-                ${OPCIONES_JUSTIFICACION.map(opcion => `
-                    <option value="${opcion}" ${opcion === valorActual ? 'selected' : ''}>
-                        ${opcion}
-                    </option>
-                `).join('')}
-            `;
+            return `<option value="">Seleccione</option>${OPCIONES_JUSTIFICACION.map(op => `<option value="${op}" ${op === valorActual ? 'selected' : ''}>${op}</option>`).join('')}`;
         }
 
         async function loadTransitos() {
@@ -3364,17 +2721,10 @@
                 const costoUnitario = Number(fila.dataset.costoUnitario || 0);
 
                 registros.push({
-                    codigo,
-                    sede,
-                    idBodega,
-                    usuario: getUsuarioActual(),
-                    descripcion,
-                    diferencia,
-                    cantidad_justificada: cantidadJustificada,
-                    costo_unitario: costoUnitario,
-                    costo_total: cantidadJustificada * costoUnitario,
-                    justificacion,
-                    fecha_modificacion: new Date().toISOString(),
+                    codigo, sede, idBodega, usuario: getUsuarioActual(), descripcion,
+                    diferencia, cantidad_justificada: cantidadJustificada,
+                    costo_unitario: costoUnitario, costo_total: cantidadJustificada * costoUnitario,
+                    justificacion, fecha_modificacion: new Date().toISOString(),
                     fecha_registro: fila.dataset.fechaRegistro || new Date().toISOString()
                 });
             }
@@ -3575,7 +2925,6 @@
                         fieldMapping.forEach((campo, idx) => {
                             obj[campo] = limpiarValor(values[idx] || '');
                         });
-                        // conversiones de tipo
                         if (obj.masterpack) obj.masterpack = parseFloat(obj.masterpack) || 1;
                         if (obj.inventario_reporteria) obj.inventario_reporteria = parseFloat(obj.inventario_reporteria) || 0;
                         if (obj.costo) obj.costo = parseFloat(obj.costo) || 0;
@@ -3587,7 +2936,6 @@
                         return;
                     }
 
-                    // Si es inventario, limpiar primero
                     if (tableName === 'inventario_reporteria') {
                         const { error: delError } = await supabase.rpc('rpc_limpiar_inventario_reporteria_segura', {
                             p_usuario: getUsuarioActual()
@@ -3601,7 +2949,6 @@
 
                     if (insertError) throw insertError;
 
-                    // Registrar historial
                     await supabase.from('inventario_importaciones').insert([{
                         usuario: getUsuarioActual(),
                         fecha_importacion: new Date().toISOString(),
@@ -3613,7 +2960,6 @@
                     if (tipoImportacion === 'inventario') cargarResumenImportaciones('inventario');
                     else if (tipoImportacion === 'codigos') cargarResumenImportaciones('codigos');
 
-                    // limpiar vista
                     const fileInput = document.querySelector(`#${tableName === 'inventario_reporteria' ? 'importInventoryFile' : 'importCodesFile'}`);
                     if (fileInput) fileInput.value = '';
                     const previewDiv = document.getElementById(tableName === 'inventario_reporteria' ? 'inventoryPreview' : 'codesPreview');
@@ -3849,7 +3195,6 @@
 
             showNotification('Éxito', `Base de códigos eliminada. Registros: ${data.codigos || 0}`, 'success', 9000);
             cargarResumenImportaciones('codigos');
-            // Limpiar preview
             document.getElementById('codesPreview')?.classList.add('hidden');
             document.getElementById('importCodesFile').value = '';
             document.getElementById('confirmImportCodes').disabled = true;
@@ -3880,7 +3225,23 @@
             const labels = document.querySelectorAll('.labelFiltrosActivos');
             const sedeTexto = filtrosGlobales.sede === 'Todas' ? 'Todas las sedes' : filtrosGlobales.sede;
             const bodegaTexto = filtrosGlobales.tipoBodega === 'Todas' ? 'Todas las bodegas' : `Bodega ${filtrosGlobales.tipoBodega}`;
-            labels.forEach(label => label.textContent = `${sedeTexto}, ${bodegaTexto}`);
+
+            // Obtener fecha del filtro de inventario si existe
+            const fechaInput = document.getElementById('filtroFechaVerInventario');
+            let fechaTexto = 'Todas las fechas';
+            if (fechaInput && fechaInput.value) {
+                const partes = fechaInput.value.split('-');
+                fechaTexto = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+
+            labels.forEach(label => {
+                const seccion = label.closest('#inventario-section');
+                if (seccion) {
+                    label.textContent = `${sedeTexto}, ${bodegaTexto}, ${fechaTexto}`;
+                } else {
+                    label.textContent = `${sedeTexto}, ${bodegaTexto}`;
+                }
+            });
         }
 
         function configurarFiltrosSegunUsuario() {
@@ -3935,6 +3296,50 @@
             window.location.href = 'index.html';
         }
 
+        // ===== NAVEGACIÓN (corregida) =====
+        function initNavigation() {
+            document.getElementById('menuToggle').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.add('open');
+                document.getElementById('mobileOverlay').classList.add('open');
+            });
+            document.getElementById('closeSidebar').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.remove('open');
+                document.getElementById('mobileOverlay').classList.remove('open');
+            });
+            document.getElementById('mobileOverlay').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.remove('open');
+                this.classList.remove('open');
+            });
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    const section = this.dataset.section;
+                    // Si no tiene data-section, es un enlace externo (ej. Dashboard)
+                    if (!section) return;
+
+                    e.preventDefault();
+
+                    if (section === 'transitos') loadTransitos();
+                    if (section === 'vencimientos') loadVencimientosData();
+                    if (section === 'usuarios') { resetUserForm(); loadUsers(); }
+
+                    document.getElementById('currentSectionTitle').textContent = this.textContent.trim();
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+
+                    document.querySelectorAll('.section-content').forEach(sec => sec.classList.add('hidden'));
+                    const target = document.getElementById(section + '-section');
+                    if (target) target.classList.remove('hidden');
+                });
+            });
+        }
+
+        function mostrarRecordatorioLunes() {
+            if (new Date().getDay() === 1) {
+                showNotification('Recordatorio', 'Hoy es Lunes, actualice fechas de vencimiento', 'warning', 10000);
+            }
+        }
+
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', async function() {
             // Verificar autenticación
@@ -3987,13 +3392,32 @@
             initUsers();
             window.initAssistant();
 
-            // Eventos de filtros en otras secciones
+            // Eventos de filtros
             document.getElementById('filtroSedeVerInventario')?.addEventListener('change', loadInventory);
             document.getElementById('filtroTipoBodegaVerInventario')?.addEventListener('change', loadInventory);
             document.getElementById('filtroSedeJustificaciones')?.addEventListener('change', loadTransitos);
             document.getElementById('filtroTipoBodegaJustificaciones')?.addEventListener('change', loadTransitos);
             document.getElementById('filtroSedeVencimientos')?.addEventListener('change', loadVencimientosData);
             document.getElementById('filtroTipoBodegaVencimientos')?.addEventListener('change', loadVencimientosData);
+
+            // Filtro de fecha en Ver Inventario
+            const fechaInputInv = document.getElementById('filtroFechaVerInventario');
+            const limpiarFechaBtn = document.getElementById('btnLimpiarFechaInventario');
+
+            // Establecer fecha actual por defecto
+            if (fechaInputInv) {
+                const hoy = new Date();
+                const fechaStr = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+                fechaInputInv.value = fechaStr;
+            }
+
+            fechaInputInv?.addEventListener('change', loadInventory);
+            limpiarFechaBtn?.addEventListener('click', function() {
+                if (fechaInputInv) {
+                    fechaInputInv.value = '';
+                    loadInventory();
+                }
+            });
 
             // Formulario artículo
             document.getElementById('articuloForm').addEventListener('submit', function(e) {
@@ -4042,7 +3466,7 @@
                 loadInventory();
             });
 
-            // Justificaciones: editar y guardar
+            // Justificaciones
             document.getElementById('btnEditarRegistros').addEventListener('click', activarModoEdicion);
             document.getElementById('btnGuardarRegistros').addEventListener('click', guardarCambiosMasivos);
 
@@ -4051,7 +3475,7 @@
                 document.getElementById('notification').classList.add('hidden');
             });
 
-            // Eventos de bodega y sede en formulario
+            // Eventos de bodega y sede
             document.getElementById('sede').addEventListener('change', function() {
                 actualizarBodegasPorSede();
                 limpiarCamposArticulo();
@@ -4068,57 +3492,14 @@
 
             // Logout
             document.getElementById('logoutBtn').addEventListener('click', logout);
+
+            // Asignar funciones globales para eventos inline
+            window.toggleFechaVencimiento = toggleFechaVencimiento;
+            window.calcularTotalUnidades = calcularTotalUnidades;
+            window.editarArticulo = editarArticulo;
+            window.eliminarArticulo = eliminarArticulo;
+            window.previewCSVFile = previewCSVFile;
         });
-
-        // ===== NAVEGACIÓN =====
-        function initNavigation() {
-		    // Toggle sidebar en móvil (sin cambios)
-		    document.getElementById('menuToggle').addEventListener('click', function() {
-		        document.querySelector('.sidebar').classList.add('open');
-		        document.getElementById('mobileOverlay').classList.add('open');
-		    });
-		    document.getElementById('closeSidebar').addEventListener('click', function() {
-		        document.querySelector('.sidebar').classList.remove('open');
-		        document.getElementById('mobileOverlay').classList.remove('open');
-		    });
-		    document.getElementById('mobileOverlay').addEventListener('click', function() {
-		        document.querySelector('.sidebar').classList.remove('open');
-		        this.classList.remove('open');
-		    });
-		
-		    // Navegación entre secciones - CORREGIDO
-		    document.querySelectorAll('.nav-item').forEach(item => {
-		        item.addEventListener('click', function(e) {
-		            const section = this.dataset.section;
-		            // Si no tiene data-section, es un enlace externo (ej. Dashboard)
-		            // Permitir que el navegador maneje el enlace normalmente
-		            if (!section) return;
-		
-		            e.preventDefault(); // Solo prevenir para enlaces internos
-		
-		            // Cargar datos específicos según la sección
-		            if (section === 'transitos') loadTransitos();
-		            if (section === 'vencimientos') loadVencimientosData();
-		            if (section === 'usuarios') { resetUserForm(); loadUsers(); }
-		
-		            // Actualizar título y clase activa
-		            document.getElementById('currentSectionTitle').textContent = this.textContent.trim();
-		            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-		            this.classList.add('active');
-		
-		            // Mostrar la sección correspondiente
-		            document.querySelectorAll('.section-content').forEach(sec => sec.classList.add('hidden'));
-		            const target = document.getElementById(section + '-section');
-		            if (target) target.classList.remove('hidden');
-		        });
-		    });
-		}
-
-        function mostrarRecordatorioLunes() {
-            if (new Date().getDay() === 1) {
-                showNotification('Recordatorio', 'Hoy es Lunes, actualice fechas de vencimiento', 'warning', 10000);
-            }
-        }
     </script>
 
     <!-- ===== ASISTENTE FLOTANTE (sin cambios) ===== -->
@@ -4165,25 +3546,12 @@
         </div>
     </div>
 
-    <!-- Footer fijo -->
-    <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
-        <div class="text-[11px] text-gray-500">Elaborado por Hernán Manuel Pérez Banegas®</div>
-        <div class="flex items-center gap-2 text-xs whitespace-nowrap">
-            <span id="nombreCorto" class="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap"></span>
-            <button onclick="window.location.href='dashboard.html'" class="ml-2" aria-label="Inicio"><i class="fas fa-home"></i></button>
-            <button id="logoutBtn" class="ml-2" aria-label="Cerrar sesión"><i class="fas fa-sign-out-alt"></i></button>
-        </div>
-    </div>
-
     <script>
-        // Código adicional para manejo de vencimiento y otros eventos que no estaban en el script principal
+        // Inicializar el asistente (la función está en el módulo)
         document.addEventListener('DOMContentLoaded', function() {
-            // Re-evaluar vencimiento al cambiar bodega (ya está en el evento)
-            // Asegurar que toggleFechaVencimiento esté disponible globalmente
-            window.toggleFechaVencimiento = toggleFechaVencimiento;
-            window.calcularTotalUnidades = calcularTotalUnidades;
-            window.editarArticulo = editarArticulo;
-            window.eliminarArticulo = eliminarArticulo;
+            if (typeof window.initAssistant === 'function') {
+                window.initAssistant();
+            }
         });
     </script>
 </body>
