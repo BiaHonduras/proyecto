@@ -2401,80 +2401,84 @@
         }
 
         // ===== BUSCAR ARTÍCULO =====
+        // ============================================================
+        // 1. FUNCIÓN NORMALIZAR CÓDIGO (MEJORADA)
+        // ============================================================
         function normalizarCodigo(codigo) {
-            return String(codigo || '').trim();
+            return String(codigo || '')
+                .trim()
+                .replace(/[\r\n\t]+/g, '')   // elimina saltos de línea y tabuladores
+                .replace(/\s+/g, ' ');       // normaliza múltiples espacios a uno solo
         }
-
+        
+        // ============================================================
+        // 2. BUSCAR ARTÍCULO (VERSIÓN CORREGIDA)
+        // ============================================================
         async function buscarArticulo(valor, opciones = {}, tipo = null) {
             if (!valor) return null;
+        
             const token = ++ultimoTokenBusqueda;
             const sede = document.getElementById('sede').value;
-            const idBodega = document.getElementById('idBodega').value;
+            const idBodega = normalizarCodigo(document.getElementById('idBodega').value);
             const valorNormalizado = normalizarCodigo(valor);
             const mostrarMensajes = opciones.mostrarMensajes !== false;
         
-            // Determinar el campo de búsqueda según el tipo recibido o la longitud
+            // Determinar campo de búsqueda según tipo
             let campoBusqueda = 'codigo';
             if (tipo === 'barra') {
                 campoBusqueda = 'codigo_barra';
             } else if (tipo === 'codigo') {
                 campoBusqueda = 'codigo';
             } else {
-                // Si no se especifica, usamos la lógica anterior (longitud >= 10 -> barra)
+                // Si no se especifica, usar lógica por longitud
                 campoBusqueda = (valorNormalizado.length >= 10) ? 'codigo_barra' : 'codigo';
             }
         
             if (!sede) {
                 limpiarCamposArticulo();
-                if (mostrarMensajes) showNotification('Error', 'Seleccione una sede', 'error');
+                if (mostrarMensajes) showNotification('Error', 'Seleccione una sede antes de buscar', 'error');
                 return null;
             }
+        
             if (!idBodega) {
                 limpiarCamposArticulo();
-                if (mostrarMensajes) showNotification('Error', 'Seleccione una bodega', 'error');
+                if (mostrarMensajes) showNotification('Error', 'Seleccione un identificador de bodega antes de buscar', 'error');
                 return null;
             }
         
-            // 1. Buscar en inventario_reporteria (con filtro de bodega)
-            let query = supabase
+            // --- 1. Buscar en inventario_reporteria (con filtro de bodega) ---
+            const { data: dataReporteria, error: errorReporteria } = await supabase
                 .from('inventario_reporteria')
                 .select('*')
-                .eq('idBodega', idBodega)
-                .eq(campoBusqueda, valorNormalizado);
-            const { data, error } = await query.limit(2);
-            console.log('🔍 Consulta a inventario_reporteria: ', { 
-                idBodega, 
-                campoBusqueda, 
-                valor: valorNormalizado, 
-                data: data 
-            });
-            
-            if (token !== ultimoTokenBusqueda) return null;
+                .eq('idBodega', idBodega);
         
-            if (error) {
-                console.error('Error en buscarArticulo (reporteria):', error);
+            if (errorReporteria) {
+                console.error('Error en buscarArticulo (reporteria):', errorReporteria);
                 limpiarCamposArticulo();
-                if (mostrarMensajes) showNotification('Error', `Falló la búsqueda: ${error.message}`, 'error');
+                if (mostrarMensajes) showNotification('Error', `Falló la búsqueda: ${errorReporteria.message}`, 'error');
                 return null;
             }
         
-            if (data && data.length > 1) {
+            // Filtrar en cliente normalizando ambos lados
+            const dataFiltradaReporteria = (dataReporteria || []).filter(item =>
+                normalizarCodigo(item[campoBusqueda]) === valorNormalizado
+            );
+        
+            if (dataFiltradaReporteria.length > 1) {
                 limpiarCamposArticulo();
                 if (mostrarMensajes) showNotification('Error', 'Registros duplicados en inventario_reporteria', 'error');
+                console.warn('Duplicados en reportería:', dataFiltradaReporteria);
                 return null;
             }
         
-            let item = data?.[0] || null;
+            let item = dataFiltradaReporteria[0] || null;
             let encontradoSoloEnBaseCodigos = false;
         
-            // 2. Si no se encontró en reportería, buscar en codigos (sin filtro de bodega)
+            // --- 2. Si no se encontró, buscar en codigos (sin filtro de bodega) ---
             if (!item) {
-                let queryCodigos = supabase
+                const { data: dataCodigos, error: errorCodigos } = await supabase
                     .from('codigos')
-                    .select('codigo, codigo_barra, proveedor, descripcion, masterpack, costo')
-                    .eq(campoBusqueda, valorNormalizado);
-                const { data: dataCodigos, error: errorCodigos } = await queryCodigos.limit(2);
-                if (token !== ultimoTokenBusqueda) return null;
+                    .select('codigo, codigo_barra, proveedor, descripcion, masterpack, costo');
         
                 if (errorCodigos) {
                     console.error('Error buscando en base de códigos:', errorCodigos);
@@ -2483,19 +2487,25 @@
                     return null;
                 }
         
-                if (dataCodigos && dataCodigos.length > 1) {
+                // Filtrar en cliente normalizando
+                const dataFiltradaCodigos = (dataCodigos || []).filter(itemCod =>
+                    normalizarCodigo(itemCod[campoBusqueda]) === valorNormalizado
+                );
+        
+                if (dataFiltradaCodigos.length > 1) {
                     limpiarCamposArticulo();
                     if (mostrarMensajes) showNotification('Error', 'Registros duplicados en Base de Códigos', 'error');
+                    console.warn('Duplicados en codigos:', dataFiltradaCodigos);
                     return null;
                 }
         
-                if (!dataCodigos || dataCodigos.length === 0) {
+                if (dataFiltradaCodigos.length === 0) {
                     limpiarCamposArticulo();
-                    if (mostrarMensajes) showNotification('Error', 'No se encontró el artículo', 'error');
+                    if (mostrarMensajes) showNotification('Error', 'No se encontró el artículo ni en inventario ni en la Base de Códigos', 'error');
                     return null;
                 }
         
-                const itemBase = dataCodigos[0];
+                const itemBase = dataFiltradaCodigos[0];
                 item = {
                     codigo: itemBase.codigo || valorNormalizado,
                     codigo_barra: itemBase.codigo_barra || '',
@@ -2508,7 +2518,7 @@
                 encontradoSoloEnBaseCodigos = true;
             }
         
-            // Rellenar el formulario con los datos encontrados
+            // --- Rellenar el formulario ---
             document.getElementById('codigoArticulo').value = item.codigo || '';
             document.getElementById('codigoBarra').value = item.codigo_barra || (campoBusqueda === 'codigo_barra' ? valorNormalizado : '');
             document.getElementById('proveedor').value = item.proveedor || '';
@@ -2521,6 +2531,7 @@
             document.getElementById('cajasFardosReporteria').value = Math.floor(inv / master);
             document.getElementById('unidadesReporteria').value = inv % master;
         
+            // --- Obtener costo desde codigos si no se encontró en reportería ---
             let costo = Number(item.costo || 0);
             if (!encontradoSoloEnBaseCodigos) {
                 const { data: dataCosto, error: errorCosto } = await supabase
@@ -2529,22 +2540,68 @@
                     .eq('codigo', item.codigo)
                     .limit(1)
                     .maybeSingle();
+        
                 if (token !== ultimoTokenBusqueda) return null;
-                costo = (!errorCosto && dataCosto?.costo != null) ? Number(dataCosto.costo) : costo;
+        
+                costo = (!errorCosto && dataCosto?.costo != null)
+                    ? Number(dataCosto.costo)
+                    : costo;
             }
         
-            costoUnitarioActual = costo;
+            window.costoUnitarioActual = costo;
             document.getElementById('costoUnitario').value = formatearMoneda(costo);
             calcularTotalUnidades();
         
             if (encontradoSoloEnBaseCodigos) {
-                if (mostrarMensajes) showNotification('Advertencia', 'El artículo no existe en inventario de reportería. Se cargó desde Base de Códigos.', 'warning');
+                if (mostrarMensajes) showNotification('Advertencia', 'El artículo no existe en inventario de reportería para esa bodega. Se cargó usando la Base de Códigos.', 'warning');
                 return item;
             }
         
             if (mostrarMensajes) showNotification('Éxito', 'Artículo cargado', 'success');
             return item;
         }
+        
+        // ============================================================
+        // 3. EVENT LISTENERS PARA BÚSQUEDA AUTOMÁTICA (ACTUALIZADOS)
+        // ============================================================
+        const codigoArticuloInput = document.getElementById('codigoArticulo');
+        if (codigoArticuloInput) {
+            codigoArticuloInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const valor = this.value.trim();
+                    if (valor) buscarArticulo(valor, {}, 'codigo');
+                }
+            });
+            codigoArticuloInput.addEventListener('blur', function() {
+                const valor = this.value.trim();
+                if (valor) buscarArticulo(valor, {}, 'codigo');
+            });
+        }
+        
+        const codigoBarraInput = document.getElementById('codigoBarra');
+        if (codigoBarraInput) {
+            codigoBarraInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const valor = this.value.trim();
+                    if (valor) buscarArticulo(valor, {}, 'barra');
+                }
+            });
+            codigoBarraInput.addEventListener('blur', function() {
+                const valor = this.value.trim();
+                if (valor) buscarArticulo(valor, {}, 'barra');
+            });
+        }
+        
+        // ============================================================
+        // 4. ACTUALIZAR LLAMADAS EN handleDetection Y editarArticulo
+        // ============================================================
+        // En la función handleDetection (dentro del escáner) debe estar:
+        // const articulo = await buscarArticulo(code, { mostrarMensajes: false }, 'barra');
+        
+        // En la función editarArticulo, después de cargar los datos, debe estar:
+        // await buscarArticulo(data.codigo, {}, 'codigo');
 
         // ===== AGREGAR ARTÍCULO =====
         async function agregarArticulo() {
