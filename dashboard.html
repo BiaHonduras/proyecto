@@ -2405,10 +2405,18 @@
         // 1. FUNCIÓN NORMALIZAR CÓDIGO (MEJORADA)
         // ============================================================
         function normalizarCodigo(codigo) {
-            return String(codigo || '')
-                .trim()
-                .replace(/[\r\n\t]+/g, '')   // elimina saltos de línea y tabuladores
-                .replace(/\s+/g, ' ');       // normaliza múltiples espacios a uno solo
+            if (!codigo) return '';
+            
+            // Convertir a string, eliminar caracteres no imprimibles y espacios
+            let limpio = String(codigo)
+                .replace(/[\r\n\t\f\v\u00A0\u2028\u2029]+/g, ' ')  // reemplaza saltos, tabs y espacios raros por espacio
+                .replace(/\s+/g, ' ')                               // múltiples espacios a uno
+                .trim();                                           // elimina espacios al inicio y final
+            
+            // Si solo quieres números (opcional, pero más seguro):
+            // limpio = limpio.replace(/[^0-9]/g, '');
+            
+            return limpio;
         }
         
         // ============================================================
@@ -2470,6 +2478,18 @@
                 console.warn('Duplicados en reportería:', dataFiltradaReporteria);
                 return null;
             }
+
+            console.log('🔍 Búsqueda en reportería:', {
+                campo: campoBusqueda,
+                valorBuscado: valorNormalizado,
+                valoresEnDB: (dataReporteria || []).map(item => ({
+                    id: item.id,
+                    codigo: item.codigo,
+                    codigo_barra: item.codigo_barra,
+                    normalizado: normalizarCodigo(item[campoBusqueda])
+                })),
+                coincidencias: dataFiltradaReporteria.length
+            });
         
             let item = dataFiltradaReporteria[0] || null;
             let encontradoSoloEnBaseCodigos = false;
