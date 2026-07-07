@@ -3640,8 +3640,7 @@
             window.location.href = 'index.html';
         }
 
-        // ===== ASISTENTE CON IA (CORREGIDO) =====
-        // Se asigna a window para que esté disponible globalmente
+        // ===== ASISTENTE CON IA =====
         window.initAssistant = function() {
             console.log('Inicializando asistente...');
             const fab = document.getElementById('assistantFab');
@@ -3659,7 +3658,6 @@
             const AI_FUNCTION_NAME = 'assistant-inventario';
             let assistantBusy = false;
 
-            // Base de conocimiento local
             const respuestasLocales = [
                 {
                     keywords: ['registrar', 'artículo', 'agregar', 'inventario diario'],
@@ -3781,12 +3779,10 @@ Fecha,Proveedor,Código de Barra, Codigo,Descripcion,Inventario Reporteria,Maste
 
             function getFallbackResponse(question) {
                 const clean = normalizeText(question);
-
                 for (const item of respuestasLocales) {
                     const ok = item.keywords.some(keyword => clean.includes(normalizeText(keyword)));
                     if (ok) return item.answer;
                 }
-
                 return `No encontré una respuesta exacta para eso.
 
 Prueba con temas como:
@@ -3804,12 +3800,10 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 
             async function getAssistantResponse(question) {
                 try {
-                    // Verificar que la función de Supabase esté disponible
                     if (!window.supabase?.functions?.invoke) {
                         console.warn('Supabase functions no disponible, usando fallback local');
                         return getFallbackResponse(question);
                     }
-            
                     const payload = {
                         question: String(question || '').trim(),
                         context: getContextoPantalla(),
@@ -3819,27 +3813,15 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                             sede: window.currentUser?.sede || window.currentUser?.Sede || ''
                         }
                     };
-            
                     console.log('Enviando a Edge Function:', payload);
-            
-                    const { data, error } = await window.supabase.functions.invoke('assistant-inventario', {
-                        body: payload
-                    });
-            
+                    const { data, error } = await window.supabase.functions.invoke('assistant-inventario', { body: payload });
                     console.log('Respuesta de Edge Function:', { data, error });
-            
                     if (error) {
                         console.error('Error invocando Edge Function:', error);
                         return getFallbackResponse(question);
                     }
-            
-                    // La función devuelve { answer: "..." }
                     const text = data?.answer || data?.respuesta || data?.message || '';
-                    if (text && String(text).trim()) {
-                        return String(text).trim();
-                    }
-            
-                    // Si no hay texto, usar fallback
+                    if (text && String(text).trim()) return String(text).trim();
                     return getFallbackResponse(question);
                 } catch (err) {
                     console.error('Excepción en getAssistantResponse:', err);
@@ -3850,11 +3832,9 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             async function processAssistantQuestion(question) {
                 const texto = String(question || '').trim();
                 if (!texto || assistantBusy) return;
-
                 addAssistantMessage(texto, 'user');
                 setAssistantBusy(true);
                 const typing = addTypingIndicator();
-
                 try {
                     const response = await getAssistantResponse(texto);
                     typing.remove();
@@ -3882,39 +3862,25 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             }
 
             fab.addEventListener('click', () => {
-                if (panel.classList.contains('hidden')) {
-                    openAssistant();
-                } else {
-                    closeAssistant();
-                }
+                if (panel.classList.contains('hidden')) openAssistant();
+                else closeAssistant();
             });
-
             closeBtn.addEventListener('click', closeAssistant);
-
-            sendBtn.addEventListener('click', () => {
-                processAssistantQuestion(input.value);
-            });
-
+            sendBtn.addEventListener('click', () => processAssistantQuestion(input.value));
             input.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     processAssistantQuestion(input.value);
                 }
             });
-
             document.querySelectorAll('.assistant-chip').forEach(chip => {
                 chip.addEventListener('click', function() {
-                    const question = this.dataset.question || this.textContent || '';
-                    processAssistantQuestion(question);
+                    processAssistantQuestion(this.dataset.question || this.textContent || '');
                 });
             });
-
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && !panel.classList.contains('hidden')) {
-                    closeAssistant();
-                }
+                if (e.key === 'Escape' && !panel.classList.contains('hidden')) closeAssistant();
             });
-
             console.log('Asistente inicializado correctamente.');
         };
 
@@ -3969,7 +3935,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             mostrarRecordatorioLunes();
             initUsers();
 
-            // Inicializar asistente (se asigna a window)
+            // Inicializar asistente
             if (typeof window.initAssistant === 'function') {
                 window.initAssistant();
             } else {
@@ -4078,6 +4044,37 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                 evaluarVencimiento();
             });
 
+            // ===== NUEVO: Búsqueda automática al escribir código (Enter y blur) =====
+            const codigoArticuloInput = document.getElementById('codigoArticulo');
+            if (codigoArticuloInput) {
+                codigoArticuloInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const valor = this.value.trim();
+                        if (valor) buscarArticulo(valor);
+                    }
+                });
+                codigoArticuloInput.addEventListener('blur', function() {
+                    const valor = this.value.trim();
+                    if (valor) buscarArticulo(valor);
+                });
+            }
+
+            const codigoBarraInput = document.getElementById('codigoBarra');
+            if (codigoBarraInput) {
+                codigoBarraInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const valor = this.value.trim();
+                        if (valor) buscarArticulo(valor);
+                    }
+                });
+                codigoBarraInput.addEventListener('blur', function() {
+                    const valor = this.value.trim();
+                    if (valor) buscarArticulo(valor);
+                });
+            }
+
             document.getElementById('userDNI').addEventListener('input', function() {
                 this.value = formatearDNI(this.value);
             });
@@ -4085,7 +4082,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             document.getElementById('logoutBtn').addEventListener('click', logout);
         });
 
-        // ===== NAVEGACIÓN CORREGIDA =====
+        // ===== NAVEGACIÓN =====
         function initNavigation() {
             document.getElementById('menuToggle').addEventListener('click', function() {
                 document.querySelector('.sidebar').classList.add('open');
