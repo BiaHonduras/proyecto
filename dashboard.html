@@ -2442,6 +2442,13 @@
                 .eq('idBodega', idBodega)
                 .eq(campoBusqueda, valorNormalizado);
             const { data, error } = await query.limit(2);
+            console.log('🔍 Consulta a inventario_reporteria: ', { 
+                idBodega, 
+                campoBusqueda, 
+                valor: valorNormalizado, 
+                data: data 
+            });
+            
             if (token !== ultimoTokenBusqueda) return null;
         
             if (error) {
