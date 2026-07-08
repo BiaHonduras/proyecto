@@ -637,7 +637,7 @@
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            <nav class="space-y-1">
+            <nav class="space-y-1" id="mainNav">
                 <a href="#resumen" class="nav-item active" data-section="resumen">
                     <i class="fas fa-chart-pie"></i> Resumen
                 </a>
@@ -656,19 +656,20 @@
                 <a href="#exportar" class="nav-item" data-section="exportar">
                     <i class="fas fa-file-export"></i> Exportación Informe
                 </a>
-                <a href="#importar-inventario" class="nav-item" data-section="importar-inventario">
+                <!-- Secciones restringidas según rol (se manejan con JS) -->
+                <a href="#importar-inventario" class="nav-item" data-section="importar-inventario" data-rol="admin">
                     <i class="fas fa-file-import"></i> Importar Inventarios
                 </a>
-                <a href="#importar-codigos" class="nav-item" data-section="importar-codigos">
+                <a href="#importar-codigos" class="nav-item" data-section="importar-codigos" data-rol="admin">
                     <i class="fas fa-database"></i> Importar Códigos
                 </a>
                 <a href="https://biahonduras.github.io/proyecto/resumen.html" class="nav-item" target="_blank">
                     <i class="fas fa-database"></i> Dashboard
                 </a>
-                <a href="#depuracion" class="nav-item" data-section="depuracion">
+                <a href="#depuracion" class="nav-item" data-section="depuracion" data-rol="superadmin">
                     <i class="fas fa-database"></i> Depuración
                 </a>
-                <a href="#usuarios" class="nav-item" data-section="usuarios">
+                <a href="#usuarios" class="nav-item" data-section="usuarios" data-rol="superadmin">
                     <i class="fas fa-users-cog"></i> Gestión de Usuarios
                 </a>
             </nav>
@@ -1005,8 +1006,8 @@
                             <input type="text" id="codigoArticulo" class="input-field w-full px-4 py-3 rounded-lg" placeholder="Ingrese el código o escanee" required inputmode="numeric" pattern="[0-9]*">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Código de Barra Artículo *</label>
-                            <input type="text" id="codigoBarra" class="input-field w-full px-4 py-3 rounded-lg" placeholder="Escanee o ingrese manualmente" maxlength="20" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Código de Barra Artículo</label>
+                            <input type="text" id="codigoBarra" class="input-field w-full px-4 py-3 rounded-lg" placeholder="Escanee o ingrese manualmente (opcional)" maxlength="20" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Cajas / Fardos</label>
@@ -1269,8 +1270,8 @@
                 </div>
             </section>
 
-            <!-- Importar Inventario Section -->
-            <section id="importar-inventario-section" class="section-content hidden">
+            <!-- Importar Inventario Section (solo admin/superadmin) -->
+            <section id="importar-inventario-section" class="section-content hidden" data-rol="admin">
                 <div class="card p-6">
                     <h3 class="text-lg font-semibold mb-6">Importar Inventario</h3>
                     <div class="mb-6">
@@ -1344,8 +1345,8 @@
                 </div>
             </section>
 
-            <!-- Importar Códigos Section -->
-            <section id="importar-codigos-section" class="section-content hidden">
+            <!-- Importar Códigos Section (solo admin/superadmin) -->
+            <section id="importar-codigos-section" class="section-content hidden" data-rol="admin">
                 <div class="card p-6">
                     <h3 class="text-lg font-semibold mb-6">Importar Base de Códigos</h3>
                     <div class="mb-6">
@@ -1417,8 +1418,8 @@
                 </div>
             </section>
 
-            <!-- Depuración Section -->
-            <section id="depuracion-section" class="section-content hidden">
+            <!-- Depuración Section (solo superadmin) -->
+            <section id="depuracion-section" class="section-content hidden" data-rol="superadmin">
                 <div class="card-depuracion">
                     <h3>⚠️ Depuración Completa de Inventario | Justificaciones</h3>
                     <p>Elimina todos los registros de inventario acumulados hasta el día actual en la sede y bodega seleccionada.</p>
@@ -1465,8 +1466,8 @@
                 </div>
             </section>
 
-            <!-- Gestión de Usuarios Section -->
-            <section id="usuarios-section" class="section-content hidden">
+            <!-- Gestión de Usuarios Section (solo superadmin) -->
+            <section id="usuarios-section" class="section-content hidden" data-rol="superadmin">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="card p-6">
                         <h3 class="text-lg font-semibold mb-6">Gestión de Usuarios</h3>
@@ -1534,6 +1535,7 @@
                                 <select id="userRole" class="input-field w-full px-4 py-3 rounded-lg">
                                     <option value="usuario">Usuario</option>
                                     <option value="admin">Administrador</option>
+                                    <option value="superadmin">Superadmin</option>
                                 </select>
                             </div>
                             <div class="flex space-x-4 pt-4">
@@ -1697,6 +1699,19 @@
             if (digits.length > 4) parts.push(digits.slice(4, 8));
             if (digits.length > 8) parts.push(digits.slice(8, 13));
             return parts.join('-');
+        }
+
+        // ===== PERMISOS =====
+        function tienePermiso(rolRequerido) {
+            if (!currentUser) return false;
+            const rol = currentUser.rol || 'usuario';
+            if (rolRequerido === 'superadmin') return rol === 'superadmin';
+            if (rolRequerido === 'admin') return rol === 'admin' || rol === 'superadmin';
+            return true; // para 'usuario' cualquiera puede
+        }
+
+        function usuarioPuedeGestionarUsuarios() {
+            return tienePermiso('superadmin');
         }
 
         // ===== MAPEOS =====
@@ -2400,131 +2415,99 @@
             Quagga.onDetected(handleDetection);
         }
 
-        // ===== BUSCAR ARTÍCULO =====
-        // ============================================================
-        // 1. FUNCIÓN NORMALIZAR CÓDIGO (MEJORADA)
-        // ============================================================
+        // ===== BUSCAR ARTÍCULO (con normalización) =====
         function normalizarCodigo(codigo) {
             if (!codigo) return '';
-            
-            // Convertir a string, eliminar caracteres no imprimibles y espacios
-            let limpio = String(codigo)
-                .replace(/[\r\n\t\f\v\u00A0\u2028\u2029]+/g, ' ')  // reemplaza saltos, tabs y espacios raros por espacio
-                .replace(/\s+/g, ' ')                               // múltiples espacios a uno
-                .trim();                                           // elimina espacios al inicio y final
-            
-            // Si solo quieres números (opcional, pero más seguro):
-            // limpio = limpio.replace(/[^0-9]/g, '');
-            
-            return limpio;
+            return String(codigo)
+                .replace(/[\r\n\t\f\v\u00A0\u2028\u2029]+/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
         }
-        
-        // ============================================================
-        // 2. BUSCAR ARTÍCULO (VERSIÓN CORREGIDA)
-        // ============================================================
+
         async function buscarArticulo(valor, opciones = {}, tipo = null) {
             if (!valor) return null;
-        
+
             const token = ++ultimoTokenBusqueda;
             const sede = document.getElementById('sede').value;
             const idBodega = normalizarCodigo(document.getElementById('idBodega').value);
             const valorNormalizado = normalizarCodigo(valor);
             const mostrarMensajes = opciones.mostrarMensajes !== false;
-        
-            // Determinar campo de búsqueda según tipo
+
             let campoBusqueda = 'codigo';
             if (tipo === 'barra') {
                 campoBusqueda = 'codigo_barra';
             } else if (tipo === 'codigo') {
                 campoBusqueda = 'codigo';
             } else {
-                // Si no se especifica, usar lógica por longitud
                 campoBusqueda = (valorNormalizado.length >= 10) ? 'codigo_barra' : 'codigo';
             }
-        
+
             if (!sede) {
                 limpiarCamposArticulo();
                 if (mostrarMensajes) showNotification('Error', 'Seleccione una sede antes de buscar', 'error');
                 return null;
             }
-        
+
             if (!idBodega) {
                 limpiarCamposArticulo();
                 if (mostrarMensajes) showNotification('Error', 'Seleccione un identificador de bodega antes de buscar', 'error');
                 return null;
             }
-        
-            // --- 1. Buscar en inventario_reporteria (con filtro de bodega) ---
+
+            // 1. Buscar en inventario_reporteria
             const { data: dataReporteria, error: errorReporteria } = await supabase
                 .from('inventario_reporteria')
                 .select('*')
                 .eq('idBodega', idBodega);
-        
+
             if (errorReporteria) {
                 console.error('Error en buscarArticulo (reporteria):', errorReporteria);
                 limpiarCamposArticulo();
                 if (mostrarMensajes) showNotification('Error', `Falló la búsqueda: ${errorReporteria.message}`, 'error');
                 return null;
             }
-        
-            // Filtrar en cliente normalizando ambos lados
+
             const dataFiltradaReporteria = (dataReporteria || []).filter(item =>
                 normalizarCodigo(item[campoBusqueda]) === valorNormalizado
             );
-        
+
             if (dataFiltradaReporteria.length > 1) {
                 limpiarCamposArticulo();
                 if (mostrarMensajes) showNotification('Error', 'Registros duplicados en inventario_reporteria', 'error');
-                console.warn('Duplicados en reportería:', dataFiltradaReporteria);
                 return null;
             }
 
-            console.log('🔍 Búsqueda en reportería:', {
-                campo: campoBusqueda,
-                valorBuscado: valorNormalizado,
-                valoresEnDB: (dataReporteria || []).map(item => ({
-                    id: item.id,
-                    codigo: item.codigo,
-                    codigo_barra: item.codigo_barra,
-                    normalizado: normalizarCodigo(item[campoBusqueda])
-                })),
-                coincidencias: dataFiltradaReporteria.length
-            });
-        
             let item = dataFiltradaReporteria[0] || null;
             let encontradoSoloEnBaseCodigos = false;
-        
-            // --- 2. Si no se encontró, buscar en codigos (sin filtro de bodega) ---
+
             if (!item) {
                 const { data: dataCodigos, error: errorCodigos } = await supabase
                     .from('codigos')
                     .select('codigo, codigo_barra, proveedor, descripcion, masterpack, costo');
-        
+
                 if (errorCodigos) {
                     console.error('Error buscando en base de códigos:', errorCodigos);
                     limpiarCamposArticulo();
                     if (mostrarMensajes) showNotification('Error', `Falló la búsqueda en Base de Códigos: ${errorCodigos.message}`, 'error');
                     return null;
                 }
-        
-                // Filtrar en cliente normalizando
+
                 const dataFiltradaCodigos = (dataCodigos || []).filter(itemCod =>
                     normalizarCodigo(itemCod[campoBusqueda]) === valorNormalizado
                 );
-        
+
                 if (dataFiltradaCodigos.length > 1) {
                     limpiarCamposArticulo();
                     if (mostrarMensajes) showNotification('Error', 'Registros duplicados en Base de Códigos', 'error');
-                    console.warn('Duplicados en codigos:', dataFiltradaCodigos);
                     return null;
                 }
-        
+
                 if (dataFiltradaCodigos.length === 0) {
                     limpiarCamposArticulo();
                     if (mostrarMensajes) showNotification('Error', 'No se encontró el artículo ni en inventario ni en la Base de Códigos', 'error');
                     return null;
                 }
-        
+
                 const itemBase = dataFiltradaCodigos[0];
                 item = {
                     codigo: itemBase.codigo || valorNormalizado,
@@ -2537,21 +2520,20 @@
                 };
                 encontradoSoloEnBaseCodigos = true;
             }
-        
-            // --- Rellenar el formulario ---
+
+            // Rellenar formulario
             document.getElementById('codigoArticulo').value = item.codigo || '';
             document.getElementById('codigoBarra').value = item.codigo_barra || (campoBusqueda === 'codigo_barra' ? valorNormalizado : '');
             document.getElementById('proveedor').value = item.proveedor || '';
             document.getElementById('descripcion').value = item.descripcion || '';
             document.getElementById('inventarioReporteria').value = Number(item.inventario_reporteria || 0);
             document.getElementById('masterpack').value = Number(item.masterpack || 1);
-        
+
             const inv = Number(item.inventario_reporteria || 0);
             const master = Number(item.masterpack || 1) || 1;
             document.getElementById('cajasFardosReporteria').value = Math.floor(inv / master);
             document.getElementById('unidadesReporteria').value = inv % master;
-        
-            // --- Obtener costo desde codigos si no se encontró en reportería ---
+
             let costo = Number(item.costo || 0);
             if (!encontradoSoloEnBaseCodigos) {
                 const { data: dataCosto, error: errorCosto } = await supabase
@@ -2560,70 +2542,28 @@
                     .eq('codigo', item.codigo)
                     .limit(1)
                     .maybeSingle();
-        
+
                 if (token !== ultimoTokenBusqueda) return null;
-        
+
                 costo = (!errorCosto && dataCosto?.costo != null)
                     ? Number(dataCosto.costo)
                     : costo;
             }
-        
+
             window.costoUnitarioActual = costo;
             document.getElementById('costoUnitario').value = formatearMoneda(costo);
             calcularTotalUnidades();
-        
+
             if (encontradoSoloEnBaseCodigos) {
                 if (mostrarMensajes) showNotification('Advertencia', 'El artículo no existe en inventario de reportería para esa bodega. Se cargó usando la Base de Códigos.', 'warning');
                 return item;
             }
-        
+
             if (mostrarMensajes) showNotification('Éxito', 'Artículo cargado', 'success');
             return item;
         }
-        
-        // ============================================================
-        // 3. EVENT LISTENERS PARA BÚSQUEDA AUTOMÁTICA (ACTUALIZADOS)
-        // ============================================================
-        const codigoArticuloInput = document.getElementById('codigoArticulo');
-        if (codigoArticuloInput) {
-            codigoArticuloInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const valor = this.value.trim();
-                    if (valor) buscarArticulo(valor, {}, 'codigo');
-                }
-            });
-            codigoArticuloInput.addEventListener('blur', function() {
-                const valor = this.value.trim();
-                if (valor) buscarArticulo(valor, {}, 'codigo');
-            });
-        }
-        
-        const codigoBarraInput = document.getElementById('codigoBarra');
-        if (codigoBarraInput) {
-            codigoBarraInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const valor = this.value.trim();
-                    if (valor) buscarArticulo(valor, {}, 'barra');
-                }
-            });
-            codigoBarraInput.addEventListener('blur', function() {
-                const valor = this.value.trim();
-                if (valor) buscarArticulo(valor, {}, 'barra');
-            });
-        }
-        
-        // ============================================================
-        // 4. ACTUALIZAR LLAMADAS EN handleDetection Y editarArticulo
-        // ============================================================
-        // En la función handleDetection (dentro del escáner) debe estar:
-        // const articulo = await buscarArticulo(code, { mostrarMensajes: false }, 'barra');
-        
-        // En la función editarArticulo, después de cargar los datos, debe estar:
-        // await buscarArticulo(data.codigo, {}, 'codigo');
 
-        // ===== AGREGAR ARTÍCULO =====
+        // ===== AGREGAR ARTÍCULO (con validación de duplicados) =====
         async function agregarArticulo() {
             const idBodega = document.getElementById('idBodega').value;
             const fecha = document.getElementById('fechaInventario').value;
@@ -2646,6 +2586,26 @@
 
             if (checkActivo && !fechaVenc) {
                 showNotification('Error', 'Debes ingresar la fecha de vencimiento', 'error');
+                return;
+            }
+
+            // --- VALIDAR DUPLICADO (codigo + idBodega + fecha) ---
+            const { data: existente, error: errorExistente } = await supabase
+                .from('inventarios_diarios')
+                .select('id')
+                .eq('codigo', codigo)
+                .eq('idBodega', idBodega)
+                .eq('fecha', fecha)
+                .maybeSingle();
+
+            if (errorExistente) {
+                console.error('Error verificando duplicado:', errorExistente);
+                showNotification('Error', 'Error al verificar duplicados', 'error');
+                return;
+            }
+
+            if (existente && existente.id !== window.editandoId) {
+                showNotification('Error', `Ya existe un registro para el código ${codigo} en esta bodega y fecha.`, 'error');
                 return;
             }
 
@@ -2672,7 +2632,6 @@
 
             try {
                 const estabaEditando = !!window.editandoId;
-                let idRegistro = window.editandoId || null;
 
                 if (window.editandoId) {
                     const { error: errorUpdate } = await supabase
@@ -2687,7 +2646,7 @@
                         .select('id')
                         .single();
                     if (errorInsert) throw errorInsert;
-                    idRegistro = inserted?.id || null;
+                    window.editandoId = inserted?.id || null;
                 }
 
                 if (checkActivo && fechaVenc) {
@@ -2734,7 +2693,7 @@
             if (error) throw error;
         }
 
-        // ===== VER INVENTARIO (con filtro de fecha) =====
+        // ===== VER INVENTARIO =====
         async function loadInventory() {
             actualizarLabelFiltrosActivos();
 
@@ -2931,7 +2890,7 @@
             showNotification('Éxito', 'Registro eliminado con respaldo', 'success');
         }
 
-        // ===== JUSTIFICACIONES (con filtro de fecha) =====
+        // ===== JUSTIFICACIONES =====
         const OPCIONES_JUSTIFICACION = [
             'Asignado en GP - La Colonia',
             'Asignado en GP - Walmart',
@@ -3407,10 +3366,6 @@
         }
 
         // ===== USUARIOS =====
-        function usuarioPuedeGestionarUsuarios(user = currentUser) {
-            return String(user?.username || user?.usuario || '').toLowerCase() === 'verificadorsps';
-        }
-
         function bloquearFormularioUsuarios() {
             const form = document.getElementById('userForm');
             if (!form) return;
@@ -3539,8 +3494,12 @@
             loadUsers();
         }
 
-        // ===== DEPURACIÓN =====
+        // ===== DEPURACIÓN (solo superadmin) =====
         async function eliminarGeneralProtegido() {
+            if (!tienePermiso('superadmin')) {
+                showNotification('Error', 'No tienes permisos para realizar esta acción.', 'error');
+                return;
+            }
             if (!confirm('¿Eliminar todos los registros de Inventarios, Justificaciones y Reportería?')) return;
             if (!confirm('¿Está completamente seguro? Esta acción no se puede deshacer.')) return;
 
@@ -3566,6 +3525,10 @@
         }
 
         async function eliminarVencimientosProtegido() {
+            if (!tienePermiso('superadmin')) {
+                showNotification('Error', 'No tienes permisos para realizar esta acción.', 'error');
+                return;
+            }
             if (!confirm('¿Eliminar todos los vencimientos registrados?')) return;
             if (!confirm('¿Está completamente seguro?')) return;
 
@@ -3585,6 +3548,10 @@
         }
 
         async function eliminarBaseCodigosProtegida() {
+            if (!tienePermiso('superadmin')) {
+                showNotification('Error', 'No tienes permisos para realizar esta acción.', 'error');
+                return;
+            }
             if (!confirm('¿Eliminar toda la base de códigos?')) return;
             if (!confirm('¿Está completamente seguro? No se puede deshacer.')) return;
 
@@ -3694,7 +3661,7 @@
 
             const sedeUsuario = currentUser?.sede || currentUser?.Sede || null;
             const tipoBodegaUsuario = currentUser?.tipos_bodega || currentUser?.tipoBodega || null;
-            const esAdmin = currentUser?.role === 'admin' || currentUser?.rol === 'admin';
+            const esAdmin = currentUser?.role === 'admin' || currentUser?.rol === 'admin' || currentUser?.rol === 'superadmin';
 
             filtrosGlobales.sede = esAdmin ? 'Todas' : (sedeUsuario || 'Todas');
             filtrosGlobales.tipoBodega = esAdmin ? 'Todas' : (tipoBodegaUsuario || 'Todas');
@@ -4019,6 +3986,29 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 
             document.getElementById('nombreCorto').textContent = currentUser.nombre_corto || '';
 
+            // ===== OCULTAR SECCIONES SEGÚN ROL =====
+            const rol = currentUser.rol || 'usuario';
+            const secciones = document.querySelectorAll('.section-content[data-rol]');
+            secciones.forEach(sec => {
+                const rolRequerido = sec.dataset.rol;
+                if (rolRequerido === 'superadmin' && rol !== 'superadmin') {
+                    sec.style.display = 'none';
+                } else if (rolRequerido === 'admin' && !(rol === 'admin' || rol === 'superadmin')) {
+                    sec.style.display = 'none';
+                }
+            });
+
+            // Ocultar enlaces del sidebar según rol
+            const navItems = document.querySelectorAll('.nav-item[data-rol]');
+            navItems.forEach(item => {
+                const rolRequerido = item.dataset.rol;
+                if (rolRequerido === 'superadmin' && rol !== 'superadmin') {
+                    item.style.display = 'none';
+                } else if (rolRequerido === 'admin' && !(rol === 'admin' || rol === 'superadmin')) {
+                    item.style.display = 'none';
+                }
+            });
+
             // Inicializar navegación
             initNavigation();
 
@@ -4086,7 +4076,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                 }
             });
 
-            // Resto de eventos (formulario, exportación, escáner, etc.)
+            // Resto de eventos
             document.getElementById('articuloForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 agregarArticulo();
@@ -4143,36 +4133,36 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                 evaluarVencimiento();
             });
 
-            // ===== NUEVO: Búsqueda automática al escribir código (Enter y blur) =====
+            // Búsqueda automática al escribir código (Enter y blur)
             const codigoArticuloInput = document.getElementById('codigoArticulo');
-                if (codigoArticuloInput) {
-                    codigoArticuloInput.addEventListener('keydown', function(e) {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const valor = this.value.trim();
-                            if (valor) buscarArticulo(valor, {}, 'codigo');
-                        }
-                    });
-                    codigoArticuloInput.addEventListener('blur', function() {
+            if (codigoArticuloInput) {
+                codigoArticuloInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
                         const valor = this.value.trim();
                         if (valor) buscarArticulo(valor, {}, 'codigo');
-                    });
-                }
+                    }
+                });
+                codigoArticuloInput.addEventListener('blur', function() {
+                    const valor = this.value.trim();
+                    if (valor) buscarArticulo(valor, {}, 'codigo');
+                });
+            }
 
             const codigoBarraInput = document.getElementById('codigoBarra');
-                if (codigoBarraInput) {
-                    codigoBarraInput.addEventListener('keydown', function(e) {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const valor = this.value.trim();
-                            if (valor) buscarArticulo(valor, {}, 'barra');
-                        }
-                    });
-                    codigoBarraInput.addEventListener('blur', function() {
+            if (codigoBarraInput) {
+                codigoBarraInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
                         const valor = this.value.trim();
                         if (valor) buscarArticulo(valor, {}, 'barra');
-                    });
-                }
+                    }
+                });
+                codigoBarraInput.addEventListener('blur', function() {
+                    const valor = this.value.trim();
+                    if (valor) buscarArticulo(valor, {}, 'barra');
+                });
+            }
 
             document.getElementById('userDNI').addEventListener('input', function() {
                 this.value = formatearDNI(this.value);
