@@ -3977,7 +3977,7 @@
             // Consultar la tabla 'usuarios' para obtener el rol actualizado
             const { data: userProfile, error: profileError } = await supabase
                 .from('usuarios')
-                .select('usuario, nombre_corto, email, dni, rol, sede, must_change_password')
+                .select('usuario, nombre_corto, correo, dni, rol, sede, must_change_password')
                 .eq('usuario', userDataFromStorage.usuario || userDataFromStorage.username)
                 .maybeSingle();
             
