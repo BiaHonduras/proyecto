@@ -3970,7 +3970,36 @@
                 return;
             }
 
-            currentUser = JSON.parse(userData);
+            // Obtener los datos del usuario desde sessionStorage (versión antigua)
+            let userDataFromStorage = JSON.parse(userData);
+            window.currentUser = userDataFromStorage;
+            
+            // Consultar la tabla 'usuarios' para obtener el rol actualizado
+            const { data: userProfile, error: profileError } = await supabase
+                .from('usuarios')
+                .select('usuario, nombre_corto, email, dni, rol, sede, must_change_password')
+                .eq('usuario', userDataFromStorage.usuario || userDataFromStorage.username)
+                .maybeSingle();
+            
+            if (profileError) {
+                console.error('Error obteniendo perfil actualizado:', profileError);
+                // Si falla, usamos los datos guardados
+                currentUser = userDataFromStorage;
+            } else if (userProfile) {
+                // Actualizar currentUser con los datos frescos
+                currentUser = {
+                    ...userDataFromStorage,
+                    ...userProfile,
+                    username: userProfile.usuario, // para compatibilidad
+                    role: userProfile.rol,         // para compatibilidad
+                };
+                // Guardar en sessionStorage
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            } else {
+                // No se encontró el perfil, mantener los datos antiguos
+                currentUser = userDataFromStorage;
+            }
+            
             window.currentUser = currentUser;
 
             if (currentUser.must_change_password) {
