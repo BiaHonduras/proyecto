@@ -3004,7 +3004,6 @@
             if (bodegas.length) queryJust = queryJust.in('idBodega', bodegas);
             // Filtrar por fecha_registro si hay fecha seleccionada
             if (fechaFiltro) {
-                // Suponiendo que fecha_registro es un campo date, comparamos igualdad
                 queryJust = queryJust.eq('fecha_registro', fechaFiltro);
             }
             const { data: justificaciones, error: errorJust } = await queryJust;
@@ -3093,7 +3092,7 @@
                         this.disabled = false;
                     } else {
                         // Modo guardar: deshabilitar campos y cambiar botón a "Editar"
-                        tr.dataset.editando = 'false';
+                        // Mantenemos data-editando="true" para que el guardado masivo lo incluya
                         const inputs = tr.querySelectorAll('.cantidad-justificada');
                         const selects = tr.querySelectorAll('.justificacion');
                         inputs.forEach(inp => { inp.disabled = true; inp.classList.add('input-disabled'); });
@@ -3102,8 +3101,7 @@
                         this.classList.remove('bg-green-600');
                         this.classList.add('bg-blue-600');
                         this.disabled = false;
-                        // Nota: no se guarda aquí, solo se desmarca la fila.
-                        // El guardado masivo se hará con el botón superior.
+                        // NOTA: data-editando permanece en "true"
                     }
                 });
             });
@@ -3116,7 +3114,6 @@
             document.querySelectorAll('#transitosTableBody .btnEditarFila').forEach(btn => {
                 btn.disabled = false;
             });
-            // También podemos mostrar un mensaje
             showNotification('Info', 'Botones Editar habilitados. Selecciona una fila para editar.', 'info');
         }
 
