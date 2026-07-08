@@ -2693,7 +2693,7 @@
             if (error) throw error;
         }
 
-        // ===== VER INVENTARIO =====
+        // ===== VER INVENTARIO (con resumen de SKUs corregido) =====
         async function loadInventory() {
             actualizarLabelFiltrosActivos();
 
@@ -2742,17 +2742,42 @@
                 return String(a.codigo || '').localeCompare(String(b.codigo || ''), 'es', { numeric: true });
             });
 
-            // Resumen SKUs
+            // ===== RESUMEN DE SKUs CORREGIDO =====
             try {
-                const skusImportados = new Set();
-                const skusInventariados = new Set();
+                // Obtener todos los códigos de reportería (sin filtro de fecha)
+                const { data: dataReporteria, error: errRep } = await supabase
+                    .from('inventario_reporteria')
+                    .select('codigo, idBodega');
 
-                const { data: dataImportados } = await supabase.from('inventario_reporteria').select('codigo');
-                (dataImportados || []).forEach(item => {
+                if (errRep) throw errRep;
+
+                const skusImportados = new Set();
+                const filtroSede = document.getElementById('filtroSedeVerInventario')?.value || 'Todas';
+                const filtroTipo = document.getElementById('filtroTipoBodegaVerInventario')?.value || 'Todas';
+
+                (dataReporteria || []).forEach(item => {
+                    const idBodega = String(item.idBodega || '').trim();
+                    // Mapear idBodega a sede y tipo usando bodegasPorSede
+                    let sedeEncontrada = null;
+                    let tipoEncontrado = null;
+                    for (const [sede, bodegas] of Object.entries(bodegasPorSede)) {
+                        const bodega = bodegas.find(b => b.value === idBodega);
+                        if (bodega) {
+                            sedeEncontrada = sede;
+                            tipoEncontrado = bodega.label;
+                            break;
+                        }
+                    }
+                    if (!sedeEncontrada) return;
+                    // Aplicar filtros de sede y tipo
+                    if (filtroSede !== 'Todas' && sedeEncontrada !== filtroSede) return;
+                    if (filtroTipo !== 'Todas' && tipoEncontrado !== filtroTipo) return;
                     const codigo = String(item.codigo || '').trim();
                     if (codigo) skusImportados.add(codigo);
                 });
 
+                // SKUs inventariados: a partir de los registros ya filtrados
+                const skusInventariados = new Set();
                 inventario.forEach(item => {
                     const codigo = String(item.codigo || '').trim();
                     if (codigo) skusInventariados.add(codigo);
@@ -2766,7 +2791,12 @@
                 document.getElementById('skusPendientes').textContent = totalPendientes.toLocaleString();
                 document.getElementById('skusInventariados').textContent = totalInventariados.toLocaleString();
                 document.getElementById('porcentajeInventarioGeneral').textContent = `${porcentaje}%`;
-            } catch (e) { console.error('Error resumen SKUs:', e); }
+            } catch (e) {
+                console.error('Error resumen SKUs:', e);
+                document.getElementById('skusPendientes').textContent = '0';
+                document.getElementById('skusInventariados').textContent = '0';
+                document.getElementById('porcentajeInventarioGeneral').textContent = '0%';
+            }
 
             if (!inventario.length) {
                 tbody.innerHTML = `
@@ -2890,7 +2920,7 @@
             showNotification('Éxito', 'Registro eliminado con respaldo', 'success');
         }
 
-        // ===== JUSTIFICACIONES (corregido) =====
+        // ===== JUSTIFICACIONES =====
         const OPCIONES_JUSTIFICACION = [
             'Asignado en GP - La Colonia',
             'Asignado en GP - Walmart',
@@ -2930,7 +2960,6 @@
             filtrosGlobales.sede = sedeFiltro;
             filtrosGlobales.tipoBodega = tipoBodegaFiltro;
 
-            // 1. Obtener inventarios diarios con filtros (sede, tipo, fecha)
             let queryInv = supabase.from('inventarios_diarios').select('*');
             if (fechaFiltro) queryInv = queryInv.eq('fecha', fechaFiltro);
             const { data: inventarios, error: errorInv } = await queryInv;
@@ -2948,7 +2977,6 @@
                 return;
             }
 
-            // 2. Obtener códigos y bodegas únicos de los inventarios filtrados
             const codigos = [...new Set(inventarioFiltrado.map(item => String(item.codigo || '').trim()).filter(Boolean))];
             const bodegas = [...new Set(inventarioFiltrado.map(item => String(item.idBodega || '').trim()).filter(Boolean))];
 
@@ -2957,7 +2985,6 @@
                 return;
             }
 
-            // 3. Buscar justificaciones solo para esos códigos y bodegas
             let queryJust = supabase.from('inventario_justificaciones').select('*').in('codigo', codigos);
             if (bodegas.length) queryJust = queryJust.in('idBodega', bodegas);
             const { data: justificaciones, error: errorJust } = await queryJust;
@@ -2968,14 +2995,12 @@
                 return;
             }
 
-            // 4. Mapear justificaciones por clave (codigo + idBodega)
             const mapaJust = {};
             (justificaciones || []).forEach(j => {
                 const clave = `${String(j.codigo || '').trim()}|${String(j.idBodega || '').trim()}`;
                 mapaJust[clave] = j;
             });
 
-            // 5. Construir tabla con los datos filtrados
             const datosTabla = inventarioFiltrado
                 .map(item => {
                     const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
