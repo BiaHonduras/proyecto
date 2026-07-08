@@ -656,7 +656,7 @@
                 <a href="#exportar" class="nav-item" data-section="exportar">
                     <i class="fas fa-file-export"></i> Exportación Informe
                 </a>
-                <!-- Secciones restringidas según rol (se manejan con JS) -->
+                <!-- Secciones restringidas según rol -->
                 <a href="#importar-inventario" class="nav-item" data-section="importar-inventario" data-rol="admin">
                     <i class="fas fa-file-import"></i> Importar Inventarios
                 </a>
@@ -691,7 +691,7 @@
 
         <!-- Content Sections -->
         <main class="p-6 space-y-6">
-            <!-- Resumen Section con filtro de fecha -->
+            <!-- Resumen Section -->
             <section id="resumen-section" class="section-content">
                 <div class="card p-4 mb-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -1145,7 +1145,7 @@
                 </div>
             </section>
 
-            <!-- Justificaciones Section con filtro de fecha -->
+            <!-- Justificaciones Section -->
             <section id="transitos-section" class="section-content hidden">
                 <div class="card p-4 mb-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -1270,7 +1270,7 @@
                 </div>
             </section>
 
-            <!-- Importar Inventario Section (solo admin/superadmin) -->
+            <!-- Importar Inventario Section -->
             <section id="importar-inventario-section" class="section-content hidden" data-rol="admin">
                 <div class="card p-6">
                     <h3 class="text-lg font-semibold mb-6">Importar Inventario</h3>
@@ -1345,7 +1345,7 @@
                 </div>
             </section>
 
-            <!-- Importar Códigos Section (solo admin/superadmin) -->
+            <!-- Importar Códigos Section -->
             <section id="importar-codigos-section" class="section-content hidden" data-rol="admin">
                 <div class="card p-6">
                     <h3 class="text-lg font-semibold mb-6">Importar Base de Códigos</h3>
@@ -1418,7 +1418,7 @@
                 </div>
             </section>
 
-            <!-- Depuración Section (solo superadmin) -->
+            <!-- Depuración Section -->
             <section id="depuracion-section" class="section-content hidden" data-rol="superadmin">
                 <div class="card-depuracion">
                     <h3>⚠️ Depuración Completa de Inventario | Justificaciones</h3>
@@ -1466,7 +1466,7 @@
                 </div>
             </section>
 
-            <!-- Gestión de Usuarios Section (solo superadmin) -->
+            <!-- Gestión de Usuarios Section -->
             <section id="usuarios-section" class="section-content hidden" data-rol="superadmin">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="card p-6">
@@ -1603,7 +1603,7 @@
         </div>
     </div>
 
-    <!-- Footer fijo -->
+    <!-- Footer -->
     <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
         <div class="text-[11px] text-gray-500">Elaborado por Hernán Manuel Pérez Banegas®</div>
         <div class="flex items-center gap-2 text-xs whitespace-nowrap">
@@ -1707,7 +1707,7 @@
             const rol = currentUser.rol || 'usuario';
             if (rolRequerido === 'superadmin') return rol === 'superadmin';
             if (rolRequerido === 'admin') return rol === 'admin' || rol === 'superadmin';
-            return true; // para 'usuario' cualquiera puede
+            return true;
         }
 
         function usuarioPuedeGestionarUsuarios() {
@@ -1787,13 +1787,12 @@
             return '121_mas';
         }
 
-        // ===== FUNCIONES DE DASHBOARD (con filtro de fecha) =====
+        // ===== FUNCIONES DE DASHBOARD =====
         async function actualizarDashboard() {
             const sedeFiltro = document.getElementById('filtroSedeResumen')?.value || 'Todas';
             const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaResumen')?.value || 'Todas';
             const fechaFiltro = document.getElementById('filtroFechaResumen')?.value || '';
 
-            // Obtener todos los datos y filtrar en cliente para simplificar
             const { data, error } = await supabase
                 .from('inventarios_diarios')
                 .select('*');
@@ -1805,14 +1804,11 @@
             }
 
             let inventario = Array.isArray(data) ? data : [];
-            // Aplicar filtros de sede y tipo
             inventario = filtrarPorSedeYTipo(inventario, sedeFiltro, tipoBodegaFiltro);
-            // Aplicar filtro de fecha si está presente
             if (fechaFiltro) {
                 inventario = inventario.filter(item => item.fecha === fechaFiltro);
             }
 
-            // Calcular totales
             const totalArticulos = inventario.length;
             const totalUnidades = inventario.reduce((sum, item) => {
                 const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
@@ -1821,7 +1817,6 @@
             const proveedores = new Set(inventario.map(item => item.proveedor).filter(Boolean));
             const totalProveedores = proveedores.size;
 
-            // Última fecha (si hay datos)
             let ultimaFecha = '-';
             if (inventario.length) {
                 const fechas = inventario.map(item => item.fecha).filter(Boolean).sort();
@@ -1833,13 +1828,11 @@
             document.getElementById('totalProveedores').textContent = totalProveedores.toLocaleString('es-HN');
             document.getElementById('ultimaActualizacion').textContent = ultimaFecha;
 
-            // Cargar artículos recientes y gráfico (filtrados por los mismos criterios)
             await Promise.all([
                 cargarArticulosRecientes(sedeFiltro, tipoBodegaFiltro, fechaFiltro),
                 cargarGraficoProveedores(sedeFiltro, tipoBodegaFiltro, fechaFiltro)
             ]);
 
-            // Actualizar etiqueta de vista activa (se actualiza en actualizarLabelFiltrosActivos)
             actualizarLabelFiltrosActivos();
         }
 
@@ -1867,7 +1860,6 @@
                 return;
             }
 
-            // Aplicar filtro de tipo de bodega en cliente
             let filtrados = data;
             if (tipoBodegaFiltro !== 'Todas') {
                 filtrados = filtrados.filter(item => {
@@ -2415,7 +2407,7 @@
             Quagga.onDetected(handleDetection);
         }
 
-        // ===== BUSCAR ARTÍCULO (con normalización) =====
+        // ===== BUSCAR ARTÍCULO =====
         function normalizarCodigo(codigo) {
             if (!codigo) return '';
             return String(codigo)
@@ -2563,7 +2555,7 @@
             return item;
         }
 
-        // ===== AGREGAR ARTÍCULO (con validación de duplicados) =====
+        // ===== AGREGAR ARTÍCULO =====
         async function agregarArticulo() {
             const idBodega = document.getElementById('idBodega').value;
             const fecha = document.getElementById('fechaInventario').value;
@@ -2589,7 +2581,7 @@
                 return;
             }
 
-            // --- VALIDAR DUPLICADO (codigo + idBodega + fecha) ---
+            // VALIDAR DUPLICADO (codigo + idBodega + fecha)
             const { data: existente, error: errorExistente } = await supabase
                 .from('inventarios_diarios')
                 .select('id')
@@ -2693,7 +2685,7 @@
             if (error) throw error;
         }
 
-        // ===== VER INVENTARIO (con resumen de SKUs corregido) =====
+        // ===== VER INVENTARIO =====
         async function loadInventory() {
             actualizarLabelFiltrosActivos();
 
@@ -2742,51 +2734,73 @@
                 return String(a.codigo || '').localeCompare(String(b.codigo || ''), 'es', { numeric: true });
             });
 
-            // ===== RESUMEN DE SKUs CORREGIDO =====
+            // ===== RESUMEN DE SKUs CORREGIDO (por bodega) =====
             try {
-                // Obtener todos los códigos de reportería (sin filtro de fecha)
                 const { data: dataReporteria, error: errRep } = await supabase
                     .from('inventario_reporteria')
                     .select('codigo, idBodega');
 
                 if (errRep) throw errRep;
 
-                const skusImportados = new Set();
-                const filtroSede = document.getElementById('filtroSedeVerInventario')?.value || 'Todas';
-                const filtroTipo = document.getElementById('filtroTipoBodegaVerInventario')?.value || 'Todas';
+                const mapReporteria = new Map();
+                const mapInventariados = new Map();
+
+                function getTipo(idBodega) {
+                    for (const sede in bodegasPorSede) {
+                        const bodega = bodegasPorSede[sede].find(b => b.value === idBodega);
+                        if (bodega) return bodega.label;
+                    }
+                    return null;
+                }
 
                 (dataReporteria || []).forEach(item => {
                     const idBodega = String(item.idBodega || '').trim();
-                    // Mapear idBodega a sede y tipo usando bodegasPorSede
+                    if (!idBodega) return;
+                    const tipo = getTipo(idBodega);
+                    if (!tipo) return;
                     let sedeEncontrada = null;
-                    let tipoEncontrado = null;
                     for (const [sede, bodegas] of Object.entries(bodegasPorSede)) {
-                        const bodega = bodegas.find(b => b.value === idBodega);
-                        if (bodega) {
+                        if (bodegas.some(b => b.value === idBodega)) {
                             sedeEncontrada = sede;
-                            tipoEncontrado = bodega.label;
                             break;
                         }
                     }
-                    if (!sedeEncontrada) return;
-                    // Aplicar filtros de sede y tipo
-                    if (filtroSede !== 'Todas' && sedeEncontrada !== filtroSede) return;
-                    if (filtroTipo !== 'Todas' && tipoEncontrado !== filtroTipo) return;
+                    if (sedeFiltro !== 'Todas' && sedeEncontrada !== sedeFiltro) return;
+                    if (tipoBodegaFiltro !== 'Todas' && tipo !== tipoBodegaFiltro) return;
+
+                    if (!mapReporteria.has(idBodega)) {
+                        mapReporteria.set(idBodega, new Set());
+                    }
                     const codigo = String(item.codigo || '').trim();
-                    if (codigo) skusImportados.add(codigo);
+                    if (codigo) mapReporteria.get(idBodega).add(codigo);
                 });
 
-                // SKUs inventariados: a partir de los registros ya filtrados
-                const skusInventariados = new Set();
                 inventario.forEach(item => {
+                    const idBodega = String(item.idBodega || '').trim();
+                    if (!idBodega) return;
+                    if (!mapInventariados.has(idBodega)) {
+                        mapInventariados.set(idBodega, new Set());
+                    }
                     const codigo = String(item.codigo || '').trim();
-                    if (codigo) skusInventariados.add(codigo);
+                    if (codigo) mapInventariados.get(idBodega).add(codigo);
                 });
 
-                const totalImportados = skusImportados.size;
-                const totalInventariados = skusInventariados.size;
-                const totalPendientes = Math.max(totalImportados - totalInventariados, 0);
-                const porcentaje = totalImportados > 0 ? ((totalInventariados / totalImportados) * 100).toFixed(2) : '0.00';
+                let totalReporteria = 0;
+                let totalInventariados = 0;
+                let totalPendientes = 0;
+
+                const todasBodegas = new Set([...mapReporteria.keys(), ...mapInventariados.keys()]);
+                for (const idBodega of todasBodegas) {
+                    const repSet = mapReporteria.get(idBodega) || new Set();
+                    const invSet = mapInventariados.get(idBodega) || new Set();
+                    const countRep = repSet.size;
+                    const countInv = invSet.size;
+                    totalReporteria += countRep;
+                    totalInventariados += countInv;
+                    totalPendientes += Math.max(countRep - countInv, 0);
+                }
+
+                const porcentaje = totalReporteria > 0 ? ((totalInventariados / totalReporteria) * 100).toFixed(2) : '0.00';
 
                 document.getElementById('skusPendientes').textContent = totalPendientes.toLocaleString();
                 document.getElementById('skusInventariados').textContent = totalInventariados.toLocaleString();
@@ -3524,7 +3538,7 @@
             loadUsers();
         }
 
-        // ===== DEPURACIÓN (solo superadmin) =====
+        // ===== DEPURACIÓN =====
         async function eliminarGeneralProtegido() {
             if (!tienePermiso('superadmin')) {
                 showNotification('Error', 'No tienes permisos para realizar esta acción.', 'error');
@@ -3629,7 +3643,6 @@
             const sedeTexto = filtrosGlobales.sede === 'Todas' ? 'Todas las sedes' : filtrosGlobales.sede;
             const bodegaTexto = filtrosGlobales.tipoBodega === 'Todas' ? 'Todas las bodegas' : `Bodega ${filtrosGlobales.tipoBodega}`;
 
-            // Fecha de resumen
             const fechaResumen = document.getElementById('filtroFechaResumen');
             let fechaTextoResumen = 'Todas las fechas';
             if (fechaResumen && fechaResumen.value) {
@@ -3637,7 +3650,6 @@
                 fechaTextoResumen = `${partes[2]}/${partes[1]}/${partes[0]}`;
             }
 
-            // Fecha de inventario
             const fechaInv = document.getElementById('filtroFechaVerInventario');
             let fechaTextoInv = 'Todas las fechas';
             if (fechaInv && fechaInv.value) {
@@ -3645,7 +3657,6 @@
                 fechaTextoInv = `${partes[2]}/${partes[1]}/${partes[0]}`;
             }
 
-            // Fecha de justificaciones
             const fechaJust = document.getElementById('filtroFechaJustificaciones');
             let fechaTextoJust = 'Todas las fechas';
             if (fechaJust && fechaJust.value) {
@@ -3669,11 +3680,9 @@
                     label.textContent = `${sedeTexto}, ${bodegaTexto}, ${fechaTextoJust}`;
                     return;
                 }
-                // Para otros casos (vencimientos, etc.)
                 label.textContent = `${sedeTexto}, ${bodegaTexto}`;
             });
 
-            // Actualizar labels específicos si existen
             const labelInv = document.getElementById('labelFiltrosActivosInventario');
             if (labelInv) {
                 labelInv.textContent = `${sedeTexto}, ${bodegaTexto}, ${fechaTextoInv}`;
@@ -3757,33 +3766,15 @@
             const respuestasLocales = [
                 {
                     keywords: ['registrar', 'artículo', 'agregar', 'inventario diario'],
-                    answer: `Para registrar un artículo:
-1. Selecciona la sede.
-2. Selecciona la bodega.
-3. Verifica la fecha actual.
-4. Escanea o escribe el código del artículo.
-5. Revisa que se carguen proveedor, descripción y masterpack.
-6. Ingresa cajas/fardos y unidades.
-7. Confirma el total y presiona "Agregar Artículo".`
+                    answer: `Para registrar un artículo:\n1. Selecciona la sede.\n2. Selecciona la bodega.\n3. Verifica la fecha actual.\n4. Escanea o escribe el código del artículo.\n5. Revisa que se carguen proveedor, descripción y masterpack.\n6. Ingresa cajas/fardos y unidades.\n7. Confirma el total y presiona "Agregar Artículo".`
                 },
                 {
                     keywords: ['importar', 'códigos', 'base de códigos'],
-                    answer: `Para importar códigos:
-1. Ve a "Importar Códigos".
-2. Carga un archivo CSV.
-3. El formato esperado es:
-Codigo,Descripcion,Proveedor,Masterpack,Código de Barra,Costo
-4. Revisa la vista previa.
-5. Luego usa el botón de importación si está habilitado.`
+                    answer: `Para importar códigos:\n1. Ve a "Importar Códigos".\n2. Carga un archivo CSV.\n3. El formato esperado es: Codigo,Descripcion,Proveedor,Masterpack,Código de Barra,Costo\n4. Revisa la vista previa.\n5. Luego usa el botón de importación si está habilitado.`
                 },
                 {
-                    keywords: ['importar', 'inventario', 'reportería', 'archivo de inventario', 'formato inventario'],
-                    answer: `Para importar inventario:
-1. Ve a "Importar Inventario".
-2. Carga un archivo CSV.
-3. El formato esperado es:
-Fecha,Proveedor,Código de Barra, Codigo,Descripcion,Inventario Reporteria,Masterpack,Bodega
-4. Revisa la vista previa antes de importar.`
+                    keywords: ['importar', 'inventario', 'reportería', 'archivo de inventario'],
+                    answer: `Para importar inventario:\n1. Ve a "Importar Inventario".\n2. Carga un archivo CSV.\n3. El formato esperado es: Fecha,Proveedor,Código de Barra, Codigo,Descripcion,Inventario Reporteria,Masterpack,Bodega\n4. Revisa la vista previa antes de importar.`
                 },
                 {
                     keywords: ['dif', 'diferencia', 'qué significa la diferencia'],
@@ -3791,21 +3782,11 @@ Fecha,Proveedor,Código de Barra, Codigo,Descripcion,Inventario Reporteria,Maste
                 },
                 {
                     keywords: ['escáner', 'scanner', 'cámara', 'código de barra'],
-                    answer: `Para usar el escáner:
-1. Presiona el botón "Escáner".
-2. Permite acceso a la cámara.
-3. Coloca el código de barras dentro del recuadro.
-4. Cuando el sistema lo detecte, se llenará el campo correspondiente.
-5. Si no funciona, puedes escribir el código manualmente.`
+                    answer: `Para usar el escáner:\n1. Presiona el botón "Escáner".\n2. Permite acceso a la cámara.\n3. Coloca el código de barras dentro del recuadro.\n4. Cuando el sistema lo detecte, se llenará el campo correspondiente.\n5. Si no funciona, puedes escribir el código manualmente.`
                 },
                 {
                     keywords: ['csv', 'exportar', 'descargar'],
-                    answer: `Para exportar:
-1. Ve a "Exportación Informe".
-2. Marca los campos que quieres incluir.
-3. Presiona "Exportar a XLSX".
-4. Selecciona filtros de sede y tipo de bodega.
-5. Descarga el archivo generado.`
+                    answer: `Para exportar:\n1. Ve a "Exportación Informe".\n2. Marca los campos que quieres incluir.\n3. Presiona "Exportar a XLSX".\n4. Selecciona filtros de sede y tipo de bodega.\n5. Descarga el archivo generado.`
                 },
                 {
                     keywords: ['justificación', 'justificaciones', 'tránsitos', 'pendientes'],
@@ -3879,19 +3860,7 @@ Fecha,Proveedor,Código de Barra, Codigo,Descripcion,Inventario Reporteria,Maste
                     const ok = item.keywords.some(keyword => clean.includes(normalizeText(keyword)));
                     if (ok) return item.answer;
                 }
-                return `No encontré una respuesta exacta para eso.
-
-Prueba con temas como:
-- registrar artículos
-- importar inventario
-- importar códigos
-- exportación informe
-- diferencia DIF
-- uso del escáner
-- justificaciones
-- fechas e historial
-
-Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede responder con contexto real del sistema.`;
+                return `No encontré una respuesta exacta para eso.\n\nPrueba con temas como:\n- registrar artículos\n- importar inventario\n- importar códigos\n- exportación informe\n- diferencia DIF\n- uso del escáner\n- justificaciones\n- fechas e historial\n\nSi luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede responder con contexto real del sistema.`;
             }
 
             async function getAssistantResponse(question) {
@@ -3982,7 +3951,6 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 
         // ===== INICIALIZACIÓN PRINCIPAL =====
         document.addEventListener('DOMContentLoaded', async function() {
-            // Verificar autenticación
             const userData = sessionStorage.getItem('currentUser');
             if (!userData) { window.location.href = 'index.html'; return; }
 
@@ -4016,7 +3984,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 
             document.getElementById('nombreCorto').textContent = currentUser.nombre_corto || '';
 
-            // ===== OCULTAR SECCIONES SEGÚN ROL =====
+            // Ocultar secciones según rol
             const rol = currentUser.rol || 'usuario';
             const secciones = document.querySelectorAll('.section-content[data-rol]');
             secciones.forEach(sec => {
@@ -4028,7 +3996,6 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                 }
             });
 
-            // Ocultar enlaces del sidebar según rol
             const navItems = document.querySelectorAll('.nav-item[data-rol]');
             navItems.forEach(item => {
                 const rolRequerido = item.dataset.rol;
@@ -4039,13 +4006,11 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                 }
             });
 
-            // Inicializar navegación
             initNavigation();
 
-            // Configurar filtros y listeners para Ver Inventario y Justificaciones
             configurarFiltrosSegunUsuario();
 
-            // Agregar listeners para los filtros de Inventario
+            // Listeners para filtros de Inventario
             const filtroSedeInv = document.getElementById('filtroSedeVerInventario');
             const filtroTipoInv = document.getElementById('filtroTipoBodegaVerInventario');
             const filtroFechaInv = document.getElementById('filtroFechaVerInventario');
@@ -4058,7 +4023,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                 if (filtroFechaInv) { filtroFechaInv.value = ''; loadInventory(); }
             });
 
-            // Agregar listeners para los filtros de Justificaciones
+            // Listeners para filtros de Justificaciones
             const filtroSedeJust = document.getElementById('filtroSedeJustificaciones');
             const filtroTipoJust = document.getElementById('filtroTipoBodegaJustificaciones');
             const filtroFechaJust = document.getElementById('filtroFechaJustificaciones');
@@ -4071,7 +4036,6 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                 if (filtroFechaJust) { filtroFechaJust.value = ''; loadTransitos(); }
             });
 
-            // Cargar datos iniciales
             await actualizarDashboard();
             await loadVencimientosData();
             await loadInventory();
@@ -4082,14 +4046,13 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             mostrarRecordatorioLunes();
             initUsers();
 
-            // Inicializar asistente
             if (typeof window.initAssistant === 'function') {
                 window.initAssistant();
             } else {
                 console.warn('initAssistant no está definida');
             }
 
-            // Eventos de filtros de fecha en Resumen
+            // Eventos de fecha en Resumen
             const fechaResumen = document.getElementById('filtroFechaResumen');
             const limpiarFechaResumen = document.getElementById('btnLimpiarFechaResumen');
             if (fechaResumen) {
@@ -4104,7 +4067,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                 }
             });
 
-            // Resto de eventos
+            // Formulario de artículos
             document.getElementById('articuloForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 agregarArticulo();
@@ -4161,7 +4124,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                 evaluarVencimiento();
             });
 
-            // Búsqueda automática al escribir código (Enter y blur)
+            // Búsqueda automática
             const codigoArticuloInput = document.getElementById('codigoArticulo');
             if (codigoArticuloInput) {
                 codigoArticuloInput.addEventListener('keydown', function(e) {
@@ -4217,7 +4180,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', function(e) {
                     const section = this.dataset.section;
-                    if (!section) return; // Enlace externo
+                    if (!section) return;
 
                     e.preventDefault();
 
@@ -4242,7 +4205,6 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             }
         }
 
-        // Exponer funciones globales para los botones
         window.calcularTotalUnidades = calcularTotalUnidades;
         window.toggleFechaVencimiento = toggleFechaVencimiento;
         window.editarArticulo = editarArticulo;
@@ -4250,7 +4212,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
         window.previewCSVFile = previewCSVFile;
     </script>
 
-    <!-- ===== ASISTENTE FLOTANTE (HTML) ===== -->
+    <!-- ===== ASISTENTE FLOTANTE ===== -->
     <button id="assistantFab" class="assistant-fab" type="button" aria-label="Abrir asistente">
         <i class="fas fa-comments"></i>
     </button>
