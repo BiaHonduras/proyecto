@@ -2890,7 +2890,7 @@
             showNotification('Éxito', 'Registro eliminado con respaldo', 'success');
         }
 
-        // ===== JUSTIFICACIONES =====
+        // ===== JUSTIFICACIONES (corregido) =====
         const OPCIONES_JUSTIFICACION = [
             'Asignado en GP - La Colonia',
             'Asignado en GP - Walmart',
@@ -2923,74 +2923,79 @@
             actualizarLabelFiltrosActivos();
 
             const tbody = document.getElementById('transitosTableBody');
-            const sede = document.getElementById('filtroSedeJustificaciones').value;
-            const tipo = document.getElementById('filtroTipoBodegaJustificaciones').value;
+            const sedeFiltro = document.getElementById('filtroSedeJustificaciones').value;
+            const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaJustificaciones').value;
             const fechaFiltro = document.getElementById('filtroFechaJustificaciones')?.value || '';
 
-            filtrosGlobales.sede = sede;
-            filtrosGlobales.tipoBodega = tipo;
+            filtrosGlobales.sede = sedeFiltro;
+            filtrosGlobales.tipoBodega = tipoBodegaFiltro;
 
-            let query = supabase.from('inventarios_diarios').select('*');
-            if (fechaFiltro) {
-                query = query.eq('fecha', fechaFiltro);
-            }
-            const { data, error } = await query;
+            // 1. Obtener inventarios diarios con filtros (sede, tipo, fecha)
+            let queryInv = supabase.from('inventarios_diarios').select('*');
+            if (fechaFiltro) queryInv = queryInv.eq('fecha', fechaFiltro);
+            const { data: inventarios, error: errorInv } = await queryInv;
 
-            if (error) {
-                console.error('Error inventarios_diarios:', error);
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6">Error cargando datos</td></tr>`;
+            if (errorInv) {
+                console.error('Error inventarios_diarios:', errorInv);
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-red-600">Error cargando inventarios</td></tr>`;
                 return;
             }
 
-            let inventario = filtrarPorSedeYTipo(data, sede, tipo);
-            if (!inventario.length) {
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6">Sin datos</td></tr>`;
+            let inventarioFiltrado = filtrarPorSedeYTipo(inventarios, sedeFiltro, tipoBodegaFiltro);
+
+            if (!inventarioFiltrado.length) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-gray-500">Sin datos para los filtros seleccionados</td></tr>`;
                 return;
             }
 
-            const codigosInventario = inventario.map(item => String(item.codigo || '').trim()).filter(Boolean);
-            const bodegasFiltradas = [...new Set(inventario.map(item => String(item.idBodega || '').trim()).filter(Boolean))];
+            // 2. Obtener códigos y bodegas únicos de los inventarios filtrados
+            const codigos = [...new Set(inventarioFiltrado.map(item => String(item.codigo || '').trim()).filter(Boolean))];
+            const bodegas = [...new Set(inventarioFiltrado.map(item => String(item.idBodega || '').trim()).filter(Boolean))];
 
-            let queryJust = supabase.from('inventario_justificaciones').select('*').in('codigo', codigosInventario);
-            if (bodegasFiltradas.length) queryJust = queryJust.in('idBodega', bodegasFiltradas);
-            if (sede && sede !== 'Todas') queryJust = queryJust.eq('sede', sede);
-            if (tipo && tipo !== 'Todas') queryJust = queryJust.eq('tipos_bodega', tipo);
+            if (!codigos.length) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-gray-500">Sin códigos válidos</td></tr>`;
+                return;
+            }
 
+            // 3. Buscar justificaciones solo para esos códigos y bodegas
+            let queryJust = supabase.from('inventario_justificaciones').select('*').in('codigo', codigos);
+            if (bodegas.length) queryJust = queryJust.in('idBodega', bodegas);
             const { data: justificaciones, error: errorJust } = await queryJust;
+
             if (errorJust) {
                 console.error('Error inventario_justificaciones:', errorJust);
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6">Error cargando justificaciones</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-red-600">Error cargando justificaciones</td></tr>`;
                 return;
             }
 
-            const mapaJustificaciones = {};
+            // 4. Mapear justificaciones por clave (codigo + idBodega)
+            const mapaJust = {};
             (justificaciones || []).forEach(j => {
                 const clave = `${String(j.codigo || '').trim()}|${String(j.idBodega || '').trim()}`;
-                mapaJustificaciones[clave] = j;
+                mapaJust[clave] = j;
             });
 
-            const filtrados = inventario.filter(item => {
-                const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-                const diferencia = total - Number(item.inventario_reporteria || 0);
-                const codigo = String(item.codigo || '').trim();
-                const idBodega = String(item.idBodega || '').trim();
-                const clave = `${codigo}|${idBodega}`;
-                return diferencia !== 0 || !!mapaJustificaciones[clave];
-            }).sort((a,b) => Number(a.codigo || 0) - Number(b.codigo || 0));
+            // 5. Construir tabla con los datos filtrados
+            const datosTabla = inventarioFiltrado
+                .map(item => {
+                    const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
+                    const diferencia = total - Number(item.inventario_reporteria || 0);
+                    const clave = `${String(item.codigo || '').trim()}|${String(item.idBodega || '').trim()}`;
+                    const just = mapaJust[clave] || {};
+                    return { ...item, total, diferencia, just };
+                })
+                .filter(item => item.diferencia !== 0 || Object.keys(item.just).length > 0)
+                .sort((a, b) => Number(a.codigo || 0) - Number(b.codigo || 0));
 
-            if (!filtrados.length) {
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6">Sin diferencias ni justificaciones</td></tr>`;
+            if (!datosTabla.length) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-gray-500">Sin diferencias ni justificaciones</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = filtrados.map(item => {
-                const total = (Number(item.cajas_fardos || 0) * Number(item.masterpack || 1)) + Number(item.unidades || 0);
-                const diferencia = total - Number(item.inventario_reporteria || 0);
-                const clave = `${String(item.codigo || '').trim()}|${String(item.idBodega || '').trim()}`;
-                const justificacionRow = mapaJustificaciones[clave] || {};
-                const justificacionGuardada = justificacionRow.justificacion || '';
-                const cantidadJustificada = justificacionRow.cantidad_justificada ?? '';
+            tbody.innerHTML = datosTabla.map(item => {
                 const costoUnitario = Number(item.costo_unitario || 0);
+                const justificacionGuardada = item.just.justificacion || '';
+                const cantidadJustificada = item.just.cantidad_justificada ?? '';
 
                 return `
                     <tr class="border-b hover:bg-gray-50"
@@ -2998,14 +3003,14 @@
                         data-codigo="${escapeAttr(item.codigo || '')}"
                         data-sede="${escapeAttr(item.sede || '')}"
                         data-id-bodega="${escapeAttr(item.idBodega || '')}"
-                        data-fecha-registro="${justificacionRow.fecha_registro || ''}"
+                        data-fecha-registro="${item.just.fecha_registro || ''}"
                         data-costo-unitario="${costoUnitario}">
                         <td class="py-3">${escapeHtml(item.idBodega || '')}</td>
                         <td class="py-3">${escapeHtml(item.codigo || '')}</td>
-                        <td class="py-3">${escapeHtml(item.descripcion || '')}</td>
+                        <td class="py-3 descripcion">${escapeHtml(item.descripcion || '')}</td>
                         <td class="py-3">${formatearMoneda(costoUnitario)}</td>
                         <td class="py-3">${Number(item.inventario_reporteria || 0)}</td>
-                        <td class="py-3 font-bold">${diferencia}</td>
+                        <td class="py-3 diferencia font-bold">${item.diferencia}</td>
                         <td class="py-3">
                             <input type="number" class="cantidad-justificada w-full px-2 py-1 text-sm input-field rounded input-disabled" value="${cantidadJustificada}" disabled>
                         </td>
@@ -4012,8 +4017,36 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             // Inicializar navegación
             initNavigation();
 
-            // Cargar datos iniciales
+            // Configurar filtros y listeners para Ver Inventario y Justificaciones
             configurarFiltrosSegunUsuario();
+
+            // Agregar listeners para los filtros de Inventario
+            const filtroSedeInv = document.getElementById('filtroSedeVerInventario');
+            const filtroTipoInv = document.getElementById('filtroTipoBodegaVerInventario');
+            const filtroFechaInv = document.getElementById('filtroFechaVerInventario');
+            const btnLimpiarFechaInv = document.getElementById('btnLimpiarFechaInventario');
+
+            if (filtroSedeInv) filtroSedeInv.addEventListener('change', loadInventory);
+            if (filtroTipoInv) filtroTipoInv.addEventListener('change', loadInventory);
+            if (filtroFechaInv) filtroFechaInv.addEventListener('change', loadInventory);
+            if (btnLimpiarFechaInv) btnLimpiarFechaInv.addEventListener('click', function() {
+                if (filtroFechaInv) { filtroFechaInv.value = ''; loadInventory(); }
+            });
+
+            // Agregar listeners para los filtros de Justificaciones
+            const filtroSedeJust = document.getElementById('filtroSedeJustificaciones');
+            const filtroTipoJust = document.getElementById('filtroTipoBodegaJustificaciones');
+            const filtroFechaJust = document.getElementById('filtroFechaJustificaciones');
+            const btnLimpiarFechaJust = document.getElementById('btnLimpiarFechaJustificaciones');
+
+            if (filtroSedeJust) filtroSedeJust.addEventListener('change', loadTransitos);
+            if (filtroTipoJust) filtroTipoJust.addEventListener('change', loadTransitos);
+            if (filtroFechaJust) filtroFechaJust.addEventListener('change', loadTransitos);
+            if (btnLimpiarFechaJust) btnLimpiarFechaJust.addEventListener('click', function() {
+                if (filtroFechaJust) { filtroFechaJust.value = ''; loadTransitos(); }
+            });
+
+            // Cargar datos iniciales
             await actualizarDashboard();
             await loadVencimientosData();
             await loadInventory();
@@ -4043,36 +4076,6 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                 if (fechaResumen) {
                     fechaResumen.value = '';
                     actualizarDashboard();
-                }
-            });
-
-            // Eventos de filtros de fecha en Ver Inventario
-            const fechaInv = document.getElementById('filtroFechaVerInventario');
-            const limpiarFechaInv = document.getElementById('btnLimpiarFechaInventario');
-            if (fechaInv) {
-                const hoy = new Date();
-                fechaInv.value = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
-                fechaInv.addEventListener('change', loadInventory);
-            }
-            limpiarFechaInv?.addEventListener('click', function() {
-                if (fechaInv) {
-                    fechaInv.value = '';
-                    loadInventory();
-                }
-            });
-
-            // Eventos de filtros de fecha en Justificaciones
-            const fechaJust = document.getElementById('filtroFechaJustificaciones');
-            const limpiarFechaJust = document.getElementById('btnLimpiarFechaJustificaciones');
-            if (fechaJust) {
-                const hoy = new Date();
-                fechaJust.value = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
-                fechaJust.addEventListener('change', loadTransitos);
-            }
-            limpiarFechaJust?.addEventListener('click', function() {
-                if (fechaJust) {
-                    fechaJust.value = '';
-                    loadTransitos();
                 }
             });
 
@@ -4189,7 +4192,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', function(e) {
                     const section = this.dataset.section;
-                    if (!section) return; // Enlace externo (Dashboard) se maneja solo
+                    if (!section) return; // Enlace externo
 
                     e.preventDefault();
 
