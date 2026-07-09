@@ -4701,7 +4701,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
 		    const rolActual = String(currentUser?.role || currentUser?.rol || '').trim().toLowerCase();
 		    const usuarioActual = currentUser?.username || currentUser?.usuario || currentUser?.email || 'desconocido';
 		
-		    if (rolActual === 'admin') {
+		    if (rolActual === 'superadmin') {
 		        return usuarioActual;
 		    }
 		
