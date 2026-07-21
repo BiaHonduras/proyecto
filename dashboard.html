@@ -5146,9 +5146,14 @@ function normalizarNombreColumnaCSV(nombre = '') {
 			}
 		
 	        function initUsers() {
-			    const form = document.getElementById('userForm');
-			    			    const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
-			    			    const tbody = document.getElementById('usersTableBody');
+				const tbody = document.getElementById('usersTableBody');
+				
+				if (!tbody) {
+			        return;
+			    }
+
+				 const form = document.getElementById('userForm');
+    			 const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
 			
 			    tbody.addEventListener('click', async (e) => {
 			        const btnDelete = e.target.closest('.btn-delete-user');
@@ -5177,12 +5182,12 @@ function normalizarNombreColumnaCSV(nombre = '') {
 			    }
 
 			    const usuario = document.getElementById('userUsername').value.trim().toLowerCase();
-				    const nombre_corto = document.getElementById('userNombre_corto').value.trim();
-				    const correo = document.getElementById('userEmail').value.trim().toLowerCase();
-				    const dni = document.getElementById('userDNI').value.trim();
-				    const password = document.getElementById('userPassword').value;
-				    const confirmPassword = document.getElementById('userConfirmPassword').value;
-				    const rol = document.getElementById('userRole').value;
+				const nombre_corto = document.getElementById('userNombre_corto').value.trim();
+				const correo = document.getElementById('userEmail').value.trim().toLowerCase();
+				const dni = document.getElementById('userDNI').value.trim();
+				const password = document.getElementById('userPassword').value;
+				const confirmPassword = document.getElementById('userConfirmPassword').value;
+				const rol = document.getElementById('userRole').value;
 				
 				    if (!usuario || !nombre_corto || !correo || !dni || !password || !confirmPassword || !sede) {
 				        showNotification('Error', 'Complete todos los campos requeridos', 'error');
@@ -5222,7 +5227,9 @@ function normalizarNombreColumnaCSV(nombre = '') {
         
         async function loadUsers() {
 		    const tbody = document.getElementById('usersTableBody');
-		    if (!tbody) return;
+		    if (!tbody) {
+		        return; // No hay tabla, salir
+		    }
 		
 		    const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
 		
@@ -5231,7 +5238,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
 		        return;
 		    }
 		
-		    if (!usuarioPuedeGestionarUsuarios(currentUser)) {
+		    if (!esSuperAdmin()) {
 		        tbody.innerHTML = `
 		            <tr>
 		                <td colspan="6" class="py-8 text-center text-gray-500">
