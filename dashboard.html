@@ -3409,6 +3409,16 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		        showNotification('Error', 'Debes ingresar la fecha de vencimiento', 'error');
 		        return;
 		    }
+
+			// Validar que la bodega permita fecha de vencimiento si el checkbox está activo
+		    const selectBodega = document.getElementById('idBodega');
+		    const optionSelected = selectBodega.options[selectBodega.selectedIndex];
+		    const manejaVencimiento = optionSelected?.dataset?.manejaVencimiento === 'true';
+		
+		    if (checkVencimiento.checked && !manejaVencimiento) {
+		        showNotification('Error', 'La bodega seleccionada no permite registrar fecha de vencimiento.', 'error');
+		        return; // Salir sin guardar
+		    }
 		
 		    const total = (cajas * masterpack) + unidades;
 		    const diasVida = checkActivo && fechaVenc
@@ -6757,34 +6767,6 @@ function validarPermiteVencimiento() {
 
     return true;
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('fechaVencimiento');
-    const check = document.getElementById('checkVencimiento');
-    const form = document.getElementById('articuloForm');
-
-    if (input) {
-        input.disabled = true;
-        input.classList.add('bg-gray-100', 'input-disabled');
-    }
-
-    const hoy = new Date();
-    const esLunes = hoy.getDay() === 1;
-
-    if (check && esLunes) {
-        check.checked = true;
-        toggleFechaVencimiento();
-    }
-
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            if (!validarPermiteVencimiento()) {
-                e.preventDefault();
-                return false;
-            }
-        });
-    }
-});
 	const btnEliminarVencimientos =
 	    document.getElementById('btn-eliminar-vencimientos');
 	
