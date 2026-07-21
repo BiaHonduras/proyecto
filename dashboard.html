@@ -2280,7 +2280,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             const navUsuarios = document.querySelector('[data-section="usuarios"]');
             const seccionUsuarios = document.getElementById('usuarios-section');
 
-            if (usuarioPuedeGestionarUsuarios()) return;
+            if (esSuperAdmin()) return;
 
             if (navUsuarios) {
                 navUsuarios.style.display = 'none';
