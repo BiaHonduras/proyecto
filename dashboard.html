@@ -2276,10 +2276,6 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             ).trim().toLowerCase();
         }
 
-        function usuarioPuedeGestionarUsuarios(user = currentUser) {
-            return obtenerUsuarioActualNormalizado(user) === 'verificadorsps';
-        }
-
         function aplicarRestriccionGestionUsuarios() {
             const navUsuarios = document.querySelector('[data-section="usuarios"]');
             const seccionUsuarios = document.getElementById('usuarios-section');
@@ -2295,15 +2291,54 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             }
         }
 
-        function usuarioPuedeGestionarVencimientos(user = currentUser) {
-            return obtenerUsuarioActualNormalizado(user) === 'verificadorsps';
-        }
+		// Obtener rol del usuario actual
+		function getRol() {
+		    return (currentUser?.rol || '').toLowerCase();
+		}
+		
+		function esSuperAdmin() {
+		    return getRol() === 'superadmin';
+		}
+		
+		function esAdmin() {
+		    const rol = getRol();
+		    return rol === 'admin' || rol === 'superadmin';
+		}
+		
+		function esUsuario() {
+		    return getRol() === 'usuario';
+		}
+		
+		// Permisos específicos
+		function puedeGestionarUsuarios() {
+		    return esSuperAdmin();
+		}
+		
+		function puedeAccederDepuracion() {
+		    return esSuperAdmin();
+		}
+		
+		function puedeImportarCodigos() {
+		    return esAdmin(); // admin o superadmin
+		}
+		
+		function puedeImportarInventario() {
+		    return esAdmin();
+		}
+		
+		function puedeCargarVencimientosManual() {
+		    return esSuperAdmin(); // solo superadmin sube CSV
+		}
+		
+		function puedeVerFiltrosLibres() {
+		    return esAdmin(); // admin o superadmin pueden cambiar sede
+		}
 
         function aplicarRestriccionCargaVencimientos() {
             const boton = document.getElementById('bloqueCargaManualBtn');
             const modal = document.getElementById('modalCargaManual');
 
-            if (usuarioPuedeGestionarVencimientos()) {
+            if (esSuperAdmin()) {
                 boton?.classList.remove('hidden');
                 return;
             }
@@ -2533,39 +2568,90 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		
 		    const sedeUsuario = currentUser?.sede || currentUser?.Sede || null;
 		    const tipoBodegaUsuario = currentUser?.tipos_bodega || currentUser?.tipoBodega || null;
-		    const esAdmin = currentUser?.role === 'admin' || currentUser?.rol === 'admin';
 		
-		    filtrosGlobales.sede = esAdmin ? 'Todas' : (sedeUsuario || 'Todas');
-		    filtrosGlobales.tipoBodega = esAdmin ? 'Todas' : (tipoBodegaUsuario || 'Todas');
+		    // Si es admin o superadmin, puede cambiar filtros libremente
+		    const puedeCambiar = puedeVerFiltrosLibres();
 		
-		    filtroSede.value = filtrosGlobales.sede;
-		    filtroTipoBodega.value = filtrosGlobales.tipoBodega;
-		
-		    if (!esAdmin && sedeUsuario) {
-		        filtroSede.disabled = true;
-		        filtroSede.classList.add('bg-gray-100');
+		    if (puedeCambiar) {
+		        filtroSede.disabled = false;
+		        filtroSede.classList.remove('bg-gray-100');
+		        filtroTipoBodega.disabled = false;
+		        filtroTipoBodega.classList.remove('bg-gray-100');
+		        // Restaurar valores por defecto a "Todas" (o mantener el último seleccionado)
+		        // Si quieres que inicie en Todas, descomenta:
+		        // filtroSede.value = 'Todas';
+		        // filtroTipoBodega.value = 'Todas';
+		    } else {
+		        // Usuario normal: bloquear según su sede/tipo
+		        if (sedeUsuario) {
+		            filtroSede.value = sedeUsuario;
+		            filtroSede.disabled = true;
+		            filtroSede.classList.add('bg-gray-100');
+		        }
+		        if (tipoBodegaUsuario) {
+		            filtroTipoBodega.value = tipoBodegaUsuario;
+		            filtroTipoBodega.disabled = true;
+		            filtroTipoBodega.classList.add('bg-gray-100');
+		        }
 		    }
 		
-		    if (!esAdmin && tipoBodegaUsuario) {
-		        filtroTipoBodega.disabled = true;
-		        filtroTipoBodega.classList.add('bg-gray-100');
-		    }
+		    // Sincronizar filtros globales
+		    filtrosGlobales.sede = filtroSede.value;
+		    filtrosGlobales.tipoBodega = filtroTipoBodega.value;
 		
-		    filtroSede.addEventListener('change', (e) => {
-		        filtrosGlobales.sede = e.target.value;
-				loadTransitos();
+		    // Event listeners
+		    filtroSede.onchange = function() {
+		        filtrosGlobales.sede = this.value;
 		        actualizarLabelFiltrosActivos();
 		        recargarDashboardConFiltros();
-		    });
-		
-		    filtroTipoBodega.addEventListener('change', (e) => {
-		        filtrosGlobales.tipoBodega = e.target.value;
-				loadTransitos();
+		    };
+		    filtroTipoBodega.onchange = function() {
+		        filtrosGlobales.tipoBodega = this.value;
 		        actualizarLabelFiltrosActivos();
 		        recargarDashboardConFiltros();
-		    });
+		    };
 		
 		    actualizarLabelFiltrosActivos();
+		}
+
+		function aplicarRestriccionesPorRol() {
+		    // Menú
+		    const navDepuracion = document.querySelector('[data-section="depuracion"]');
+		    const navUsuarios = document.querySelector('[data-section="usuarios"]');
+		    const navImportarCodigos = document.querySelector('[data-section="importar-codigos"]');
+		    const navImportarInventario = document.querySelector('[data-section="importar-inventario"]');
+		
+		    if (navDepuracion) navDepuracion.style.display = esSuperAdmin() ? '' : 'none';
+		    if (navUsuarios) navUsuarios.style.display = esSuperAdmin() ? '' : 'none';
+		    if (navImportarCodigos) navImportarCodigos.style.display = puedeImportarCodigos() ? '' : 'none';
+		    if (navImportarInventario) navImportarInventario.style.display = puedeImportarInventario() ? '' : 'none';
+		
+		    // Secciones (por si alguien accede por URL)
+		    const seccionDepuracion = document.getElementById('depuracion-section');
+		    const seccionUsuarios = document.getElementById('usuarios-section');
+		    const seccionImportarCodigos = document.getElementById('importar-codigos-section');
+		    const seccionImportarInventario = document.getElementById('importar-inventario-section');
+		
+		    if (seccionDepuracion) seccionDepuracion.style.display = esSuperAdmin() ? '' : 'none';
+		    if (seccionUsuarios) seccionUsuarios.style.display = esSuperAdmin() ? '' : 'none';
+		    if (seccionImportarCodigos) seccionImportarCodigos.style.display = puedeImportarCodigos() ? '' : 'none';
+		    if (seccionImportarInventario) seccionImportarInventario.style.display = puedeImportarInventario() ? '' : 'none';
+		
+		    // Botones de acciones sensibles
+		    const btnCargaManualVenc = document.getElementById('btnAbrirCargaManual');
+		    if (btnCargaManualVenc) btnCargaManualVenc.style.display = esSuperAdmin() ? '' : 'none';
+		
+		    const btnEliminarInv = document.getElementById('btn-eliminar-inventario-dia');
+		    if (btnEliminarInv) btnEliminarInv.style.display = esSuperAdmin() ? '' : 'none';
+		
+		    const btnEliminarBDD = document.getElementById('btn-eliminar-bdd');
+		    if (btnEliminarBDD) btnEliminarBDD.style.display = esSuperAdmin() ? '' : 'none';
+		
+		    const btnImportInv = document.getElementById('confirmImportInventory');
+		    if (btnImportInv) btnImportInv.style.display = puedeImportarInventario() ? '' : 'none';
+		
+		    const btnImportCodes = document.getElementById('confirmImportCodes');
+		    if (btnImportCodes) btnImportCodes.style.display = puedeImportarCodigos() ? '' : 'none';
 		}
 
         function recargarDashboardConFiltros() {
@@ -4329,10 +4415,10 @@ function normalizarNombreColumnaCSV(nombre = '') {
         }
 
         async function importVencimientosManual() {
-            if (!usuarioPuedeGestionarVencimientos()) {
-                showNotification('Error', 'No tienes permisos para importar vencimientos', 'error');
-                return;
-            }
+            if (!esSuperAdmin()) {
+			    showNotification('Error', 'No tienes permisos para importar vencimientos', 'error');
+			    return;
+			}
 
             const fileInput = document.getElementById('importVencimientosFile');
             const file = fileInput?.files?.[0];
@@ -4712,14 +4798,14 @@ function normalizarNombreColumnaCSV(nombre = '') {
 		    const usuarioActual = currentUser?.username || currentUser?.usuario || currentUser?.email || 'desconocido';
 		
 		    if (rolActual === 'superadmin') {
-		        return usuarioActual;
+		        return currentUser?.username || 'superadmin';
 		    }
 		
 		    const credenciales = await abrirModalAuth();
 		    if (!credenciales) return null;
 		
 		    const { usuario, password } = credenciales;
-		    const credencialesValidas = await validarCredencialesAdministrador(usuario, password);
+		    const credencialesValidas = await esSuperAdmin(usuario, password);
 		
 		    if (!credencialesValidas) {
 		        showNotification('Error', 'Credenciales inválidas o sin permisos de administrador', 'error');
@@ -4736,7 +4822,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
             );
             if (!confirmar) return;
 
-            const adminAutorizador = await solicitarAutorizacionAdmin();
+            const adminAutorizador = await esSuperAdmin();
             if (!adminAutorizador) return;
 
             showNotification('Proceso', 'Ejecutando respaldo y eliminación segura desde SQL...', 'warning');
@@ -4788,7 +4874,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
 		
 		    if (!confirmar) return;
 		
-		    const adminAutorizador = await solicitarAutorizacionAdmin();
+		    const adminAutorizador = await esSuperAdmin();
 		    if (!adminAutorizador) return;
 		
 		    showNotification(
@@ -4834,7 +4920,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
             );
             if (!confirmar) return;
 
-            const adminAutorizador = await solicitarAutorizacionAdmin();
+            const adminAutorizador = await esSuperAdmin();
             if (!adminAutorizador) return;
 
             showNotification('Proceso', 'Ejecutando respaldo y eliminación segura de códigos desde SQL...', 'warning');
@@ -5042,7 +5128,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
 			        'userRole'
 			    ];
 			
-			    if (!usuarioPuedeGestionarUsuarios()) {
+			    if (!esSuperAdmin()) {
 			        bloquearFormularioUsuarios();
 			        return;
 			    }
@@ -5085,7 +5171,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
 			    form.addEventListener('submit', async function (e) {
 				    e.preventDefault();
 				
-				    if (!usuarioPuedeGestionarUsuarios()) {
+				    if (!esSuperAdmin()) {
 			        showNotification('Error', 'No tienes permisos para crear usuarios', 'error');
 			        return;
 			    }
