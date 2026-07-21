@@ -2293,7 +2293,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 
 		// Obtener rol del usuario actual
 		function getRol() {
-		    return (currentUser?.rol || '').toLowerCase();
+		    return (currentUser?.role || currentUser?.rol || '').toLowerCase();
 		}
 		
 		function esSuperAdmin() {
