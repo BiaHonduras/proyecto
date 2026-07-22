@@ -2798,12 +2798,12 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 			});
 
 			document.addEventListener('DOMContentLoaded', async function() {
-			    const today = new Date().toISOString().split('T')[0];
+			    const hoy = new Date().toISOString().split('T')[0];
 			    ['filtroFechaResumen', 'filtroFechaInventario', 'filtroFechaJustificaciones'].forEach(id => {
 			        const el = document.getElementById(id);
-			        if (el) el.value = today;
+			        if (el) el.value = hoy;
 			    });
-				filtrosGlobales.fecha = today;
+				filtrosGlobales.fecha = hoy;
 
             if (currentUser.must_change_password) {
                 alert('Debe cambiar su contraseña antes de continuar.');
@@ -3468,12 +3468,6 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 			window.costoUnitarioActual = 0;
     		window.costoTotalActual = 0;
 			toggleFechaVencimiento();
-
-    		const today = new Date();
-    		const yyyy = today.getFullYear();
-    		const mm = String(today.getMonth() + 1).padStart(2, '0');
-    		const dd = String(today.getDate()).padStart(2, '0');
-    		document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
 		}
 
         async function registrarImportacionVencimientos(cantidadRegistros = 1) {
