@@ -1086,8 +1086,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 						<div>
 					        <label class="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
 					        <div class="flex gap-2">
-					            <input type="date" id="filtroFechaDesdeResumen" class="input-field w-1/2 px-2 py-1 text-sm rounded-lg">
-					            <input type="date" id="filtroFechaHastaResumen" class="input-field w-1/2 px-2 py-1 text-sm rounded-lg">
+					            <input type="date" id="filtroFechaResumen" class="input-field w-1/2 px-2 py-1 text-sm rounded-lg">
 					        </div>
 					    </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
@@ -1541,8 +1540,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 						<div>
 					        <label class="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
 					        <div class="flex gap-2">
-					            <input type="date" id="filtroFechaDesdeInventario" class="input-field w-1/2 px-2 py-1 text-sm rounded-lg">
-					            <input type="date" id="filtroFechaHastaInventario" class="input-field w-1/2 px-2 py-1 text-sm rounded-lg">
+					            <input type="date" id="filtroFechaInventario" class="input-field w-1/2 px-2 py-1 text-sm rounded-lg">
 					        </div>
 					    </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
@@ -1645,8 +1643,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 						<div>
 					        <label class="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
 					        <div class="flex gap-2">
-					            <input type="date" id="filtroFechaDesdeJustificaciones" class="input-field w-1/2 px-2 py-1 text-sm rounded-lg">
-					            <input type="date" id="filtroFechaHastaJustificaciones" class="input-field w-1/2 px-2 py-1 text-sm rounded-lg">
+					            <input type="date" id="filtroFechaJustificaciones" class="input-field w-1/2 px-2 py-1 text-sm rounded-lg">
 					        </div>
 					    </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
@@ -2283,8 +2280,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
         let filtrosGlobales = {
             sede: 'Todas',
             tipoBodega: 'Todas',
-			fechaDesde: null,
-			fechaHasta: null
+			fecha: null
         };
 
         const DNI_REGEX = /^\d{4}-\d{4}-\d{5}$/;
@@ -2502,7 +2498,14 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		            return false;
 		        }
 		    }
-		
+
+			// Validación de fecha exacta
+		    if (filtrosGlobales.fecha) {
+		        const fechaItem = item.fecha ? item.fecha.split('T')[0] : null;
+		        if (fechaItem !== filtrosGlobales.fecha) {
+		            return false;
+		        }
+		    }
 		    return true;
 		}
 
@@ -2781,6 +2784,24 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 			document.getElementById('filtroTipoBodegaVerInventario')?.addEventListener('change', loadInventory);
 			document.getElementById('filtroSedeJustificaciones').addEventListener('change', aplicarFiltrosJustificaciones);
 			document.getElementById('filtroTipoBodegaJustificaciones').addEventListener('change', aplicarFiltrosJustificaciones);
+			
+			// Resumen
+			document.getElementById('filtroFechaResumen').addEventListener('change', function() {
+			    filtrosGlobales.fecha = this.value || null;
+			    recargarDashboardConFiltros(); // o loadDashboardData() y cargar gráficos
+			});
+			
+			// Ver Inventario
+			document.getElementById('filtroFechaInventario').addEventListener('change', function() {
+			    filtrosGlobales.fecha = this.value || null;
+			    loadInventory();
+			});
+			
+			// Justificaciones
+			document.getElementById('filtroFechaJustificaciones').addEventListener('change', function() {
+			    filtrosGlobales.fecha = this.value || null;
+			    loadTransitos();
+			});
 
             if (currentUser.must_change_password) {
                 alert('Debe cambiar su contraseña antes de continuar.');
@@ -3180,8 +3201,24 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 
         // ===== DASHBOARD =====
         async function loadDashboardData() {
-            const sedeFiltro = document.getElementById('filtroSedeResumen')?.value || 'Todas';
-            const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaResumen')?.value || 'Todas';
+            const sedeFiltro = filtrosGlobales.sede;
+		    const tipoBodegaFiltro = filtrosGlobales.tipoBodega;
+		    const fechaFiltro = filtrosGlobales.fecha;
+
+			let query = supabase
+		        .from('inventarios_diarios')
+		        .select('*');
+		
+		    if (sedeFiltro !== 'Todas') {
+		        query = query.eq('sede', sedeFiltro);
+		    }
+		    if (tipoBodegaFiltro !== 'Todas') {
+		        const ids = obtenerIdsBodegaPorTipo(tipoBodegaFiltro);
+		        if (ids.length) query = query.in('idBodega', ids);
+		    }
+		    if (fechaFiltro) {
+		        query = query.eq('fecha', fechaFiltro);
+		    }
 
             const { data, error } = await supabase
                 .from('vw_dashboard_resumen')
@@ -3213,6 +3250,18 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                 cargarGraficoProveedores()
             ]);
         }
+
+		function obtenerIdsBodegaPorTipo(tipo) {
+		    const ids = new Set();
+		    for (const sede in bodegasPorSede) {
+		        bodegasPorSede[sede].forEach(b => {
+		            if (b.label === tipo) {
+		                ids.add(b.value);
+		            }
+		        });
+		    }
+		    return Array.from(ids);
+		}
 
         // === FORMATO DE FECHA ====
         function formatearFecha(fechaISO) {
@@ -3856,6 +3905,22 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		    const tbody = document.getElementById('inventoryTableBody');
 		    const searchInput = document.getElementById('searchInventory');
 		    const searchTerm = (searchInput?.value || '').trim().toLowerCase();
+
+			let query = supabase
+		        .from('inventarios_diarios')
+		        .select('*')
+		        .order('codigo', { ascending: true });
+		
+		    if (filtrosGlobales.sede !== 'Todas') {
+		        query = query.eq('sede', filtrosGlobales.sede);
+		    }
+		    if (filtrosGlobales.tipoBodega !== 'Todas') {
+		        const ids = obtenerIdsBodegaPorTipo(filtrosGlobales.tipoBodega);
+		        if (ids.length) query = query.in('idBodega', ids);
+		    }
+		    if (filtrosGlobales.fecha) {
+		        query = query.eq('fecha', filtrosGlobales.fecha);
+		    }
 		
 		    const { data, error } = await supabase
 		        .from('inventarios_diarios')
@@ -3885,7 +3950,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 			const tiposBodega = {
 			    Principal: ['010', '030', '040', '050', '060'],
 			    PPV: ['013', '033', '043', '053', '063'],
-			    PFN: ['015', '045', '095', '096', '099']
+			    PFN: ['095', '096', '097', '098', '099']
 			};
 
 			inventario = inventario.filter(item => {
@@ -5709,12 +5774,26 @@ tbody.innerHTML = data.map(item => {
 			    actualizarLabelFiltrosActivos();
 			
 			    const tbody = document.getElementById('transitosTableBody');
-			
 			    const sede = document.getElementById('filtroSedeJustificaciones').value;
 			    const tipo = document.getElementById('filtroTipoBodegaJustificaciones').value;
 			
 			    filtrosGlobales.sede = sede;
 			    filtrosGlobales.tipoBodega = tipo;
+
+				let queryInv = supabase
+			        .from('inventarios_diarios')
+			        .select('*');
+			
+			    if (filtrosGlobales.sede !== 'Todas') {
+			        queryInv = queryInv.eq('sede', filtrosGlobales.sede);
+			    }
+			    if (filtrosGlobales.tipoBodega !== 'Todas') {
+			        const ids = obtenerIdsBodegaPorTipo(filtrosGlobales.tipoBodega);
+			        if (ids.length) queryInv = queryInv.in('idBodega', ids);
+			    }
+			    if (filtrosGlobales.fecha) {
+			        queryInv = queryInv.eq('fecha', filtrosGlobales.fecha);
+			    }
 			
 			    const { data, error: errorInventario } = await supabase
 			        .from('inventarios_diarios')
