@@ -1062,7 +1062,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             <!-- Dashboard Section -->
             <section id="resumen-section" class="section-content">
                 <div class="card p-4 mb-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 items-end">
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Sede</label>
                             <select id="filtroSedeResumen" class="input-field w-full px-3 py-2 text-sm rounded-lg">
@@ -1083,15 +1083,13 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                                 <option value="PFN">PFN</option>
                             </select>
                         </div>
-						<div>
-					        <label class="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
-					        <div class="flex gap-2">
-					            <input type="date" id="filtroFechaResumen" class="input-field w-1/2 px-2 py-1 text-sm rounded-lg">
-					        </div>
-					    </div>
-                        <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                            <p class="text-sm text-gray-600">Vista activa</p>
-                            <span class="labelFiltrosActivos">Todas las sedes, Todas las bodegas</span>
+						 <div class="min-w-0">
+				            <label class="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
+				            <input type="date" id="filtroFechaResumen" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+				        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex flex-col justify-end min-w-0">
+				            <p class="text-sm text-gray-600">Vista activa</p>
+				            <span class="labelFiltrosActivos font-semibold text-gray-800 truncate">Todas las sedes, Todas las bodegas</span>
                         </div>
                     </div>
                 </div>
@@ -1537,16 +1535,14 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                                 <option value="PFN">PFN</option>
                             </select>
                         </div>
-						<div>
-					        <label class="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
-					        <div class="flex gap-2">
-					            <input type="date" id="filtroFechaInventario" class="input-field w-1/2 px-2 py-1 text-sm rounded-lg">
-					        </div>
-					    </div>
-                        <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                            <p class="text-sm text-gray-600">Vista activa</p>
-                            <p class="font-semibold text-gray-800" id="labelFiltrosActivos">Todas las sedes, Todas las bodegas</p>
-                        </div>
+						<div class="min-w-0">
+				            <label class="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
+				            <input type="date" id="filtroFechaResumen" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+				        </div>
+					    <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex flex-col justify-end min-w-0">
+				            <p class="text-sm text-gray-600">Vista activa</p>
+				            <span class="labelFiltrosActivos font-semibold text-gray-800 truncate">Todas las sedes, Todas las bodegas</span>
+				        </div>
                     </div>
                 </div>
                 <div class="card p-6">
@@ -1640,16 +1636,14 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
                                 <option value="PFN">PFN</option>
                             </select>
                         </div>
-						<div>
-					        <label class="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
-					        <div class="flex gap-2">
-					            <input type="date" id="filtroFechaJustificaciones" class="input-field w-1/2 px-2 py-1 text-sm rounded-lg">
-					        </div>
-					    </div>
-                        <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                            <p class="text-sm text-gray-600">Vista activa</p>
-                            <p class="font-semibold text-gray-800" id="labelFiltrosActivos">Todas las sedes, Todas las bodegas</p>
-                        </div>
+						<div class="min-w-0">
+				            <label class="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
+				            <input type="date" id="filtroFechaResumen" class="input-field w-full px-3 py-2 text-sm rounded-lg">
+				        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex flex-col justify-end min-w-0">
+				            <p class="text-sm text-gray-600">Vista activa</p>
+				            <span class="labelFiltrosActivos font-semibold text-gray-800 truncate">Todas las sedes, Todas las bodegas</span>
+				        </div>
                     </div>
                 </div>
 	    <div class="card p-6">
@@ -2803,6 +2797,14 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 			    loadTransitos();
 			});
 
+			document.addEventListener('DOMContentLoaded', function() {
+			    const today = new Date().toISOString().split('T')[0];
+			    ['filtroFechaResumen', 'filtroFechaInventario', 'filtroFechaJustificaciones'].forEach(id => {
+			        const el = document.getElementById(id);
+			        if (el) el.value = today;
+			    });
+				filtrosGlobales.fecha = today;
+
             if (currentUser.must_change_password) {
                 alert('Debe cambiar su contraseña antes de continuar.');
                 try {
@@ -3695,6 +3697,25 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
             box.classList.add('scanner-error');
             setTimeout(() => box.classList.remove('scanner-error'), 500);
         }
+
+		function actualizarFechaGlobal(fecha) {
+		    const ids = ['filtroFechaResumen', 'filtroFechaInventario', 'filtroFechaJustificaciones'];
+		    ids.forEach(id => {
+		        const el = document.getElementById(id);
+		        if (el) el.value = fecha;
+		    });
+		    filtrosGlobales.fecha = fecha;
+		    loadDashboardData();
+		    loadInventory();
+		    loadTransitos();
+		}
+		
+		// Event listeners
+		['filtroFechaResumen', 'filtroFechaInventario', 'filtroFechaJustificaciones'].forEach(id => {
+		    document.getElementById(id)?.addEventListener('change', function() {
+		        actualizarFechaGlobal(this.value || null);
+		    });
+		});
 
         function renderScannerOverlay() {
             return `
@@ -5832,72 +5853,34 @@ tbody.innerHTML = data.map(item => {
 			        return;
 			    }
 			
-			    const codigosInventario = inventario
-			        .map(item => String(item.codigo || '').trim())
-			        .filter(Boolean);
-			
-			    const bodegasFiltradas = [
-			        ...new Set(
-			            inventario
-			                .map(item => String(item.idBodega || '').trim())
-			                .filter(Boolean)
-			        )
-			    ];
-			
-			    let queryJustificaciones = supabase
-			        .from('inventario_justificaciones')
-			        .select('*')
-			        .in('codigo', codigosInventario);
-			
-			    if (bodegasFiltradas.length > 0) {
-			        queryJustificaciones = queryJustificaciones.in(
-			            'idBodega',
-			            bodegasFiltradas
-			        );
-			    }
-			
-			    if (sede && sede !== 'Todas') {
-			        queryJustificaciones = queryJustificaciones.eq('sede', sede);
-			    }
-			
-			    if (tipo && tipo !== 'Todas') {
-			        queryJustificaciones = queryJustificaciones.eq(
-			            'tipos_bodega',
-			            tipo
-			        );
-			    }
-			
-			    const {
-			        data: justificaciones,
-			        error: errorJust
-			    } = await queryJustificaciones;
-			
-			    if (errorJust) {
-			        console.error('Error inventario_justificaciones:', errorJust);
-			        tbody.innerHTML = `
-			            <tr>
-			                <td colspan="9" class="py-8 text-center text-gray-500">
-			                    Error cargando justificaciones
-			                </td>
-			            </tr>
-			        `;
-			        return;
-			    }
-			
-			    const mapaJustificaciones = {};
-			
-			    (justificaciones || []).forEach(j => {
-			        const codigo = String(j.codigo || '').trim();
-			        const idBodega = String(
-			            j.idBodega || j.id_bodega || j.bodega || ''
-			        ).trim();
-			
-			        const clave = `${codigo}|${idBodega}`;
-			
-			        if (codigo && idBodega) {
-			            mapaJustificaciones[clave] = j;
-			        }
-			    });
+			    // Después de obtener inventario filtrado
+				const codigosInventario = [...new Set(inventario.map(item => String(item.codigo || '').trim()).filter(Boolean))];
+				let justificaciones = [];
+				
+				if (codigosInventario.length > 0) {
+				    let queryJust = supabase
+				        .from('inventario_justificaciones')
+				        .select('*')
+				        .in('codigo', codigosInventario);
+				
+				    if (filtrosGlobales.fecha) {
+				        queryJust = queryJust.eq('fecha', filtrosGlobales.fecha);
+				    }
+				
+				    const { data: justData, error: errorJust } = await queryJust;
+				    if (!errorJust) {
+				        justificaciones = justData || [];
+				    } else {
+				        console.error('Error al cargar justificaciones:', errorJust);
+				    }
+				}
+				
+				// Luego usa justificaciones para construir el mapa
+				const mapaJustificaciones = {};
+				justificaciones.forEach(j => {
+				    const clave = `${String(j.codigo || '').trim()}|${String(j.idBodega || '').trim()}`;
+				    if (j.codigo && j.idBodega) mapaJustificaciones[clave] = j;
+				});
 			
 			    const filtrados = inventario
 			        .filter(item => {
@@ -6138,7 +6121,8 @@ async function guardarJustificacion(id, texto) {
                     costo_total: cantidadJustificada * costoUnitario,
                     justificacion,
                     fecha_modificacion: new Date().toISOString(),
-                    fecha_registro: fila.dataset.fechaRegistro || new Date().toISOString()
+                    fecha_registro: fila.dataset.fechaRegistro || new Date().toISOString(),
+					fecha: filtrosGlobales.fecha 
                 });
             }
 
