@@ -5783,6 +5783,10 @@ tbody.innerHTML = data.map(item => {
 				let queryInv = supabase
 			        .from('inventarios_diarios')
 			        .select('*');
+
+				if (filtrosGlobales.fecha) {
+			        queryJust = queryJust.eq('fecha', filtrosGlobales.fecha);
+			    }
 			
 			    if (filtrosGlobales.sede !== 'Todas') {
 			        queryInv = queryInv.eq('sede', filtrosGlobales.sede);
