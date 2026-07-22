@@ -4934,7 +4934,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
             );
             if (!confirmar) return;
 
-            const adminAutorizador = await esSuperAdmin();
+            const adminAutorizador = esSuperAdmin();
             if (!adminAutorizador) return;
 
             showNotification('Proceso', 'Ejecutando respaldo y eliminación segura desde SQL...', 'warning');
@@ -5856,27 +5856,25 @@ tbody.innerHTML = data.map(item => {
 			        return;
 			    }
 			
-			    // Después de obtener inventario filtrado
-				const codigosInventario = [...new Set(inventario.map(item => String(item.codigo || '').trim()).filter(Boolean))];
-				let justificaciones = [];
-				
-				if (codigosInventario.length > 0) {
-				    let queryJust = supabase
-				        .from('inventario_justificaciones')
-				        .select('*')
-				        .in('codigo', codigosInventario);
-				
-				    if (filtrosGlobales.fecha) {
-				        queryJust = queryJust.eq('fecha', filtrosGlobales.fecha);
-				    }
-				
-				    const { data: justData, error: errorJust } = await queryJust;
-				    if (!errorJust) {
-				        justificaciones = justData || [];
-				    } else {
-				        console.error('Error al cargar justificaciones:', errorJust);
-				    }
-				}
+			    // Dentro de loadTransitos, después de obtener inventario filtrado
+			const codigosInventario = [...new Set(inventario.map(item => String(item.codigo || '').trim()).filter(Boolean))];
+			let justificaciones = [];
+			
+			if (codigosInventario.length > 0) {
+			    let queryJust = supabase
+			        .from('inventario_justificaciones')
+			        .select('*')
+			        .in('codigo', codigosInventario);
+			
+			    if (filtrosGlobales.fecha) {
+			        queryJust = queryJust.eq('fecha', filtrosGlobales.fecha);
+			    }
+			
+			    const { data: justData, error: errorJust } = await queryJust;
+			    if (!errorJust) {
+			        justificaciones = justData || [];
+			    }
+			}
 				
 				// Luego usa justificaciones para construir el mapa
 				const mapaJustificaciones = {};
