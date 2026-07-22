@@ -2797,7 +2797,7 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 			    loadTransitos();
 			});
 
-			document.addEventListener('DOMContentLoaded', function() {
+			document.addEventListener('DOMContentLoaded', async function() {
 			    const today = new Date().toISOString().split('T')[0];
 			    ['filtroFechaResumen', 'filtroFechaInventario', 'filtroFechaJustificaciones'].forEach(id => {
 			        const el = document.getElementById(id);
@@ -2823,6 +2823,14 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 			
 			const filtroSedeVenc = document.getElementById('filtroSedeVencimientos');
 		    const filtroBodegaVenc = document.getElementById('filtroTipoBodegaVencimientos');
+			const btnEliminarVencimientos = document.getElementById('btn-eliminar-vencimientos');
+	
+			if (btnEliminarVencimientos) {
+			    btnEliminarVencimientos.addEventListener(
+			        'click',
+			        eliminarVencimientosProtegido
+			    );
+			}
 		
 		    if (filtroSedeVenc) {
 		        filtroSedeVenc.addEventListener('change', loadVencimientosData);
@@ -6950,15 +6958,7 @@ function validarPermiteVencimiento() {
 
     return true;
 }
-	const btnEliminarVencimientos =
-	    document.getElementById('btn-eliminar-vencimientos');
 	
-	if (btnEliminarVencimientos) {
-	    btnEliminarVencimientos.addEventListener(
-	        'click',
-	        eliminarVencimientosProtegido
-	    );
-	}	
 </script>
 
 
