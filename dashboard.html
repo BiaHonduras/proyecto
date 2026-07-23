@@ -2745,397 +2745,311 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		    console.log('[Depuración] Usuario actual:', usuarioActual, '| Autorizado:', esAutorizado);
 		}
 
-        // ===== INICIALIZACIÓN =====
-        document.addEventListener('DOMContentLoaded', async function() {
-            
-			// Verificar autenticación
-            const userData = sessionStorage.getItem('currentUser');
-            if (!userData) {
-                window.location.href = 'index.html';
-                return;
-            }
-
-            try {
-                const { data: authData, error: authError } = await window.supabase.auth.getUser();
-                if (authError || !authData?.user) {
-                    sessionStorage.removeItem('currentUser');
-                    window.currentUser = null;
-                    window.location.href = 'index.html';
-                    return;
-                }
-            } catch (err) {
-                console.error('No fue posible validar la sesión activa en Supabase Auth:', err);
-                sessionStorage.removeItem('currentUser');
-                window.currentUser = null;
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            currentUser = JSON.parse(userData);
-            window.currentUser = currentUser;
-
-			document.getElementById('filtroSedeVerInventario')?.addEventListener('change', loadInventory);
-			document.getElementById('filtroTipoBodegaVerInventario')?.addEventListener('change', loadInventory);
-			document.getElementById('filtroSedeJustificaciones').addEventListener('change', aplicarFiltrosJustificaciones);
-			document.getElementById('filtroTipoBodegaJustificaciones').addEventListener('change', aplicarFiltrosJustificaciones);
-			
-			// Resumen
-			document.getElementById('filtroFechaResumen').addEventListener('change', function() {
-			    filtrosGlobales.fecha = this.value || null;
-			    recargarDashboardConFiltros(); // o loadDashboardData() y cargar gráficos
-			});
-			
-			// Ver Inventario
-			document.getElementById('filtroFechaInventario').addEventListener('change', function() {
-			    filtrosGlobales.fecha = this.value || null;
-			    loadInventory();
-			});
-			
-			// Justificaciones
-			document.getElementById('filtroFechaJustificaciones').addEventListener('change', function() {
-			    filtrosGlobales.fecha = this.value || null;
-			    loadTransitos();
-			});
-
-			document.addEventListener('DOMContentLoaded', async function() {
-			    const hoy = new Date().toISOString().split('T')[0];
-			    ['filtroFechaResumen', 'filtroFechaInventario', 'filtroFechaJustificaciones'].forEach(id => {
-			        const el = document.getElementById(id);
-			        if (el) el.value = hoy;
-			    });
-				filtrosGlobales.fecha = hoy;
-
-            if (currentUser.must_change_password) {
-                alert('Debe cambiar su contraseña antes de continuar.');
-                try {
-                    await window.supabase.auth.signOut();
-                } catch (err) {
-                    console.warn('No se pudo cerrar la sesión al forzar cambio de contraseña:', err);
-                }
-                sessionStorage.removeItem('currentUser');
-                window.currentUser = null;
-                window.location.href = 'index.html';
-                return;
-            }
-
-			const nombreCortoEl = document.getElementById('nombreCorto');
-            if (nombreCortoEl) nombreCortoEl.textContent = currentUser.nombre_corto || '';
-			
-			const filtroSedeVenc = document.getElementById('filtroSedeVencimientos');
+	        // ===== INICIALIZACIÓN =====
+	        document.addEventListener('DOMContentLoaded', async function() {
+		    // ========================================================
+		    // 1. VERIFICACIÓN DE AUTENTICACIÓN Y USUARIO
+		    // ========================================================
+		    const userData = sessionStorage.getItem('currentUser');
+		    if (!userData) {
+		        window.location.href = 'index.html';
+		        return;
+		    }
+		
+		    try {
+		        const { data: authData, error: authError } = await window.supabase.auth.getUser();
+		        if (authError || !authData?.user) {
+		            sessionStorage.removeItem('currentUser');
+		            window.currentUser = null;
+		            window.location.href = 'index.html';
+		            return;
+		        }
+		    } catch (err) {
+		        console.error('No fue posible validar la sesión activa en Supabase Auth:', err);
+		        sessionStorage.removeItem('currentUser');
+		        window.currentUser = null;
+		        window.location.href = 'index.html';
+		        return;
+		    }
+		
+		    currentUser = JSON.parse(userData);
+		    window.currentUser = currentUser;
+		
+		    // ========================================================
+		    // 2. CONFIGURACIÓN INICIAL DE LA INTERFAZ
+		    // ========================================================
+		    // Mostrar nombre corto
+		    const nombreCortoEl = document.getElementById('nombreCorto');
+		    if (nombreCortoEl) nombreCortoEl.textContent = currentUser.nombre_corto || '';
+		
+		    // Fecha por defecto en filtros
+		    const hoy = new Date().toISOString().split('T')[0];
+		    ['filtroFechaResumen', 'filtroFechaInventario', 'filtroFechaJustificaciones'].forEach(id => {
+		        const el = document.getElementById(id);
+		        if (el) el.value = hoy;
+		    });
+		    filtrosGlobales.fecha = hoy;
+		
+		    // ========================================================
+		    // 3. CARGA DE BODEGAS (desde la tabla 'bodegas')
+		    // ========================================================
+		    await cargarBodegas();   // definida al inicio del script
+		
+		    // ========================================================
+		    // 4. EVENTOS DE CAMBIO EN BODEGA (vencimientos)
+		    // ========================================================
+		    const selectBodega = document.getElementById('idBodega');
+		    if (selectBodega) {
+		        selectBodega.addEventListener('change', function() {
+		            limpiarCamposArticulo();
+		            document.getElementById('codigoArticulo').value = '';
+		            document.getElementById('codigoBarra').value = '';
+		            evaluarVencimiento();   // definida al inicio
+		        });
+		        // Ejecutar una vez al cargar
+		        evaluarVencimiento();
+		    }
+		
+		    // ========================================================
+		    // 5. VERIFICACIÓN DE DÍA LUNES (checkbox de vencimiento)
+		    // ========================================================
+		    const checkVencimiento = document.getElementById('checkVencimiento');
+		    const fechaVencimientoInput = document.getElementById('fechaVencimiento');
+		    if (checkVencimiento && fechaVencimientoInput) {
+		        const diaSemana = new Date().getDay(); // 0=Dom, 1=Lun
+		        if (diaSemana === 1) {
+		            checkVencimiento.checked = true;
+		            checkVencimiento.disabled = false;
+		            fechaVencimientoInput.disabled = false;
+		            fechaVencimientoInput.classList.remove('bg-gray-100', 'input-disabled');
+		        } else {
+		            checkVencimiento.checked = false;
+		            fechaVencimientoInput.disabled = true;
+		            fechaVencimientoInput.classList.add('bg-gray-100', 'input-disabled');
+		            fechaVencimientoInput.value = '';
+		        }
+		
+		        // Control manual mediante checkbox
+		        checkVencimiento.addEventListener('change', function() {
+		            toggleFechaVencimiento();   // definida al inicio
+		            if (this.checked) {
+		                fechaVencimientoInput.focus();
+		            }
+		        });
+		    }
+		
+		    // ========================================================
+		    // 6. EVENTO DE ENVÍO DEL FORMULARIO (validar vencimiento)
+		    // ========================================================
+		    const articuloForm = document.getElementById('articuloForm');
+		    if (articuloForm) {
+		        articuloForm.addEventListener('submit', function(e) {
+		            const selected = selectBodega?.selectedOptions?.[0];
+		            const maneja = selected?.dataset?.manejaVencimiento;
+		            if (checkVencimiento.checked && maneja === 'false') {
+		                e.preventDefault();
+		                alert('La bodega seleccionada no permite registrar Fecha de Vencimiento.');
+		                return false;
+		            }
+		            // El resto del submit se maneja en el evento original (agregarArticulo)
+		        }, true);
+		    }
+		
+		    // ========================================================
+		    // 7. RESTO DE INICIALIZACIONES (las que ya tenías)
+		    // ========================================================
+		    if (currentUser.must_change_password) {
+		        alert('Debe cambiar su contraseña antes de continuar.');
+		        try {
+		            await window.supabase.auth.signOut();
+		        } catch (err) {
+		            console.warn('No se pudo cerrar la sesión al forzar cambio de contraseña:', err);
+		        }
+		        sessionStorage.removeItem('currentUser');
+		        window.currentUser = null;
+		        window.location.href = 'index.html';
+		        return;
+		    }
+		
+		    const filtroSedeVenc = document.getElementById('filtroSedeVencimientos');
 		    const filtroBodegaVenc = document.getElementById('filtroTipoBodegaVencimientos');
-			const btnEliminarVencimientos = document.getElementById('btn-eliminar-vencimientos');
-	
-			if (btnEliminarVencimientos) {
-			    btnEliminarVencimientos.addEventListener(
-			        'click',
-			        eliminarVencimientosProtegido
-			    );
-			}
+		    const btnEliminarVencimientos = document.getElementById('btn-eliminar-vencimientos');
+		
+		    if (btnEliminarVencimientos) {
+		        btnEliminarVencimientos.addEventListener('click', eliminarVencimientosProtegido);
+		    }
 		
 		    if (filtroSedeVenc) {
 		        filtroSedeVenc.addEventListener('change', loadVencimientosData);
 		    }
-		
 		    if (filtroBodegaVenc) {
 		        filtroBodegaVenc.addEventListener('change', loadVencimientosData);
 		    }
-
-			const btnAbrir = document.getElementById('btnAbrirCargaVencimientos');
-		    const modal = document.getElementById('modalCargaManual');
-		    const btnCerrar = document.getElementById('cerrarModalCarga');
 		
-		    if (btnAbrir && modal) {
-		        btnAbrir.addEventListener('click', () => {
-		            modal.classList.remove('hidden');
-		            modal.classList.add('flex');
-		        });
-		    }
+		    // Inicializar navegación
+		    initNavigation();
+		    cargarResumenCodigos();
+		    programarActualizacionVencimientos();
+		    aplicarRestriccionGestionUsuarios();
+		    aplicarRestriccionCargaVencimientos();
+		    loadVencimientosData();
 		
-		    if (btnCerrar && modal) {
-		        btnCerrar.addEventListener('click', () => {
-		            modal.classList.add('hidden');
-		            modal.classList.remove('flex');
-		        });
-		    }
+		    // Botones de justificaciones
+		    const btnEditar = document.getElementById('btnEditarRegistros');
+		    if (btnEditar) btnEditar.addEventListener('click', activarModoEdicion);
 		
-		    modal?.addEventListener('click', (e) => {
-		        if (e.target === modal) {
-		            modal.classList.add('hidden');
-		            modal.classList.remove('flex');
-		        }
+		    const btnGuardar = document.getElementById('btnGuardarRegistros');
+		    if (btnGuardar) btnGuardar.addEventListener('click', guardarCambiosMasivos);
+		
+		    // Evento de cambio en sede para actualizar bodegas
+		    document.getElementById('sede').addEventListener('change', () => {
+		        actualizarBodegasPorSede();
+		        limpiarCamposArticulo();
+		        document.getElementById('codigoArticulo').value = '';
+		        document.getElementById('codigoBarra').value = '';
 		    });
-            
-            // Inicializar navegación
-            initNavigation();
-            cargarResumenCodigos();
-			programarActualizacionVencimientos();
-			aplicarRestriccionGestionUsuarios();
-            aplicarRestriccionCargaVencimientos();
-			loadVencimientosData();
-			
-			document.getElementById('btnEditarRegistros').addEventListener('click', () => {
-    			activarModoEdicion();
-				});
-
-			document.getElementById('btnGuardarRegistros').addEventListener('click', () => {
-    			guardarCambiosMasivos();
-				});
-
-
-			document.getElementById('sede').addEventListener('change', () => {
-			    actualizarBodegasPorSede();
-			    limpiarCamposArticulo();
-			    document.getElementById('codigoArticulo').value = '';
-			    document.getElementById('codigoBarra').value = '';
-			});
-
-			document.getElementById('idBodega').addEventListener('change', () => {
-			    limpiarCamposArticulo();
-			    document.getElementById('codigoArticulo').value = '';
-			    document.getElementById('codigoBarra').value = '';
-			    evaluarVencimiento();
-			});
-
-			const searchInventory = document.getElementById('searchInventory');
+		
+		    // Buscador y refresco de inventario
+		    const searchInventory = document.getElementById('searchInventory');
 		    const refreshInventory = document.getElementById('refreshInventory');
-		
 		    if (searchInventory) {
-		        searchInventory.addEventListener('input', function () {
-		            loadInventory();
-		        });
+		        searchInventory.addEventListener('input', loadInventory);
 		    }
-		
 		    if (refreshInventory) {
-		        refreshInventory.addEventListener('click', function () {
+		        refreshInventory.addEventListener('click', function() {
 		            if (searchInventory) searchInventory.value = '';
 		            loadInventory();
 		        });
 		    }
-
-            const userDniInput = document.getElementById('userDNI');
-            if (userDniInput) {
-                userDniInput.addEventListener('input', function () {
-                    this.value = formatearDNI(this.value);
-                });
-            }
-
-			document.addEventListener('click', function(e) {
-			    const btn = e.target.closest('.btnEditarFila');
-			    if (!btn || btn.disabled) return;
-			
-			    const fila = btn.closest('tr');
-			    if (!fila) return;
-			
-			    const campoJustificacion = fila.querySelector('.justificacion');
-			    const campoCantidad = fila.querySelector('.cantidad-justificada');
-			
-			    if (campoJustificacion) {
-			        campoJustificacion.disabled = false;
-			        campoJustificacion.removeAttribute('disabled');
-			        campoJustificacion.classList.remove('input-disabled');
-			    }
-			
-			    if (campoCantidad) {
-			        campoCantidad.disabled = false;
-			        campoCantidad.removeAttribute('disabled');
-			        campoCantidad.classList.remove('input-disabled');
-			        campoCantidad.focus();
-			    }
-			
-			    fila.dataset.editando = 'true';
-			    btn.disabled = true;
-			    btn.classList.add('opacity-50', 'cursor-not-allowed');
-			});
-            
-            // Cargar datos iniciales
-            configurarFiltrosSegunUsuario();
-            loadDashboardData();
-            loadVencimientosData();
-            mostrarRecordatorioLunes();
-            loadInventory();
-            cargarResumenInventario();
-            initUsers(); // Initialize user management
-			initAssistant();
-            
-            // Configurar formulario de artículo
-            document.getElementById('articuloForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                agregarArticulo();
-            });
-            
-            // Configurar exportación CSV
-            document.getElementById('exportCSV').addEventListener('click', abrirModalExportarCSV);
-            document.getElementById('btnCancelarModalExport').addEventListener('click', cerrarModalExportarCSV);
-            document.getElementById('btnConfirmarModalExport').addEventListener('click', async function() {
-                const sede = document.getElementById('modalFiltroSedeExport').value;
-                const tipoBodega = document.getElementById('modalFiltroTipoBodegaExport').value;
-
-                await exportToCSV(sede, tipoBodega);
-            });
-
-            // Set current date for inventory
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months start at 0!
-            const dd = String(today.getDate()).padStart(2, '0');
-            document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
-
-            // Scanner buttons
-            document.getElementById('startScannerBtn').addEventListener('click', startScanner);
-            document.getElementById('stopScannerBtn').addEventListener('click', stopScanner);
-
-            // Import buttons
-            document.getElementById('confirmImportInventory').addEventListener('click', importInventory);
-            document.getElementById('confirmImportCodes').addEventListener('click', importCodes);
-            document.getElementById('confirmImportVencimientos')?.addEventListener('click', importVencimientosManual);
-            document.getElementById('btnLimpiarImportVencimientos')?.addEventListener('click', limpiarImportVencimientos);
-
-            const btnAbrirCargaManual = document.getElementById('btnAbrirCargaManual');
-            const modalCargaManual = document.getElementById('modalCargaManual');
-            const cerrarModalCarga = document.getElementById('cerrarModalCarga');
-
-            btnAbrirCargaManual?.addEventListener('click', () => {
-                modalCargaManual?.classList.remove('hidden');
-                modalCargaManual?.classList.add('flex');
-            });
-
-            cerrarModalCarga?.addEventListener('click', () => {
-                modalCargaManual?.classList.add('hidden');
-                modalCargaManual?.classList.remove('flex');
-            });
-
-            modalCargaManual?.addEventListener('click', (e) => {
-                if (e.target === modalCargaManual) {
-                    modalCargaManual.classList.add('hidden');
-                    modalCargaManual.classList.remove('flex');
-                }
-            });
-			
-            const btnEliminarGeneral = document.getElementById('btnEliminarGeneral');
-			if (btnEliminarGeneral) {
-			    btnEliminarGeneral.addEventListener('click', eliminarGeneralProtegido);
-			    btnEliminarGeneral.title = 'Realiza respaldo completo antes de eliminar';
-			}
-
-            const btnEliminarBaseCodigos = document.getElementById('btnEliminarBaseCodigos');
-			if (btnEliminarBaseCodigos) {
-			    btnEliminarBaseCodigos.addEventListener('click', eliminarBaseCodigosProtegida);
-			    btnEliminarBaseCodigos.title = 'Realiza respaldo completo antes de eliminar';
-			}
-
-            const btnImportInv = document.getElementById('confirmImportInventory');
-            if (btnImportInv) btnImportInv.title = 'Deshabilitado temporalmente por seguridad';
-
-            const btnImportCodes = document.getElementById('confirmImportCodes');
-            if (btnImportCodes) btnImportCodes.title = 'Deshabilitado temporalmente por seguridad';
-
-			const codigoInput = document.getElementById('codigoArticulo');
-			const barraInput = document.getElementById('codigoBarra');
-
-			codigoInput.addEventListener('input', function (e) {
-    				this.value = this.value.replace(/\D/g, '');
-
-    				if (this.value.length >= 6) {
-        					this.setCustomValidity('');
-        					debounceBuscar(e);
-    				} else {
-        					this.setCustomValidity('Debe tener al menos 6 dígitos');
-        					limpiarCamposArticulo();
-    				}
-			});
-			
-			barraInput.addEventListener('input', function () {
-    			this.value = this.value.replace(/\D/g, '');
-
-    				if (this.value.length >= 13) {
-        				this.setCustomValidity('');
-   					} else {
-        				this.setCustomValidity('Código de barra inválido');
-    				}
-				});
-
-			let timeoutBusqueda;
-
-				function debounceBuscar(e) {
-    				clearTimeout(timeoutBusqueda);
-
-    				timeoutBusqueda = setTimeout(() => {
-        				const valor = e.target.value.trim();
-        				if (!valor) return;
-
-        				buscarArticulo(valor);
-    					}, 400);
-					}
-			const fechaVencimiento = document.getElementById('fechaVencimiento');
-			toggleFechaVencimiento();
-			
-			const checkbox = document.getElementById('checkVencimiento');
-		    const inputFecha = document.getElementById('fechaVencimiento');
-		    const diaSemana = new Date().getDay(); // 0=Dom, 1=Lun, 2=Mar...
 		
-		    // Función para habilitar/deshabilitar visual y funcionalmente
-		    const toggleFecha = (habilitar) => {
-		        inputFecha.disabled = !habilitar;
-		        if (habilitar) {
-		            inputFecha.classList.remove('bg-gray-100', 'text-gray-500', 'cursor-not-allowed');
-		            inputFecha.classList.add('bg-white', 'text-gray-900');
-		        } else {
-		            inputFecha.classList.add('bg-gray-100', 'text-gray-500', 'cursor-not-allowed');
-		            inputFecha.classList.remove('bg-white', 'text-gray-900');
-		            inputFecha.value = ''; // Opcional: limpiar si se desactiva
-		        }
-		    };
-		
-		    // 1. Si es Lunes (1), habilitar automáticamente y marcar checkbox
-		    if (diaSemana === 1) {
-		        checkbox.checked = true;
-				checkbox.disabled = false;
-		        toggleFecha(true);
+		    // Formateo de DNI
+		    const userDniInput = document.getElementById('userDNI');
+		    if (userDniInput) {
+		        userDniInput.addEventListener('input', function() {
+		            this.value = formatearDNI(this.value);
+		        });
 		    }
 		
-		    // 2. Control manual con el checkbox
-		    checkbox.addEventListener('change', function() {
-		        toggleFecha(this.checked);
-		        if (this.checked) inputFecha.focus();
+		    // Botones de edición de filas (justificaciones)
+		    document.addEventListener('click', function(e) {
+		        const btn = e.target.closest('.btnEditarFila');
+		        if (!btn || btn.disabled) return;
+		        const fila = btn.closest('tr');
+		        if (!fila) return;
+		        const campoJustificacion = fila.querySelector('.justificacion');
+		        const campoCantidad = fila.querySelector('.cantidad-justificada');
+		        if (campoJustificacion) {
+		            campoJustificacion.disabled = false;
+		            campoJustificacion.removeAttribute('disabled');
+		            campoJustificacion.classList.remove('input-disabled');
+		        }
+		        if (campoCantidad) {
+		            campoCantidad.disabled = false;
+		            campoCantidad.removeAttribute('disabled');
+		            campoCantidad.classList.remove('input-disabled');
+		            campoCantidad.focus();
+		        }
+		        fila.dataset.editando = 'true';
+		        btn.disabled = true;
+		        btn.classList.add('opacity-50', 'cursor-not-allowed');
 		    });
-
-			const btnElimInv = document.getElementById('btn-eliminar-inventario-dia')
-			    if (btnElimInv) {
-				    btnElimInv.addEventListener('click', async () => {
-				        await eliminarGeneralProtegido();
-				    });
-				}
-			    
-			    // Importar vencimientos CSV
-			    const btnImpVenc = document.getElementById('btn-importar-vencimientos');
-
-				btnImpVenc.addEventListener('click', () => {
-				    modalCarga.classList.remove('hidden');
-				    modalCarga.classList.add('flex');
-				});
-			    
-			    // Limpiar preview
-			    const btnLimpiar = document.getElementById('btn-depuracion-limpiar-venc');
-			    if (btnLimpiar) {
-			        btnLimpiar.addEventListener('click', function() {
-			            document.getElementById('depuracion-csv-vencimientos').value = '';
-			            document.getElementById('depuracion-preview-vencimientos').innerHTML = '';
-			        });
-			    }
-			    
-			    // Eliminar base de códigos
-			    const btnElimBDD = document.getElementById('btn-eliminar-bdd')
-			    if (btnElimBDD) {
-			        btnElimBDD.addEventListener('click', function() {
-			            if (!confirm('⚠️ ADVERTENCIA: Esta acción eliminará TODA la base de códigos. ¿Continuar?')) return;
-			            if (!confirm('¿Está COMPLETAMENTE seguro? Esta acción no se puede deshacer.')) return;
-			            // TODO: Conectar con la función existente de eliminar base de datos
-			            // eliminarBaseDeCodigos();
-			            alert('Base de códigos eliminada (conectar con la función existente).');
-			        });
-			    }
-        });
-	}
+		
+		    // Cargar datos iniciales
+		    configurarFiltrosSegunUsuario();
+		    loadDashboardData();
+		    loadVencimientosData();
+		    mostrarRecordatorioLunes();
+		    loadInventory();
+		    cargarResumenInventario();
+		    initUsers(); // Gestión de usuarios
+		    initAssistant();
+		
+		    // Configurar formulario de artículo
+		    document.getElementById('articuloForm').addEventListener('submit', function(e) {
+		        e.preventDefault();
+		        agregarArticulo();
+		    });
+		
+		    // Exportación
+		    document.getElementById('exportCSV').addEventListener('click', abrirModalExportarCSV);
+		    document.getElementById('btnCancelarModalExport').addEventListener('click', cerrarModalExportarCSV);
+		    document.getElementById('btnConfirmarModalExport').addEventListener('click', async function() {
+		        const sede = document.getElementById('modalFiltroSedeExport').value;
+		        const tipoBodega = document.getElementById('modalFiltroTipoBodegaExport').value;
+		        await exportToCSV(sede, tipoBodega);
+		    });
+		
+		    // Fecha actual en inventario diario
+		    const today = new Date();
+		    const yyyy = today.getFullYear();
+		    const mm = String(today.getMonth() + 1).padStart(2, '0');
+		    const dd = String(today.getDate()).padStart(2, '0');
+		    document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
+		
+		    // Scanner
+		    document.getElementById('startScannerBtn').addEventListener('click', startScanner);
+		    document.getElementById('stopScannerBtn').addEventListener('click', stopScanner);
+		
+		    // Importar
+		    document.getElementById('confirmImportInventory').addEventListener('click', importInventory);
+		    document.getElementById('confirmImportCodes').addEventListener('click', importCodes);
+		    document.getElementById('confirmImportVencimientos')?.addEventListener('click', importVencimientosManual);
+		    document.getElementById('btnLimpiarImportVencimientos')?.addEventListener('click', limpiarImportVencimientos);
+		
+		    // Botón de carga manual de vencimientos (modal)
+		    const btnAbrirCargaManual = document.getElementById('btnAbrirCargaManual');
+		    const modalCargaManual = document.getElementById('modalCargaManual');
+		    const cerrarModalCarga = document.getElementById('cerrarModalCarga');
+		    if (btnAbrirCargaManual && modalCargaManual) {
+		        btnAbrirCargaManual.addEventListener('click', () => {
+		            modalCargaManual.classList.remove('hidden');
+		            modalCargaManual.classList.add('flex');
+		        });
+		    }
+		    if (cerrarModalCarga && modalCargaManual) {
+		        cerrarModalCarga.addEventListener('click', () => {
+		            modalCargaManual.classList.add('hidden');
+		            modalCargaManual.classList.remove('flex');
+		        });
+		        modalCargaManual.addEventListener('click', (e) => {
+		            if (e.target === modalCargaManual) {
+		                modalCargaManual.classList.add('hidden');
+		                modalCargaManual.classList.remove('flex');
+		            }
+		        });
+		    }
+		
+		    // Botones de depuración (eliminar inventario, vencimientos, base de códigos)
+		    const btnElimInv = document.getElementById('btn-eliminar-inventario-dia');
+		    if (btnElimInv) {
+		        btnElimInv.addEventListener('click', eliminarGeneralProtegido);
+		    }
+		    const btnElimBDD = document.getElementById('btn-eliminar-bdd');
+		    if (btnElimBDD) {
+		        btnElimBDD.addEventListener('click', eliminarBaseCodigosProtegida);
+		    }
+		    const btnImpVenc = document.getElementById('btn-importar-vencimientos');
+		    if (btnImpVenc) {
+		        btnImpVenc.addEventListener('click', () => {
+		            if (modalCargaManual) {
+		                modalCargaManual.classList.remove('hidden');
+		                modalCargaManual.classList.add('flex');
+		            }
+		        });
+		    }
+		    const btnLimpiarVenc = document.getElementById('btn-depuracion-limpiar-venc');
+		    if (btnLimpiarVenc) {
+		        btnLimpiarVenc.addEventListener('click', function() {
+		            document.getElementById('depuracion-csv-vencimientos').value = '';
+		            document.getElementById('depuracion-preview-vencimientos').innerHTML = '';
+		        });
+		    }
+		
+		    // Configurar restricciones por rol
+		    aplicarRestriccionesPorRol();
+		
+		    // === FIN DE INICIALIZACIÓN ===
+		});
 
         // ===== NAVEGACIÓN =====
         function initNavigation() {
@@ -6636,14 +6550,6 @@ async function obtenerAccessToken() {
 		        setEstadoFechaVencimiento(false);
 		    }
 		}
-
-		document.addEventListener('DOMContentLoaded', () => {
-		    const checkVencimiento = document.getElementById('checkVencimiento');
-		    if (checkVencimiento) {
-		        checkVencimiento.addEventListener('change', toggleFechaVencimiento);
-		    }
-		    evaluarVencimiento();
-		});
 </script>
 
 <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
@@ -6753,55 +6659,6 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
         </div>
     </div>
 		<script>
-		async function cargarBodegas() {
-		    try {
-		        // ✅ Usar SELECT * para obtener todas las columnas
-		        const { data, error } = await supabase
-		            .from('bodegas')
-		            .select('*');
-		        
-		        if (error) {
-		            console.error('Error al cargar bodegas:', error);
-		            throw error;
-		        }
-		        
-
-		        
-		        if (!data || data.length === 0) {
-		            console.warn('La tabla bodegas está vacía');
-		            return;
-		        }
-		        
-		        const select = document.getElementById('idBodega');
-		        select.innerHTML = '<option value="">Seleccione una bodega</option>';
-		        
-		        // ✅ Usar las columnas reales que existen
-		        data.forEach(bodega => {
-		            const option = document.createElement('option');
-		            option.value = bodega.id_bodega;
-		            
-		            // ✅ Ajustar según las columnas reales que encuentres
-		            // Si solo existe id_bodega, mostrar solo eso
-		            if (bodega.nombre) {
-		                option.textContent = `${bodega.id_bodega} - ${bodega.nombre}`;
-		            } else if (bodega.descripcion) {
-		                option.textContent = `${bodega.id_bodega} - ${bodega.descripcion}`;
-		            } else {
-		                // Si solo existe id_bodega
-		                option.textContent = bodega.id_bodega;
-		            }
-		            
-		            select.appendChild(option);
-		        });
-		        
-		    } catch (err) {
-		        console.error('Error al cargar bodegas:', err);
-		    }
-		}
-		
-		// Llamar al cargar la página
-		document.addEventListener('DOMContentLoaded', cargarBodegas);
-			
 		async function evaluarVencimiento() {
 		    const idBodega = document.getElementById('idBodega').value;
 		    const contenedor = document.getElementById('contenedorVencimiento');
@@ -6877,12 +6734,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 		        contenedor.classList.add('hidden');
 		    }
 		}
-		
-		// ✅ CORRECCIÓN 6: Mover los event listeners FUERA de la función
-		document.addEventListener('DOMContentLoaded', () => {
-		    document.getElementById('idBodega').addEventListener('change', evaluarVencimiento);
-		    evaluarVencimiento(); // Ejecutar una vez al cargar
-		});
+			
 		function verificarDiaLunes() {
 	    const hoy = new Date();
 	    const diaSemana = hoy.getDay(); // 0 = Domingo, 1 = Lunes, etc.
@@ -6896,19 +6748,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 	        fechaVencimientoInput.disabled = true;
 	        if (checkVencimiento) checkVencimiento.checked = false;
 	    		}
-		}
-		// Función para habilitar/deshabilitar manualmente
-		function toggleFechaVencimiento() {
-		    const checkVencimiento = document.getElementById('checkVencimiento');
-		    const fechaVencimientoInput = document.getElementById('fechaVencimiento');
-		    
-		    fechaVencimientoInput.disabled = !checkVencimiento.checked;
-		}
-		
-		// Llamar al cargar la página
-		document.addEventListener('DOMContentLoaded', function() {
-		    verificarDiaLunes();
-		});		
+		}	
 	</script>
 
 <script>
@@ -6953,57 +6793,5 @@ function validarPermiteVencimiento() {
 }
 	
 </script>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const contenedor = document.getElementById('contenedorVencimiento');
-    const check = document.getElementById('checkVencimiento');
-    const fecha = document.getElementById('fechaVencimiento');
-    const form = document.getElementById('articuloForm');
-    const selectBodega = document.getElementById('idBodega');
-
-    if (contenedor) {
-        contenedor.style.display = 'block';
-        contenedor.style.visibility = 'visible';
-    }
-
-    function toggleFechaVencimiento() {
-        if (!fecha || !check) return;
-        fecha.disabled = !check.checked;
-
-        if (fecha.disabled) {
-            fecha.classList.add('input-disabled');
-            fecha.classList.add('bg-gray-100');
-        } else {
-            fecha.classList.remove('input-disabled');
-            fecha.classList.remove('bg-gray-100');
-        }
-    }
-
-    window.toggleFechaVencimiento = toggleFechaVencimiento;
-
-    const hoy = new Date();
-    if (hoy.getDay() === 1 && check) {
-        check.checked = true;
-    }
-
-    toggleFechaVencimiento();
-
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            const selected = selectBodega?.selectedOptions?.[0];
-            const maneja = selected?.dataset?.manejaVencimiento;
-
-            if (check.checked && maneja === 'false') {
-                e.preventDefault();
-                alert('La bodega seleccionada no permite registrar Fecha de Vencimiento.');
-                return false;
-            }
-        }, true);
-    }
-});
-</script>
-
 </body>
 </html>
