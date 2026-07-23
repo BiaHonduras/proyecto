@@ -2179,6 +2179,7 @@
                                 <select id="userRole" class="input-field w-full px-4 py-3 rounded-lg">
                                     <option value="usuario">Usuario</option>
                                     <option value="admin">Administrador</option>
+									<option value="superadmin">SuperAdministrador</option>
                                 </select>
                             </div>
                             
@@ -2288,9 +2289,10 @@
             ).trim().toLowerCase();
         }
 
-        function usuarioPuedeGestionarUsuarios(user = currentUser) {
-            return obtenerUsuarioActualNormalizado(user) === 'verificadorsps';
-        }
+        // Reemplazar usuarioPuedeGestionarUsuarios()
+		function puedeGestionarUsuarios() {
+		    return currentUser?.rol === 'superadmin';
+		}
 
         function aplicarRestriccionGestionUsuarios() {
             const navUsuarios = document.querySelector('[data-section="usuarios"]');
@@ -2307,9 +2309,29 @@
             }
         }
 
-        function usuarioPuedeGestionarVencimientos(user = currentUser) {
-            return obtenerUsuarioActualNormalizado(user) === 'verificadorsps';
-        }
+        // Reemplazar usuarioPuedeGestionarVencimientos()
+		function puedeGestionarVencimientos() {
+		    return currentUser?.rol === 'superadmin' || currentUser?.rol === 'admin';
+		}
+
+		function esAdminOSuper() {
+		    return currentUser?.rol === 'admin' || currentUser?.rol === 'superadmin';
+		}
+		
+		// Nueva función para controlar el acceso a secciones
+		function puedeAccederASeccion(seccion) {
+		    const rol = currentUser?.rol;
+		    if (rol === 'superadmin') return true;
+		    if (rol === 'admin') {
+		        // Admin no puede acceder a gestión de usuarios
+		        return seccion !== 'usuarios';
+		    }
+		    if (rol === 'usuario') {
+		        // Usuario solo puede acceder a inventario-diario
+		        return seccion === 'inventario-diario';
+		    }
+		    return false;
+		}
 
         function aplicarRestriccionCargaVencimientos() {
             const boton = document.getElementById('bloqueCargaManualBtn');
@@ -2610,26 +2632,26 @@
         }
 
 		function controlAccesoDepuracion() {
-		    // Usuario autorizado (ajustar según la variable global de sesión del sistema)
-		    const USUARIO_AUTORIZADO = 'verificadorsps';
+		    // Perfil autorizado (cambiar según tu sistema)
+		    const PERFIL_AUTORIZADO = 'superadmin';
 		    
-		    // Obtener el usuario actual desde la sesión (ajusta según tu sistema)
-		    // Opciones comunes: localStorage.getItem('usuario'), currentUser, sessionUser, etc.
-		    function obtenerUsuarioActual() {
-		        // Intenta obtener de localStorage (ajusta la clave según tu sistema)
-		        const userStorage = localStorage.getItem('usuario') 
-		                         || localStorage.getItem('currentUser')
-		                         || localStorage.getItem('sessionUser');
-		        if (userStorage) return userStorage;
+		    // Obtener el perfil del usuario desde la sesión
+		    function obtenerPerfilUsuario() {
+		        // Intenta obtener de localStorage (ajusta las claves según tu sistema)
+		        const perfilStorage = localStorage.getItem('perfil') 
+		                           || localStorage.getItem('userProfile')
+		                           || localStorage.getItem('rol')
+		                           || localStorage.getItem('userRol');
+		        if (perfilStorage) return perfilStorage;
 		        
 		        // Si tu sistema usa una variable global, descomenta la siguiente línea:
-		        // if (typeof currentUser !== 'undefined') return currentUser;
+		        // if (typeof currentUserProfile !== 'undefined') return currentUserProfile;
 		        
 		        return null;
 		    }
 		    
-		    const usuarioActual = obtenerUsuarioActual();
-		    const esAutorizado = (usuarioActual && usuarioActual.toLowerCase() === USUARIO_AUTORIZADO);
+		    const perfilActual = obtenerPerfilUsuario();
+		    const esAutorizado = (perfilActual && perfilActual.toLowerCase() === PERFIL_AUTORIZADO.toLowerCase());
 		    
 		    // 1. Mostrar/ocultar enlace en el menú
 		    const linkDepuracion = document.getElementById('link-depuracion');
@@ -2665,12 +2687,12 @@
 		    // 5. Bloquear acceso directo por URL (hash)
 		    window.addEventListener('hashchange', function() {
 		        if (window.location.hash === '#depuracion' && !esAutorizado) {
-		            alert('⛔ Acceso denegado: solo el usuario "' + USUARIO_AUTORIZADO + '" puede acceder a Depuración.');
+		            alert('⛔ Acceso denegado: solo el perfil "' + PERFIL_AUTORIZADO + '" puede acceder a Depuración.');
 		            window.location.hash = '#resumen';
 		        }
 		    });
 		    
-		    console.log('[Depuración] Usuario actual:', usuarioActual, '| Autorizado:', esAutorizado);
+		    console.log('[Depuración] Perfil actual:', perfilActual, '| Autorizado:', esAutorizado);
 		}
 
         // ===== INICIALIZACIÓN =====
@@ -3067,7 +3089,6 @@
                 this.classList.remove('open');
             });
 
-			           
             // Navegación entre secciones
             document.querySelectorAll('.nav-item').forEach(item => {
     			item.addEventListener('click', function (e) {
@@ -3094,9 +3115,12 @@
         	document.getElementById('currentSectionTitle').textContent = titulo;
 
         	// Active
-        	document.querySelectorAll('.nav-item').forEach(i => {
-            	i.classList.remove('active');
-        	});
+        	document.querySelectorAll('.nav-item[data-section]').forEach(item => {
+			    const section = item.dataset.section;
+			    if (!puedeAccederASeccion(section)) {
+			        item.style.display = 'none';
+			    }
+			});
         		this.classList.add('active');
 
         	// Ocultar todas
