@@ -26,42 +26,6 @@
         import { supabase, verificarConexion } from './supabase-config.js';
         window.supabase = supabase;
         window.verificarConexion = verificarConexion;
-
-		async function cargarBodegas() {
-		    const select = document.getElementById('idBodega');
-		
-		    const { data, error } = await supabase
-		        .from('bodegas')
-		        .select(`
-		            id_bodega,
-		            sede,
-		            nombre,
-		            tipos_bodega (
-		                tipos_bodega,
-		                maneja_vencimiento
-		            )
-		        `)
-		        .order('sede');
-		
-		    if (error) {
-		        console.error('Error cargando bodegas:', error);
-		        return;
-		    }
-		
-		    // limpiar opciones actuales
-		    select.innerHTML = '<option value="">Seleccione una bodega</option>';
-		
-		    data.forEach(b => {
-		        const option = document.createElement('option');
-		        option.value = b.id_bodega;
-		        option.textContent = `${b.sede} - ${b.nombre}`;
-                option.dataset.manejaVencimiento = b.tipos_bodega?.maneja_vencimiento ? 'true' : 'false';
-		        select.appendChild(option);
-		    });
-		}
-		
-		// ejecutar cuando cargue la página
-		document.addEventListener('DOMContentLoaded', cargarBodegas);
 		
         window.initAssistant = function() {
             const fab = document.getElementById('assistantFab');
@@ -2789,7 +2753,42 @@ Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede respo
 		        if (el) el.value = hoy;
 		    });
 		    filtrosGlobales.fecha = hoy;
-		
+
+			async function cargarBodegas() {
+			    const select = document.getElementById('idBodega');
+			
+			    const { data, error } = await supabase
+			        .from('bodegas')
+			        .select(`
+			            id_bodega,
+			            sede,
+			            nombre,
+			            tipos_bodega (
+			                tipos_bodega,
+			                maneja_vencimiento
+			            )
+			        `)
+			        .order('sede');
+			
+			    if (error) {
+			        console.error('Error cargando bodegas:', error);
+			        return;
+			    }
+			
+			    // limpiar opciones actuales
+			    select.innerHTML = '<option value="">Seleccione una bodega</option>';
+			
+			    data.forEach(b => {
+			        const option = document.createElement('option');
+			        option.value = b.id_bodega;
+			        option.textContent = `${b.sede} - ${b.nombre}`;
+	                option.dataset.manejaVencimiento = b.tipos_bodega?.maneja_vencimiento ? 'true' : 'false';
+			        select.appendChild(option);
+			    });
+			}
+			
+			// ejecutar cuando cargue la página
+			document.addEventListener('DOMContentLoaded', cargarBodegas);
 		    // ========================================================
 		    // 3. CARGA DE BODEGAS (desde la tabla 'bodegas')
 		    // ========================================================
