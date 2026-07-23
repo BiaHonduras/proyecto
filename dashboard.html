@@ -3797,46 +3797,37 @@
 
         // ===== VER INVENTARIO =====
 		async function loadInventory() {
-			const sede = document.getElementById('filtroSedeVerInventario')?.value || 'Todas';
-			const tipoBodega = document.getElementById('filtroTipoBodegaVerInventario')?.value || 'Todas';
-			const fecha = document.getElementById('filtroFechaVerInventario')?.value || null;
-			let searchTerm = (document.getElementById('searchInventory')?.value || '').trim().toLowerCase();
-			
-			let query = supabase.from('inventarios_diarios').select('*').order('codigo', { ascending: true });
-
-				if (sede !== 'Todas') query = query.eq('sede', sede);
-				if (fecha) query = query.eq('fecha', fecha);
-
-				const { data, error } = await query;
-				if (error) {
-					console.error('Error loadInventory:', error);
-					document.getElementById('inventoryTableBody').innerHTML = `<tr><td colspan="12" class="py-8 text-center text-gray-500">Error cargando inventario</td></tr>`;
-					return;
-				}
-
-				let inventario = data || [];
-				if (tipoBodega !== 'Todas') {
-					inventario = inventario.filter(item => obtenerTipoBodegaDesdeId(item.idBodega) === tipoBodega);
-				}
-
-				if (searchTerm) {
-					inventario = inventario.filter(item =>
-						Object.values(item).some(val => String(val).toLowerCase().includes(searchTerm))
-					);
-				}
-
-			actualizarLabelFiltrosActivos();
-			
+		    // 1. Obtener referencias a los elementos del DOM (cache)
 		    const tbody = document.getElementById('inventoryTableBody');
 		    const searchInput = document.getElementById('searchInventory');
+		    const sedeSelect = document.getElementById('filtroSedeVerInventario');
+		    const tipoBodegaSelect = document.getElementById('filtroTipoBodegaVerInventario');
+		    const fechaInput = document.getElementById('filtroFechaVerInventario');
 		
-		    const { data, error } = await supabase
+		    // 2. Leer valores de filtros
+		    const sede = sedeSelect?.value || 'Todas';
+		    const tipoBodegaFiltro = tipoBodegaSelect?.value || 'Todas';
+		    const fecha = fechaInput?.value || null;
+		    const searchTerm = (searchInput?.value || '').trim().toLowerCase();
+		
+		    // 3. Construir la consulta a Supabase (solo una vez)
+		    let query = supabase
 		        .from('inventarios_diarios')
 		        .select('*')
 		        .order('codigo', { ascending: true });
 		
+		    // Aplicar filtros que pueden ir en la consulta SQL
+		    if (sede !== 'Todas') {
+		        query = query.eq('sede', sede);
+		    }
+		    if (fecha) {
+		        query = query.eq('fecha', fecha);
+		    }
+		
+		    // 4. Ejecutar la consulta
+		    const { data, error } = await query;
 		    if (error) {
-		        console.error('Error real loadInventory:', error);
+		        console.error('Error loadInventory:', error);
 		        tbody.innerHTML = `
 		            <tr>
 		                <td colspan="12" class="py-8 text-center text-gray-500">
@@ -3849,121 +3840,98 @@
 		        return;
 		    }
 		
-		    const inventarioOriginal = Array.isArray(data) ? data : [];
-		    let inventario = aplicarFiltrosGlobales(inventarioOriginal);
-
-			const sedeFiltro = document.getElementById('filtroSedeVerInventario')?.value || 'Todas';
-			const tipoBodegaFiltro = document.getElementById('filtroTipoBodegaVerInventario')?.value || 'Todas';
-			
-			const tiposBodega = {
-			    Principal: ['010', '030', '040', '050', '060'],
-			    PPV: ['013', '033', '043', '053', '063'],
-			    PFN: ['015', '045', '095', '096', '099']
-			};
-
-			inventario = inventario.filter(item => {
-
-		    const cumpleSede =
-		        sedeFiltro === 'Todas' ||
-		        item.sede === sedeFiltro;
+		    // 5. Inicializar el array con los datos obtenidos
+		    let inventario = Array.isArray(data) ? data : [];
 		
-		    const cumpleBodega =
-		        tipoBodegaFiltro === 'Todas' ||
-		        tiposBodega[tipoBodegaFiltro]?.includes(
-		            String(item.idBodega || '').trim()
+		    // 6. Filtrar por tipo de bodega (en memoria, porque no es una columna directa)
+		    if (tipoBodegaFiltro !== 'Todas') {
+		        const tiposBodega = {
+		            Principal: ['010', '030', '040', '050', '060'],
+		            PPV: ['013', '033', '043', '053', '063'],
+		            PFN: ['015', '045', '095', '096', '099']
+		        };
+		        const codigosPermitidos = tiposBodega[tipoBodegaFiltro] || [];
+		        inventario = inventario.filter(item =>
+		            codigosPermitidos.includes(String(item.idBodega || '').trim())
 		        );
+		    }
 		
-		    return cumpleSede && cumpleBodega;
-		});
-		
+		    // 7. Filtrar por término de búsqueda (en memoria)
 		    if (searchTerm) {
-		
 		        inventario = inventario.filter(item => {
-		            const bodega = String(item.idBodega || '').toLowerCase();
-		            const fecha = String(item.fecha || '').toLowerCase();
-		            const codigo = String(item.codigo || '').toLowerCase();
-		            const codigoBarra = String(item.codigo_barra || '').toLowerCase();
-		            const descripcion = String(item.descripcion || '').toLowerCase();
-		            const proveedor = String(item.proveedor || '').toLowerCase();
-		            const sede = String(item.sede || '').toLowerCase();
-		
-		            return (
-		                bodega.includes(searchTerm) ||
-		                fecha.includes(searchTerm) ||
-		                codigo.includes(searchTerm) ||
-		                codigoBarra.includes(searchTerm) ||
-		                descripcion.includes(searchTerm) ||
-		                proveedor.includes(searchTerm) ||
-		                sede.includes(searchTerm)
+		            const fields = [
+		                item.idBodega,
+		                item.fecha,
+		                item.codigo,
+		                item.codigo_barra,
+		                item.descripcion,
+		                item.proveedor,
+		                item.sede
+		            ];
+		            return fields.some(field =>
+		                String(field || '').toLowerCase().includes(searchTerm)
 		            );
 		        });
 		    }
 		
-
+		    // 8. Ordenar (numérico si es posible, sino alfabético)
 		    inventario.sort((a, b) => {
 		        const codigoA = String(a?.codigo ?? '').trim();
 		        const codigoB = String(b?.codigo ?? '').trim();
-		        const numeroA = Number(codigoA);
-		        const numeroB = Number(codigoB);
-
-		        const ambosNumericos = !Number.isNaN(numeroA) && !Number.isNaN(numeroB);
-
-		        if (ambosNumericos) {
-		            return numeroA - numeroB;
+		        const numA = Number(codigoA);
+		        const numB = Number(codigoB);
+		        if (!isNaN(numA) && !isNaN(numB)) {
+		            return numA - numB;
 		        }
-
 		        return codigoA.localeCompare(codigoB, 'es', { numeric: true, sensitivity: 'base' });
 		    });
-
-            try {
-                const resumenPendientes = document.getElementById('skusPendientes');
-                const resumenInventariados = document.getElementById('skusInventariados');
-                const resumenPorcentaje = document.getElementById('porcentajeInventarioGeneral');
-
-                const skusImportados = new Set();
-                const skusInventariadosSet = new Set();
-
-                const { data: dataImportados } = await supabase
-                    .from('inventario_reporteria')
-                    .select('codigo');
-
-                (dataImportados || []).forEach(item => {
-                    const codigo = String(item.codigo || '').trim();
-                    if (codigo) {
-                        skusImportados.add(codigo);
-                    }
-                });
-
-                inventario.forEach(item => {
-                    const codigo = String(item.codigo || '').trim();
-                    if (codigo) {
-                        skusInventariadosSet.add(codigo);
-                    }
-                });
-
-                const totalImportados = skusImportados.size;
-                const totalInventariados = skusInventariadosSet.size;
-                const totalPendientes = Math.max(totalImportados - totalInventariados, 0);
-                const porcentaje = totalImportados > 0
-                    ? ((totalInventariados / totalImportados) * 100).toFixed(2)
-                    : '0.00';
-
-                if (resumenPendientes) {
-                    resumenPendientes.textContent = totalPendientes.toLocaleString();
-                }
-
-                if (resumenInventariados) {
-                    resumenInventariados.textContent = totalInventariados.toLocaleString();
-                }
-
-                if (resumenPorcentaje) {
-                    resumenPorcentaje.textContent = `${porcentaje}%`;
-                }
-
-            } catch (errorResumen) {
-                console.error('Error calculando resumen de inventario:', errorResumen);
-            }
-
+		
+		    // 9. Actualizar etiquetas de filtros activos (si existe la función)
+		    if (typeof actualizarLabelFiltrosActivos === 'function') {
+		        actualizarLabelFiltrosActivos();
+		    }
+		
+		    // 10. Calcular resumen de SKUs (pendientes, inventariados, porcentaje)
+		    try {
+		        const resumenPendientes = document.getElementById('skusPendientes');
+		        const resumenInventariados = document.getElementById('skusInventariados');
+		        const resumenPorcentaje = document.getElementById('porcentajeInventarioGeneral');
+		
+		        const skusImportados = new Set();
+		        const skusInventariadosSet = new Set();
+		
+		        // Obtener todos los códigos de la tabla reportería
+		        const { data: dataImportados } = await supabase
+		            .from('inventario_reporteria')
+		            .select('codigo');
+		
+		        (dataImportados || []).forEach(item => {
+		            const codigo = String(item.codigo || '').trim();
+		            if (codigo) skusImportados.add(codigo);
+		        });
+		
+		        // Códigos presentes en el inventario actual (ya filtrado)
+		        inventario.forEach(item => {
+		            const codigo = String(item.codigo || '').trim();
+		            if (codigo) skusInventariadosSet.add(codigo);
+		        });
+		
+		        const totalImportados = skusImportados.size;
+		        const totalInventariados = skusInventariadosSet.size;
+		        const totalPendientes = Math.max(totalImportados - totalInventariados, 0);
+		        const porcentaje = totalImportados > 0
+		            ? ((totalInventariados / totalImportados) * 100).toFixed(2)
+		            : '0.00';
+		
+		        if (resumenPendientes) resumenPendientes.textContent = totalPendientes.toLocaleString();
+		        if (resumenInventariados) resumenInventariados.textContent = totalInventariados.toLocaleString();
+		        if (resumenPorcentaje) resumenPorcentaje.textContent = `${porcentaje}%`;
+		
+		    } catch (errorResumen) {
+		        console.error('Error calculando resumen de inventario:', errorResumen);
+		    }
+		
+		    // 11. Renderizar la tabla o mensaje de vacío
 		    if (!inventario.length) {
 		        tbody.innerHTML = `
 		            <tr>
@@ -3976,6 +3944,7 @@
 		        return;
 		    }
 		
+		    // 12. Construir las filas de la tabla
 		    tbody.innerHTML = inventario.map(item => {
 		        const cajas = Number(item.cajas_fardos || 0);
 		        const masterpack = Number(item.masterpack || 1);
@@ -6839,15 +6808,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-	const btnEliminarVencimientos =
-	    document.getElementById('btn-eliminar-vencimientos');
-	
-	if (btnEliminarVencimientos) {
-	    btnEliminarVencimientos.addEventListener(
-	        'click',
-	        eliminarVencimientosProtegido
-	    );
-	}	
 </script>
 
 
