@@ -2734,7 +2734,11 @@
                 window.location.href = 'index.html';
                 return;
             }
-
+			const btnEliminarVencimientos = document.getElementById('btn-eliminar-vencimientos');
+			    if (btnEliminarVencimientos) {
+			        btnEliminarVencimientos.addEventListener('click', eliminarVencimientosProtegido);
+			    }
+			
 			const nombreCortoEl = document.getElementById('nombreCorto');
             if (nombreCortoEl) nombreCortoEl.textContent = currentUser.nombre_corto || '';
 			
@@ -3796,7 +3800,7 @@
 			const sede = document.getElementById('filtroSedeVerInventario')?.value || 'Todas';
 			const tipoBodega = document.getElementById('filtroTipoBodegaVerInventario')?.value || 'Todas';
 			const fecha = document.getElementById('filtroFechaVerInventario')?.value || null;
-			const searchTerm = (document.getElementById('searchInventory')?.value || '').trim().toLowerCase();
+			let searchTerm = (document.getElementById('searchInventory')?.value || '').trim().toLowerCase();
 			
 			let query = supabase.from('inventarios_diarios').select('*').order('codigo', { ascending: true });
 
@@ -3825,7 +3829,6 @@
 			
 		    const tbody = document.getElementById('inventoryTableBody');
 		    const searchInput = document.getElementById('searchInventory');
-		    const searchTerm = (searchInput?.value || '').trim().toLowerCase();
 		
 		    const { data, error } = await supabase
 		        .from('inventarios_diarios')
@@ -4859,22 +4862,18 @@ function normalizarNombreColumnaCSV(nombre = '') {
                 loadTransitos()
             ]);
         }
+		
 		async function eliminarVencimientosProtegido() {
 		    const confirmar = confirm(
 		        '¿Estás seguro que deseas eliminar todos los vencimientos registrados?\n\n' +
 		        'Se realizará un respaldo automático antes de la eliminación.'
 		    );
-		
 		    if (!confirmar) return;
 		
 		    const adminAutorizador = await solicitarAutorizacionAdmin();
 		    if (!adminAutorizador) return;
 		
-		    showNotification(
-		        'Proceso',
-		        'Ejecutando respaldo y eliminación segura de vencimientos...',
-		        'warning'
-		    );
+		    showNotification('Proceso', 'Ejecutando respaldo y eliminación segura de vencimientos...', 'warning');
 		
 		    const { data, error } = await supabase.rpc(
 		        'rpc_limpiar_vencimientos_seguro',
@@ -4886,23 +4885,11 @@ function normalizarNombreColumnaCSV(nombre = '') {
 		
 		    if (error || !data?.ok) {
 		        console.error(error || data);
-		
-		        showNotification(
-		            'Error',
-		            error?.message || data?.message || 'No fue posible eliminar los vencimientos',
-		            'error'
-		        );
-		
+		        showNotification('Error', error?.message || data?.message || 'No fue posible eliminar los vencimientos', 'error');
 		        return;
 		    }
 		
-		    showNotification(
-		        'Éxito',
-		        `Se eliminaron ${data.vencimientos || 0} registros de vencimientos.`,
-		        'success',
-		        9000
-		    );
-		
+		    showNotification('Éxito', `Se eliminaron ${data.vencimientos || 0} registros de vencimientos.`, 'success', 9000);
 		    await loadVencimientosData();
 		}
 
