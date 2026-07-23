@@ -5586,6 +5586,7 @@ tbody.innerHTML = data.map(item => {
 				const sede = document.getElementById('filtroSedeJustificaciones')?.value || 'Todas';
 				const tipoBodega = document.getElementById('filtroTipoBodegaJustificaciones')?.value || 'Todas';
 				const fecha = document.getElementById('filtroFechaJustificaciones')?.value || null;
+				const tbody = document.getElementById('transitosTableBody');
 
 				let query = supabase.from('inventarios_diarios').select('*');
 				if (sede !== 'Todas') query = query.eq('sede', sede);
@@ -5604,12 +5605,6 @@ tbody.innerHTML = data.map(item => {
 				}
 				
 			    actualizarLabelFiltrosActivos();
-			
-			    const tbody = document.getElementById('transitosTableBody');
-			
-			    const sede = document.getElementById('filtroSedeJustificaciones').value;
-			    const tipo = document.getElementById('filtroTipoBodegaJustificaciones').value;
-			
 			    filtrosGlobales.sede = sede;
 			    filtrosGlobales.tipoBodega = tipo;
 			
