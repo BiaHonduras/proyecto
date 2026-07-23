@@ -3900,10 +3900,16 @@
 		        const skusImportados = new Set();
 		        const skusInventariadosSet = new Set();
 		
-		        // Obtener todos los códigos de la tabla reportería
-		        const { data: dataImportados } = await supabase
-		            .from('inventario_reporteria')
-		            .select('codigo');
+		        let queryReporteria = supabase
+				    .from('inventario_reporteria')
+				    .select('codigo');
+				
+				// Aplicar filtro de fecha solo si se seleccionó una
+				if (fecha) {
+				    queryReporteria = queryReporteria.eq('fecha', fecha);
+				}
+				
+				const { data: dataImportados } = await queryReporteria;
 		
 		        (dataImportados || []).forEach(item => {
 		            const codigo = String(item.codigo || '').trim();
