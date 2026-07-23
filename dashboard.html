@@ -5592,7 +5592,7 @@ tbody.innerHTML = data.map(item => {
 				if (sede !== 'Todas') query = query.eq('sede', sede);
 				if (fecha) query = query.eq('fecha', fecha);
 
-				const { data, error } = await query;
+				const { dataError, error } = await query;
 				if (error) {
 					console.error(error);
 					document.getElementById('transitosTableBody').innerHTML = `<tr><td colspan="9" class="py-8 text-center text-gray-500">Error cargando datos</td></tr>`;
