@@ -5583,248 +5583,217 @@ tbody.innerHTML = data.map(item => {
 		}
 		
 			async function loadTransitos() {
-				const sede = document.getElementById('filtroSedeJustificaciones')?.value || 'Todas';
-				const tipoBodega = document.getElementById('filtroTipoBodegaJustificaciones')?.value || 'Todas';
-				const fecha = document.getElementById('filtroFechaJustificaciones')?.value || null;
-				const tbody = document.getElementById('transitosTableBody');
-
-				let query = supabase.from('inventarios_diarios').select('*');
-				if (sede !== 'Todas') query = query.eq('sede', sede);
-				if (fecha) query = query.eq('fecha', fecha);
-
-				const { dataError, error } = await query;
-				if (error) {
-					console.error(error);
-					document.getElementById('transitosTableBody').innerHTML = `<tr><td colspan="9" class="py-8 text-center text-gray-500">Error cargando datos</td></tr>`;
-					return;
-				}
-
-				let inventario = data || [];
-				if (tipoBodega !== 'Todas') {
-					inventario = inventario.filter(item => obtenerTipoBodegaDesdeId(item.idBodega) === tipoBodega);
-				}
-				
-			    actualizarLabelFiltrosActivos();
-			    filtrosGlobales.sede = sede;
-			    filtrosGlobales.tipoBodega = tipo;
+			    // 1. Obtener referencias y valores de los filtros
+			    const tbody = document.getElementById('transitosTableBody');
+			    if (!tbody) return;
 			
-			    const { data, error: errorInventario } = await supabase
+			    const sedeSelect = document.getElementById('filtroSedeJustificaciones');
+			    const tipoBodegaSelect = document.getElementById('filtroTipoBodegaJustificaciones');
+			    const fechaInput = document.getElementById('filtroFechaJustificaciones');
+			
+			    const sede = sedeSelect?.value || 'Todas';
+			    const tipoBodegaFiltro = tipoBodegaSelect?.value || 'Todas';
+			    const fecha = fechaInput?.value || null;
+			
+			    // 2. Mapeo de tipos de bodega (según el código de idBodega)
+			    const tiposBodega = {
+			        Principal: ['010', '030', '040', '050', '060'],
+			        PPV: ['013', '033', '043', '053', '063'],
+			        PFN: ['015', '045', '095', '096', '099']
+			    };
+			
+			    // 3. Consultar inventarios_diarios con filtros de sede y fecha (en SQL)
+			    let query = supabase
 			        .from('inventarios_diarios')
 			        .select('*');
 			
-			    if (errorInventario) {
-			        console.error('Error inventarios_diarios:', errorInventario);
+			    if (sede !== 'Todas') {
+			        query = query.eq('sede', sede);
+			    }
+			    if (fecha) {
+			        query = query.eq('fecha', fecha);
+			    }
+			
+			    const { data, error } = await query;
+			    if (error) {
+			        console.error('Error al obtener inventarios_diarios:', error);
 			        tbody.innerHTML = `
 			            <tr>
 			                <td colspan="9" class="py-8 text-center text-gray-500">
-			                    Error cargando datos
+			                    <i class="fas fa-circle-exclamation text-3xl mb-2"></i>
+			                    <p>Error cargando los datos de inventario</p>
 			                </td>
 			            </tr>
 			        `;
 			        return;
 			    }
 			
-			    const inventarioOriginal = Array.isArray(data) ? data : [];
+			    let inventario = Array.isArray(data) ? data : [];
 			
-			    let inventario = inventarioOriginal.filter(item =>
-			        registroCoincideFiltros(item, sede, tipo)
-			    );
+			    // 4. Filtrar por tipo de bodega en memoria (según el código idBodega)
+			    if (tipoBodegaFiltro !== 'Todas') {
+			        const codigosPermitidos = tiposBodega[tipoBodegaFiltro] || [];
+			        inventario = inventario.filter(item =>
+			            codigosPermitidos.includes(String(item.idBodega || '').trim())
+			        );
+			    }
 			
+			    // 5. Si no hay inventario después del filtro, mostrar mensaje
 			    if (!inventario.length) {
 			        tbody.innerHTML = `
 			            <tr>
-			                <td colspan="9" class="text-center py-6">
-			                    Sin datos
+			                <td colspan="9" class="text-center py-6 text-gray-500">
+			                    <i class="fas fa-inbox text-3xl mb-2"></i>
+			                    <p>No hay artículos que coincidan con los filtros</p>
 			                </td>
 			            </tr>
 			        `;
+			        // Actualizar etiquetas de filtros activos (si existe la función)
+			        if (typeof actualizarLabelFiltrosActivos === 'function') {
+			            actualizarLabelFiltrosActivos();
+			        }
 			        return;
 			    }
 			
-			    const codigosInventario = inventario
-			        .map(item => String(item.codigo || '').trim())
-			        .filter(Boolean);
+			    // 6. Obtener listas únicas de códigos y bodegas para consultar justificaciones
+			    const codigosInventario = [...new Set(
+			        inventario
+			            .map(item => String(item.codigo || '').trim())
+			            .filter(Boolean)
+			    )];
 			
-			    const bodegasFiltradas = [
-			        ...new Set(
-			            inventario
-			                .map(item => String(item.idBodega || '').trim())
-			                .filter(Boolean)
-			        )
-			    ];
+			    const bodegasInventario = [...new Set(
+			        inventario
+			            .map(item => String(item.idBodega || '').trim())
+			            .filter(Boolean)
+			    )];
 			
-			    let queryJustificaciones = supabase
+			    // 7. Consultar inventario_justificaciones para esos códigos y bodegas
+			    let queryJust = supabase
 			        .from('inventario_justificaciones')
 			        .select('*')
 			        .in('codigo', codigosInventario);
 			
-			    if (bodegasFiltradas.length > 0) {
-			        queryJustificaciones = queryJustificaciones.in(
-			            'idBodega',
-			            bodegasFiltradas
-			        );
+			    if (bodegasInventario.length > 0) {
+			        queryJust = queryJust.in('idBodega', bodegasInventario);
 			    }
 			
-			    if (sede && sede !== 'Todas') {
-			        queryJustificaciones = queryJustificaciones.eq('sede', sede);
-			    }
-			
-			    if (tipo && tipo !== 'Todas') {
-			        queryJustificaciones = queryJustificaciones.eq(
-			            'tipos_bodega',
-			            tipo
-			        );
-			    }
-			
-			    const {
-			        data: justificaciones,
-			        error: errorJust
-			    } = await queryJustificaciones;
-			
+			    const { data: justificaciones, error: errorJust } = await queryJust;
 			    if (errorJust) {
-			        console.error('Error inventario_justificaciones:', errorJust);
+			        console.error('Error al obtener justificaciones:', errorJust);
 			        tbody.innerHTML = `
 			            <tr>
 			                <td colspan="9" class="py-8 text-center text-gray-500">
-			                    Error cargando justificaciones
+			                    <i class="fas fa-circle-exclamation text-3xl mb-2"></i>
+			                    <p>Error cargando las justificaciones</p>
 			                </td>
 			            </tr>
 			        `;
 			        return;
 			    }
 			
+			    // 8. Construir mapa de justificaciones por clave "codigo|idBodega"
 			    const mapaJustificaciones = {};
-			
 			    (justificaciones || []).forEach(j => {
 			        const codigo = String(j.codigo || '').trim();
-			        const idBodega = String(
-			            j.idBodega || j.id_bodega || j.bodega || ''
-			        ).trim();
-			
-			        const clave = `${codigo}|${idBodega}`;
-			
+			        const idBodega = String(j.idBodega || j.id_bodega || j.bodega || '').trim();
 			        if (codigo && idBodega) {
+			            const clave = `${codigo}|${idBodega}`;
 			            mapaJustificaciones[clave] = j;
 			        }
 			    });
 			
+			    // 9. Filtrar el inventario: solo items con diferencia != 0 O que tengan justificación
 			    const filtrados = inventario
 			        .filter(item => {
-			            const total =
-			                (Number(item.cajas_fardos || 0) *
-			                    Number(item.masterpack || 1)) +
-			                Number(item.unidades || 0);
-			
-			            const diferencia =
-			                total - Number(item.inventario_reporteria || 0);
+			            const cajas = Number(item.cajas_fardos || 0);
+			            const masterpack = Number(item.masterpack || 1);
+			            const unidades = Number(item.unidades || 0);
+			            const reporteria = Number(item.inventario_reporteria || 0);
+			            const total = (cajas * masterpack) + unidades;
+			            const diferencia = total - reporteria;
 			
 			            const codigo = String(item.codigo || '').trim();
 			            const idBodega = String(item.idBodega || '').trim();
-			
 			            const clave = `${codigo}|${idBodega}`;
 			
-			            const cumpleSede =
-			                filtrosGlobales.sede === 'Todas' ||
-			                item.sede === filtrosGlobales.sede;
-			
-			            const cumpleTipoBodega =
-			                filtrosGlobales.tipoBodega === 'Todas' ||
-			                item.tipoBodega === filtrosGlobales.tipoBodega;
-			
-			            const cumpleDiferencia =
-			                diferencia !== 0 || !!mapaJustificaciones[clave];
-			
-			            return (
-			                cumpleSede &&
-			                cumpleTipoBodega &&
-			                cumpleDiferencia
-			            );
+			            // Incluir si hay diferencia o si existe justificación guardada
+			            return diferencia !== 0 || mapaJustificaciones[clave];
 			        })
-			        .sort(
-			            (a, b) =>
-			                Number(a.codigo || 0) -
-			                Number(b.codigo || 0)
-			        );
+			        .sort((a, b) => {
+			            const codA = Number(a.codigo || 0);
+			            const codB = Number(b.codigo || 0);
+			            return codA - codB;
+			        });
 			
+			    // 10. Actualizar etiquetas de filtros activos (si existe la función)
+			    if (typeof actualizarLabelFiltrosActivos === 'function') {
+			        // Se puede actualizar un objeto global si es necesario, pero aquí no se usa
+			        actualizarLabelFiltrosActivos();
+			    }
+			
+			    // 11. Mostrar mensaje si no hay resultados después del filtro final
 			    if (!filtrados.length) {
 			        tbody.innerHTML = `
 			            <tr>
-			                <td colspan="9" class="text-center py-6">
-			                    Sin diferencias ni justificaciones guardadas
+			                <td colspan="9" class="text-center py-6 text-gray-500">
+			                    <i class="fas fa-check-circle text-3xl mb-2"></i>
+			                    <p>No hay diferencias ni justificaciones guardadas</p>
 			                </td>
 			            </tr>
 			        `;
 			        return;
 			    }
 			
+			    // 12. Renderizar la tabla
 			    tbody.innerHTML = filtrados.map(item => {
-			        const total =
-			            (Number(item.cajas_fardos || 0) *
-			                Number(item.masterpack || 1)) +
-			            Number(item.unidades || 0);
-			
-			        const diferencia =
-			            total - Number(item.inventario_reporteria || 0);
+			        const cajas = Number(item.cajas_fardos || 0);
+			        const masterpack = Number(item.masterpack || 1);
+			        const unidades = Number(item.unidades || 0);
+			        const reporteria = Number(item.inventario_reporteria || 0);
+			        const total = (cajas * masterpack) + unidades;
+			        const diferencia = total - reporteria;
 			
 			        const codigo = String(item.codigo || '').trim();
+			        const idBodega = String(item.idBodega || '').trim();
+			        const clave = `${codigo}|${idBodega}`;
+			        const justificacionRow = mapaJustificaciones[clave] || {};
 			
-			        const clave = `${codigo}|${String(
-			            item.idBodega || ''
-			        ).trim()}`;
-			
-			        const justificacionRow =
-			            mapaJustificaciones[clave];
-			
-			        const justificacionGuardada =
-			            justificacionRow?.justificacion || '';
-			
-			        const cantidadJustificada =
-			            justificacionRow?.cantidad_justificada ?? '';
-			
-			        const fechaRegistro =
-			            justificacionRow?.fecha_registro || '';
-			
-			        const costoUnitario = Number(
-			            item.costo_unitario || 0
-			        );
+			        const justificacionGuardada = justificacionRow.justificacion || '';
+			        const cantidadJustificada = justificacionRow.cantidad_justificada ?? '';
+			        const fechaRegistro = justificacionRow.fecha_registro || '';
+			        const costoUnitario = Number(item.costo_unitario || 0);
 			
 			        return `
 			            <tr class="border-b hover:bg-gray-50"
 			                data-id="${item.id || ''}"
 			                data-codigo="${codigo}"
 			                data-sede="${item.sede || ''}"
-			                data-id-bodega="${escapeHtml(item.idBodega || '')}"
+			                data-id-bodega="${escapeHtml(idBodega)}"
 			                data-fecha-registro="${fechaRegistro}"
 			                data-costo-unitario="${costoUnitario}">
-			
-			                <td class="py-3">${escapeHtml(item.idBodega || '')}</td>
-			                <td class="py-3 codigo">${codigo}</td>
+			                <td class="py-3">${escapeHtml(idBodega)}</td>
+			                <td class="py-3 codigo">${escapeHtml(codigo)}</td>
 			                <td class="py-3 descripcion">${escapeHtml(item.descripcion || '')}</td>
 			                <td class="py-3 costo">${formatearMoneda(costoUnitario)}</td>
-			                <td class="py-3 reporteria">${Number(item.inventario_reporteria || 0)}</td>
+			                <td class="py-3 reporteria">${reporteria}</td>
 			                <td class="py-3 font-bold diferencia">${diferencia}</td>
-			
 			                <td class="py-3">
-			                    <input
-			                        type="number"
-			                        class="cantidad-justificada w-full px-2 py-1 text-sm input-field rounded input-disabled"
-			                        value="${cantidadJustificada}"
-			                        disabled>
+			                    <input type="number"
+			                           class="cantidad-justificada w-full px-2 py-1 text-sm input-field rounded input-disabled"
+			                           value="${cantidadJustificada}"
+			                           disabled>
 			                </td>
-			
 			                <td class="py-3">
-			                    <select
-			                        class="justificacion input-field w-full px-2 py-1 rounded input-disabled"
-			                        data-id="${codigo}"
-			                        disabled>
+			                    <select class="justificacion input-field w-full px-2 py-1 rounded input-disabled"
+			                            data-id="${codigo}"
+			                            disabled>
 			                        ${construirOpcionesJustificacion(justificacionGuardada)}
 			                    </select>
 			                </td>
-			
 			                <td class="py-3">
-			                    <button
-			                        type="button"
-			                        class="btnEditarFila px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+			                    <button type="button"
+			                            class="btnEditarFila px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
 			                        Editar
 			                    </button>
 			                </td>
