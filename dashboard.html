@@ -2291,7 +2291,7 @@
 
         // Reemplazar usuarioPuedeGestionarUsuarios()
 		function usuarioPuedeGestionarUsuarios() {
-		    return currentUser?.rol === 'superadmin';
+		    return currentUser?.rol === 'superadmin' || currentUser?.rol === 'admin';
 		}
 
         function aplicarRestriccionGestionUsuarios() {
@@ -2326,13 +2326,9 @@
 		    
 		    console.log('🔍 puedeAccederASeccion - sección:', seccion, 'rol:', rol);
 		
-		    if (rol === 'superadmin') return true;
-		    if (rol === 'admin') {
-		        return seccion !== 'usuarios';
-		    }
-		    if (rol === 'usuario') {
-		        return seccion === 'inventario-diario';
-		    }
+		    if (seccion === 'usuarios') {
+			    return rol === 'superadmin' || rol === 'admin';
+			}
 		    return false;
 		}
 
