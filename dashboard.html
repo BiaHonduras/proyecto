@@ -3071,70 +3071,89 @@
 			    }
         });
 
-        // ===== NAVEGACIÓN =====
-        function initNavigation() {
-            // Toggle sidebar en mobile
-            document.getElementById('menuToggle').addEventListener('click', function() {
-                document.querySelector('.sidebar').classList.add('open');
-                document.getElementById('mobileOverlay').classList.add('open');
-            });
-            
-            document.getElementById('closeSidebar').addEventListener('click', function() {
-                document.querySelector('.sidebar').classList.remove('open');
-                document.getElementById('mobileOverlay').classList.remove('open');
-            });
-            
-            document.getElementById('mobileOverlay').addEventListener('click', function() {
-                document.querySelector('.sidebar').classList.remove('open');
-                this.classList.remove('open');
-            });
-
-            // Navegación entre secciones
-            document.querySelectorAll('.nav-item').forEach(item => {
-    			item.addEventListener('click', function (e) {
-					const section = this.dataset.section;
-					if(!section) return;
-					
-        		e.preventDefault();
-
-				if (section === 'transitos') {
-    				loadTransitos();
+		        // ===== NAVEGACIÓN =====
+		        function initNavigation() {
+				    // Toggle sidebar en mobile
+				    const menuToggle = document.getElementById('menuToggle');
+				    const closeSidebarBtn = document.getElementById('closeSidebar');
+				    const mobileOverlay = document.getElementById('mobileOverlay');
+				    const sidebar = document.querySelector('.sidebar');
+				
+				    if (menuToggle) {
+				        menuToggle.addEventListener('click', function() {
+				            sidebar.classList.add('open');
+				            mobileOverlay.classList.add('open');
+				        });
+				    }
+				
+				    if (closeSidebarBtn) {
+				        closeSidebarBtn.addEventListener('click', function() {
+				            sidebar.classList.remove('open');
+				            mobileOverlay.classList.remove('open');
+				        });
+				    }
+				
+				    if (mobileOverlay) {
+				        mobileOverlay.addEventListener('click', function() {
+				            sidebar.classList.remove('open');
+				            this.classList.remove('open');
+				        });
+				    }
+				
+				    // Navegación entre secciones
+				    document.querySelectorAll('.nav-item').forEach(item => {
+				        item.addEventListener('click', function(e) {
+				            const section = this.dataset.section;
+				            if (!section) return;
+				
+				            // Verificar si el usuario tiene acceso a esta sección
+				            if (!puedeAccederASeccion(section)) {
+				                showNotification('Acceso denegado', 'No tienes permisos para ver esta sección', 'error');
+				                e.preventDefault();
+				                return;
+				            }
+				
+				            e.preventDefault();
+				
+				            // Cargar datos específicos según la sección (si es necesario)
+				            if (section === 'transitos') {
+				                loadTransitos();
+				            }
+				            if (section === 'vencimientos') {
+				                loadVencimientosData();
+				            }
+				            if (section === 'usuarios') {
+				                resetUserForm();
+				                loadUsers();
+				            }
+				
+				            // Actualizar título
+				            const titulo = this.textContent.trim();
+				            document.getElementById('currentSectionTitle').textContent = titulo;
+				
+				            // Marcar como activo
+				            document.querySelectorAll('.nav-item.active').forEach(el => el.classList.remove('active'));
+				            this.classList.add('active');
+				
+				            // Ocultar todas las secciones
+				            document.querySelectorAll('.section-content').forEach(sec => {
+				                sec.classList.add('hidden');
+				            });
+				
+				            // Mostrar la sección correspondiente
+				            const target = document.getElementById(section + '-section');
+				            if (target) {
+				                target.classList.remove('hidden');
+				            }
+				
+				            // Cerrar sidebar en móviles después de seleccionar una opción
+				            if (window.innerWidth <= 768) {
+				                sidebar.classList.remove('open');
+				                mobileOverlay.classList.remove('open');
+				            }
+				        });
+				    });
 				}
-
-				if (section === 'vencimientos') {
-    				loadVencimientosData();
-				}
-
-				if (section === 'usuarios') {
-				    resetUserForm();
-				    loadUsers();
-				}
-
-			// Actualizar título
-        	const titulo = this.textContent.trim();
-        	document.getElementById('currentSectionTitle').textContent = titulo;
-
-        	// Active
-        	document.querySelectorAll('.nav-item[data-section]').forEach(item => {
-			    const section = item.dataset.section;
-			    if (!puedeAccederASeccion(section)) {
-			        item.style.display = 'none';
-			    }
-			});
-        		this.classList.add('active');
-
-        	// Ocultar todas
-        	document.querySelectorAll('.section-content').forEach(sec => {
-           	 sec.classList.add('hidden');
-        	});
-
-        	// Mostrar la correcta
-        	const target = document.getElementById(section + '-section');
-        		if (target) {
-            		target.classList.remove('hidden');
-        		}
-   			 });
-		});
             
             // Logout
             const logoutBtn = document.getElementById('logoutBtn');
