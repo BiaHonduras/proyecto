@@ -2320,15 +2320,18 @@
 		
 		// Nueva función para controlar el acceso a secciones
 		function puedeAccederASeccion(seccion) {
-		    const usuario = window.currentUser; // ✅ usar la variable global del window
-			console.log('🔍 puedeAccederASeccion - seccion:', seccion, 'rol:', rol);
+		    // ✅ Usar window.currentUser para mayor estabilidad
+		    const usuario = window.currentUser;
+		    const rol = usuario?.rol; // 👈 Obtener el rol
+		    
+		    // Depuración (opcional)
+		    console.log('🔍 puedeAccederASeccion - sección:', seccion, 'rol:', rol);
+		
 		    if (rol === 'superadmin') return true;
 		    if (rol === 'admin') {
-		        // Admin no puede acceder a gestión de usuarios
 		        return seccion !== 'usuarios';
 		    }
 		    if (rol === 'usuario') {
-		        // Usuario solo puede acceder a inventario-diario
 		        return seccion === 'inventario-diario';
 		    }
 		    return false;
@@ -3101,26 +3104,55 @@
 				    }
 				
 				    document.querySelectorAll('.nav-item').forEach(item => {
-					    item.addEventListener('click', function(e) {
-					        const section = this.dataset.section;
-					        if (!section) return;
-					
-					        // ✅ Verificar que el usuario esté autenticado
-					        if (!window.currentUser) {
-					            showNotification('Error', 'No hay sesión activa', 'error');
-					            window.location.href = 'index.html';
-					            return;
-					        }
-					
-					        if (!puedeAccederASeccion(section)) {
-					            showNotification('Acceso denegado', 'No tienes permisos para ver esta sección', 'error');
-					            e.preventDefault();
-					            return;
-					        }
-					
-					        // ... resto de la navegación
-					    });
-					});
+				        item.addEventListener('click', function(e) {
+				            const section = this.dataset.section;
+				            if (!section) return;
+				
+				            // Verificar autenticación
+				            if (!window.currentUser) {
+				                showNotification('Error', 'No hay sesión activa', 'error');
+				                window.location.href = 'index.html';
+				                return;
+				            }
+				
+				            // Verificar permisos
+				            if (!puedeAccederASeccion(section)) {
+				                showNotification('Acceso denegado', 'No tienes permisos para ver esta sección', 'error');
+				                e.preventDefault();
+				                return;
+				            }
+				
+				            e.preventDefault();
+				
+				            // Cargar datos según sección
+				            if (section === 'transitos') loadTransitos();
+				            if (section === 'vencimientos') loadVencimientosData();
+				            if (section === 'usuarios') {
+				                resetUserForm();
+				                loadUsers();
+				            }
+				
+				            // Actualizar título
+				            document.getElementById('currentSectionTitle').textContent = this.textContent.trim();
+				
+				            // Marcar como activo
+				            document.querySelectorAll('.nav-item.active').forEach(el => el.classList.remove('active'));
+				            this.classList.add('active');
+				
+				            // Ocultar todas las secciones
+				            document.querySelectorAll('.section-content').forEach(sec => sec.classList.add('hidden'));
+				
+				            // Mostrar la sección correspondiente
+				            const target = document.getElementById(section + '-section');
+				            if (target) target.classList.remove('hidden');
+				
+				            // Cerrar sidebar en móviles
+				            if (window.innerWidth <= 768) {
+				                sidebar.classList.remove('open');
+				                mobileOverlay.classList.remove('open');
+				            }
+				        });
+				    });
 				}
 
         // ===== DASHBOARD =====
