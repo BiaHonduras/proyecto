@@ -2320,11 +2320,10 @@
 		
 		// Nueva función para controlar el acceso a secciones
 		function puedeAccederASeccion(seccion) {
-		    // ✅ Usar window.currentUser para mayor estabilidad
 		    const usuario = window.currentUser;
-		    const rol = usuario?.rol; // 👈 Obtener el rol
+		    // ✅ Buscar tanto 'rol' como 'role'
+		    const rol = usuario?.rol || usuario?.role;
 		    
-		    // Depuración (opcional)
 		    console.log('🔍 puedeAccederASeccion - sección:', seccion, 'rol:', rol);
 		
 		    if (rol === 'superadmin') return true;
@@ -2708,6 +2707,11 @@
                 window.location.href = 'index.html';
                 return;
             }
+			const currentUser = JSON.parse(userData);
+		    window.currentUser = currentUser;  // <-- importante
+		
+		    // Ahora inicializar navegación
+		    initNavigation();
 
             try {
                 const { data: authData, error: authError } = await window.supabase.auth.getUser();
