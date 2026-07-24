@@ -5126,74 +5126,86 @@ function normalizarNombreColumnaCSV(nombre = '') {
 		
 	        function initUsers() {
 			    const form = document.getElementById('userForm');
-			    			    const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
-			    			    const tbody = document.getElementById('usersTableBody');
+			    const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
+			    const tbody = document.getElementById('usersTableBody');
 			
-			    tbody.addEventListener('click', async (e) => {
-			        const btnDelete = e.target.closest('.btn-delete-user');
-			        if (btnDelete) {
-			            await deleteUser(btnDelete.dataset.username);
-			            return;
-			        }
-			
-			        const btnEdit = e.target.closest('.btn-edit-user');
-			        if (btnEdit) {
-			            editUser(
-			                btnEdit.dataset.username,
-			                btnEdit.dataset.nombre,
-			                btnEdit.dataset.correo,
-			                btnEdit.dataset.rol
-			            );
-			        }
-			    });
-			
-			    form.addEventListener('submit', async function (e) {
-				    e.preventDefault();
-				
-				    if (!usuarioPuedeGestionarUsuarios()) {
-			        showNotification('Error', 'No tienes permisos para crear usuarios', 'error');
-			        return;
+			    // Verificar que los elementos existan antes de asignar eventos
+			    if (tbody) {
+			        tbody.addEventListener('click', async (e) => {
+			            const btnDelete = e.target.closest('.btn-delete-user');
+			            if (btnDelete) {
+			                await deleteUser(btnDelete.dataset.username);
+			                return;
+			            }
+			            const btnEdit = e.target.closest('.btn-edit-user');
+			            if (btnEdit) {
+			                editUser(
+			                    btnEdit.dataset.username,
+			                    btnEdit.dataset.nombre,
+			                    btnEdit.dataset.correo,
+			                    btnEdit.dataset.rol
+			                );
+			            }
+			        });
 			    }
-
-			    const usuario = document.getElementById('userUsername').value.trim().toLowerCase();
-				    const nombre_corto = document.getElementById('userNombre_corto').value.trim();
-				    const correo = document.getElementById('userEmail').value.trim().toLowerCase();
-				    const dni = document.getElementById('userDNI').value.trim();
-				    const password = document.getElementById('userPassword').value;
-				    const confirmPassword = document.getElementById('userConfirmPassword').value;
-				    const rol = document.getElementById('userRole').value;
-				
-				    if (!usuario || !nombre_corto || !correo || !dni || !password || !confirmPassword || !sede) {
-				        showNotification('Error', 'Complete todos los campos requeridos', 'error');
-				        return;
-				    }
-				
-				    if (password !== confirmPassword) {
-				        showNotification('Error', 'Las contraseñas no coinciden', 'error');
-				        return;
-				    }
-				
-				    try {
-				        await llamarFuncionSegura({
-						  usuario,
-						  nombre_corto,
-						  correo,
-						  dni,
-						  password,
-						  rol
-						});
-										
-				        showNotification('Éxito', 'Usuario creado correctamente', 'success');
-				        resetUserForm();
-				        await loadUsers();
-				    } catch (error) {
-				        console.error(error);
-				        showNotification('Error', error.message || 'No se pudo crear el usuario', 'error');
-				    }
-				});
-
-				form.querySelector('button[type="reset"]').addEventListener('click', resetUserForm);
-			    btnNuevoUsuario.addEventListener('click', resetUserForm);
+			
+			    if (form) {
+			        form.addEventListener('submit', async function (e) {
+			            e.preventDefault();
+			
+			            if (!usuarioPuedeGestionarUsuarios()) {
+			                showNotification('Error', 'No tienes permisos para crear usuarios', 'error');
+			                return;
+			            }
+			
+			            const usuario = document.getElementById('userUsername').value.trim().toLowerCase();
+			            const nombre_corto = document.getElementById('userNombre_corto').value.trim();
+			            const correo = document.getElementById('userEmail').value.trim().toLowerCase();
+			            const dni = document.getElementById('userDNI').value.trim();
+			            const password = document.getElementById('userPassword').value;
+			            const confirmPassword = document.getElementById('userConfirmPassword').value;
+			            const rol = document.getElementById('userRole').value;
+			            const sede = document.getElementById('userSite').value;
+			
+			            if (!usuario || !nombre_corto || !correo || !dni || !password || !confirmPassword || !sede) {
+			                showNotification('Error', 'Complete todos los campos requeridos', 'error');
+			                return;
+			            }
+			
+			            if (password !== confirmPassword) {
+			                showNotification('Error', 'Las contraseñas no coinciden', 'error');
+			                return;
+			            }
+			
+			            try {
+			                await llamarFuncionSegura({
+			                    usuario,
+			                    nombre_corto,
+			                    correo,
+			                    dni,
+			                    password,
+			                    rol,
+			                    sede
+			                });
+			
+			                showNotification('Éxito', 'Usuario creado correctamente', 'success');
+			                resetUserForm();
+			                await loadUsers();
+			            } catch (error) {
+			                console.error(error);
+			                showNotification('Error', error.message || 'No se pudo crear el usuario', 'error');
+			            }
+			        });
+			
+			        const resetBtn = form.querySelector('button[type="reset"]');
+			        if (resetBtn) {
+			            resetBtn.addEventListener('click', resetUserForm);
+			        }
+			    }
+			
+			    if (btnNuevoUsuario) {
+			        btnNuevoUsuario.addEventListener('click', resetUserForm);
+			    }
 			
 			    resetUserForm();
 			    loadUsers();
