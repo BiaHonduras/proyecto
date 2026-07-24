@@ -2707,8 +2707,10 @@
                 window.location.href = 'index.html';
                 return;
             }
-			const currentUser = JSON.parse(userData);
-		    window.currentUser = currentUser;  // <-- importante
+			
+			// ✅ Usar la variable global (sin const/let)
+		    currentUser = JSON.parse(userData);
+		    window.currentUser = currentUser;
 		
 		    // Ahora inicializar navegación
 		    initNavigation();
